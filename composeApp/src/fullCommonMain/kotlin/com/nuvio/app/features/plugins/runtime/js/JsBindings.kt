@@ -16,6 +16,7 @@ internal object JsBindings {
             ${cryptoPolyfill()}
             ${textEncoderPolyfill()}
             ${cheerioPolyfill()}
+            ${browserPolyfill()}
             ${requirePolyfill()}
             ${arrayPolyfill()}
             ${objectPolyfill()}
@@ -905,6 +906,20 @@ internal object JsBindings {
             };
             return wrapper;
         }
+    """.trimIndent()
+
+    private fun browserPolyfill() = """
+        globalThis.browserResolve = async function(url, script, options) {
+            options = options || {};
+            var timeout = options.timeout || 45000;
+            var userAgent = options.userAgent || null;
+            var result = await __native_browser_resolve(url, script || null, userAgent, timeout);
+            return JSON.parse(result);
+        };
+
+        globalThis.resolveCloudflare = async function(url, options) {
+            return await globalThis.browserResolve(url, null, options);
+        };
     """.trimIndent()
 
     private fun requirePolyfill() = """

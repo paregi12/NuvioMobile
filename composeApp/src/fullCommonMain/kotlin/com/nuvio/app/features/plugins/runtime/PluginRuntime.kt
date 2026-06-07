@@ -137,6 +137,7 @@ internal object PluginRuntime {
             addModule(CryptoBridge())
             addModule(WasmBridge())
             addModule(domBridge)
+            addModule(com.nuvio.app.features.plugins.runtime.network.BrowserHostBridge())
         }
 
         try {

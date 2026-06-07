@@ -52,11 +52,20 @@ internal class FetchBridge : HostModule {
         followRedirects: Boolean,
     ): String {
         val headers = parseHeaders(headersJson).toMutableMap()
-        if (!headers.containsKey("User-Agent")) {
-            headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+        // Inject cached Cloudflare data if available
+        CloudflareCache.getUserAgent(url)?.let { headers["User-Agent"] = it }
+        CloudflareCache.getCookies(url)?.let { cachedCookies ->
+            val existing = headers["Cookie"]
+            val newCookies = cachedCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+            headers["Cookie"] = if (existing != null) "$existing; $newCookies" else newCookies
         }
 
-        val response = runBlocking {
+        if (!headers.containsKey("User-Agent")) {
+            headers["User-Agent"] = com.nuvio.app.features.plugins.PluginStorage.DEFAULT_USER_AGENT
+        }
+
+        var response = runBlocking {
             httpRequestRaw(
                 method = method,
                 url = url,
@@ -64,6 +73,50 @@ internal class FetchBridge : HostModule {
                 body = body,
                 followRedirects = followRedirects,
             )
+        }
+
+        // Detect anti-bot challenge (Cloudflare or DDoS-Guard)
+        val serverHeader = response.headers["server"]?.lowercase() ?: ""
+        val bodyLower = response.body.lowercase()
+        val isCloudflare = serverHeader.contains("cloudflare") || bodyLower.contains("cf-challenge") || bodyLower.contains("ray id")
+        val isDdosGuard = serverHeader.contains("ddos-guard") || bodyLower.contains("ddos-guard") || response.status == 403 && bodyLower.contains("check.ddos-guard.net")
+
+        if ((response.status == 403 || response.status == 503) && (isCloudflare || isDdosGuard)) {
+            val challengeType = if (isCloudflare) "Cloudflare" else "DDoS-Guard"
+            log.i { "$challengeType challenge detected for $url (Status: ${response.status}). Attempting to solve..." }
+            
+            val solveResult = runBlocking {
+                CloudflareSolver.solve(url, headers["User-Agent"])
+            }
+
+            if (solveResult.success) {
+                log.i { "$challengeType challenge solved successfully for $url. Retrying request..." }
+                CloudflareCache.update(url, solveResult.userAgent, solveResult.cookies)
+
+                val retryHeaders = headers.toMutableMap()
+                solveResult.userAgent?.let { retryHeaders["User-Agent"] = it }
+                solveResult.cookies?.let { newCookiesMap ->
+                    val existing = retryHeaders["Cookie"]
+                    val newCookiesStr = newCookiesMap.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                    retryHeaders["Cookie"] = if (existing != null) {
+                        if (existing.contains(newCookiesStr)) existing else "$existing; $newCookiesStr"
+                    } else {
+                        newCookiesStr
+                    }
+                }
+
+                response = runBlocking {
+                    httpRequestRaw(
+                        method = method,
+                        url = url,
+                        headers = retryHeaders,
+                        body = body,
+                        followRedirects = followRedirects,
+                    )
+                }
+            } else {
+                log.w { "Cloudflare challenge solve failed for $url" }
+            }
         }
 
         val responseHeaders = response.headers.mapKeys { (key, _) -> key.lowercase() }
