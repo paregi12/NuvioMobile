@@ -462,7 +462,7 @@
     <string name="settings_advanced_debugging_filter_level">Level</string>
     <string name="settings_advanced_debugging_filter_all">All</string>
     <string name="settings_advanced_debugging_no_filter_matches">No logs match the selected filters.</string>
-    <string name="settings_advanced_debugging_showing_logs">Showing %1$d of %2$d log lines</string>
+    <string name="settings_advanced_debugging_showing_logs">Showing latest %1$d of %2$d filtered logs · %3$d/%4$d retained</string>
     <string name="settings_advanced_remember_last_profile">Remember Last Profile</string>
     <string name="settings_advanced_remember_last_profile_description">Remember last selected profile at startup</string>
     <string name="settings_advanced_clear_cw_cache">Clear Continue Watching Cache</string>

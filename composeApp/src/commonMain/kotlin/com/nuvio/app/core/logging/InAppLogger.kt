@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-private const val DEFAULT_MAX_LOG_LINES = 1_500
+private const val DEFAULT_MAX_LOG_LINES = 3_000
 
 internal expect fun currentInAppLogTimestamp(): String
 
@@ -32,6 +32,8 @@ data class InAppLogEntry(
  * headers, or account state are not written to disk.
  */
 object InAppLogger {
+    val maxRetainedEntries: Int = DEFAULT_MAX_LOG_LINES
+
     private val maxLines = DEFAULT_MAX_LOG_LINES
     private val _entries = MutableStateFlow<List<InAppLogEntry>>(emptyList())
     private val _lines = MutableStateFlow<List<String>>(emptyList())

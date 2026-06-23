@@ -51,6 +51,7 @@ import nuvio.composeapp.generated.resources.settings_advanced_section_debugging
 import org.jetbrains.compose.resources.stringResource
 
 private const val ALL_FILTER_VALUE = "__all__"
+private const val MAX_DISPLAYED_LOG_LINES = 500
 
 internal fun LazyListScope.debugLogsSettingsContent(
     isTablet: Boolean,
@@ -82,7 +83,8 @@ private fun DebugLogsSection(isTablet: Boolean) {
         (selectedCategory == ALL_FILTER_VALUE || entry.category == selectedCategory) &&
             (selectedLevel == ALL_FILTER_VALUE || entry.level.label == selectedLevel)
     }
-    val logText = filteredEntries.joinToString(separator = "\n") { it.line }
+    val displayedEntries = filteredEntries.takeLast(MAX_DISPLAYED_LOG_LINES)
+    val logText = displayedEntries.joinToString(separator = "\n") { it.line }
     val viewerText = when {
         logEntries.isEmpty() -> stringResource(Res.string.settings_advanced_debugging_empty)
         filteredEntries.isEmpty() -> stringResource(Res.string.settings_advanced_debugging_no_filter_matches)
@@ -108,9 +110,9 @@ private fun DebugLogsSection(isTablet: Boolean) {
                 title = stringResource(Res.string.settings_advanced_debugging_copy_logs),
                 description = stringResource(
                     Res.string.settings_advanced_debugging_copy_logs_description,
-                    filteredEntries.size,
+                    displayedEntries.size,
                 ),
-                enabled = filteredEntries.isNotEmpty(),
+                enabled = displayedEntries.isNotEmpty(),
                 isTablet = isTablet,
                 onClick = {
                     clipboardManager.setText(AnnotatedString(logText))
@@ -128,8 +130,10 @@ private fun DebugLogsSection(isTablet: Boolean) {
             DebugLogTextPanel(
                 text = viewerText,
                 isEmpty = logEntries.isEmpty() || filteredEntries.isEmpty(),
+                displayedCount = displayedEntries.size,
                 filteredCount = filteredEntries.size,
-                totalCount = logEntries.size,
+                retainedCount = logEntries.size,
+                retainedLimit = InAppLogger.maxRetainedEntries,
                 isTablet = isTablet,
             )
         }
@@ -230,8 +234,10 @@ private fun DebugLogFilterChip(
 private fun DebugLogTextPanel(
     text: String,
     isEmpty: Boolean,
+    displayedCount: Int,
     filteredCount: Int,
-    totalCount: Int,
+    retainedCount: Int,
+    retainedLimit: Int,
     isTablet: Boolean,
 ) {
     val verticalScrollState = rememberScrollState()
@@ -264,8 +270,10 @@ private fun DebugLogTextPanel(
     Text(
         text = stringResource(
             Res.string.settings_advanced_debugging_showing_logs,
+            displayedCount,
             filteredCount,
-            totalCount,
+            retainedCount,
+            retainedLimit,
         ),
         modifier = Modifier.padding(horizontal = if (isTablet) 20.dp else 16.dp, vertical = 0.dp),
         style = MaterialTheme.typography.bodySmall,
