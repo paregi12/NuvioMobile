@@ -16,6 +16,15 @@ enum class InAppLogLevel(val label: String) {
     Error("Error"),
 }
 
+data class InAppLogEntry(
+    val timestamp: String,
+    val level: InAppLogLevel,
+    val tag: String,
+    val category: String,
+    val message: String,
+    val line: String,
+)
+
 /**
  * In-memory app log buffer shown from Settings -> Advanced -> Debugging.
  *
@@ -24,8 +33,14 @@ enum class InAppLogLevel(val label: String) {
  */
 object InAppLogger {
     private val maxLines = DEFAULT_MAX_LOG_LINES
+    private val _entries = MutableStateFlow<List<InAppLogEntry>>(emptyList())
     private val _lines = MutableStateFlow<List<String>>(emptyList())
 
+    val entries: StateFlow<List<InAppLogEntry>> = _entries.asStateFlow()
+
+    /**
+     * Backward-compatible text-only view for existing callers.
+     */
     val lines: StateFlow<List<String>> = _lines.asStateFlow()
 
     fun debug(tag: String, message: String) = log(InAppLogLevel.Debug, tag, message)
@@ -37,9 +52,10 @@ object InAppLogger {
         val trimmedMessage = message.trim()
         if (trimmedMessage.isEmpty()) return
 
+        val timestamp = currentInAppLogTimestamp()
         val safeTag = tag.trim().ifEmpty { "App" }
         val line = buildString {
-            append(currentInAppLogTimestamp())
+            append(timestamp)
             append(" [")
             append(level.label)
             append("] [")
@@ -47,7 +63,16 @@ object InAppLogger {
             append("] ")
             append(trimmedMessage)
         }
-        appendLine(line)
+        appendEntry(
+            InAppLogEntry(
+                timestamp = timestamp,
+                level = level,
+                tag = safeTag,
+                category = deriveCategory(safeTag),
+                message = trimmedMessage,
+                line = line,
+            ),
+        )
     }
 
     fun logMpv(platform: String, prefix: String, level: String, message: String) {
@@ -72,8 +97,6 @@ object InAppLogger {
         }
         log(normalizedLevel, tag, message)
     }
-
-
 
     fun redactUrl(url: String?, maxLength: Int = 180): String {
         val raw = url?.trim().orEmpty()
@@ -112,20 +135,48 @@ object InAppLogger {
         return if (message.isBlank()) type else "$type: $message"
     }
 
-    fun dump(): String = lines.value.joinToString(separator = "\n")
+    fun dump(): String = entries.value.joinToString(separator = "\n") { it.line }
 
     fun clear() {
-        _lines.value = emptyList()
+        _entries.value = emptyList()
+        syncLines(emptyList())
     }
 
-    private fun appendLine(line: String) {
-        _lines.update { current ->
-            if (current.size < maxLines) {
-                current + line
+    private fun appendEntry(entry: InAppLogEntry) {
+        _entries.update { current ->
+            val updated = if (current.size < maxLines) {
+                current + entry
             } else {
-                current.drop(current.size - maxLines + 1) + line
+                current.drop(current.size - maxLines + 1) + entry
             }
+            syncLines(updated)
+            updated
         }
+    }
+
+    private fun syncLines(entries: List<InAppLogEntry>) {
+        _lines.value = entries.map { it.line }
+    }
+
+    private fun deriveCategory(tag: String): String {
+        val root = tag.substringBefore('/').substringBefore(':').trim()
+        val normalized = root.lowercase()
+        return when (normalized) {
+            "mpv", "exoplayer", "player" -> "Player"
+            "streams", "stream" -> "Streams"
+            "addons", "addon" -> "Addon"
+            "plugins", "plugin" -> "Plugin"
+            "metadata", "tmdb", "mdblist", "trakt" -> "Metadata"
+            "network", "http" -> "Network"
+            "app", "application" -> "App"
+            else -> root.toTitleCaseOrDefault("Other")
+        }
+    }
+
+    private fun String.toTitleCaseOrDefault(default: String): String {
+        val value = trim()
+        if (value.isEmpty()) return default
+        return value.take(1).uppercase() + value.drop(1).lowercase()
     }
 }
 
