@@ -61,6 +61,7 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
 import androidx.media3.ui.CaptionStyleCompat
 import com.nuvio.app.R
+import com.nuvio.app.core.logging.InAppLogger
 import com.nuvio.app.features.streams.normalizeStreamType
 import `is`.xyz.mpv.BaseMPVView
 import `is`.xyz.mpv.MPV
@@ -130,6 +131,7 @@ actual fun PlatformPlayerSurface(
             onError = { message ->
                 if (message != null && playerSettings.androidPlaybackEngine == AndroidPlaybackEngine.Auto) {
                     Log.w(TAG, "ExoPlayer failed; falling back to libmpv: $message")
+                    InAppLogger.warn("Player/Android", "ExoPlayer failed; falling back to libmpv: $message")
                     activeEngine = ResolvedAndroidPlaybackEngine.Libmpv
                     onError(null)
                 } else {
@@ -825,12 +827,16 @@ private fun LibmpvPlayerSurface(
                 when (eventId) {
                     MPV.mpvEvent.MPV_EVENT_FILE_LOADED,
                     MPV.mpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
+                        InAppLogger.info("MPV/Android", "event=$eventId playback ready")
                         coroutineScope.launch(Dispatchers.Main.immediate) {
                             latestOnError.value(null)
                             latestOnSnapshot.value(view.snapshot())
                         }
                     }
-                    MPV.mpvEvent.MPV_EVENT_END_FILE -> dispatchSnapshot()
+                    MPV.mpvEvent.MPV_EVENT_END_FILE -> {
+                        InAppLogger.info("MPV/Android", "event=end-file")
+                        dispatchSnapshot()
+                    }
                 }
             }
         }
@@ -904,6 +910,7 @@ private fun LibmpvPlayerSurface(
                     initialize(viewContext.filesDir.path, viewContext.cacheDir.path)
                 }.onFailure { error ->
                     Log.e(TAG, "Failed to initialize libmpv", error)
+                    InAppLogger.error("MPV/Android", "Failed to initialize libmpv: ${error.localizedMessage ?: error::class.simpleName.orEmpty()}")
                     latestOnError.value(error.localizedMessage ?: "libmpv unavailable")
                 }
                 playerViewRef = this
@@ -940,6 +947,10 @@ private class NuvioLibmpvView(
     private var currentExternalSubtitles: List<com.nuvio.app.features.streams.StreamSubtitle> = emptyList()
 
     override fun initOptions() {
+        InAppLogger.info(
+            "MPV/Android",
+            "Initializing libmpv vo=${videoOutput.mpvValue} hwdec=${if (hardwareDecodingEnabled) "auto" else "no"} yuv420p=$yuv420pEnabled",
+        )
         setVo(videoOutput.mpvValue)
         mpv.setOptionString("profile", "fast")
         mpv.setOptionString("hwdec", if (hardwareDecodingEnabled) "auto" else "no")
@@ -995,6 +1006,10 @@ private class NuvioLibmpvView(
         applyRequestHeaders(requestHeaders)
         setPaused(!playWhenReady)
         if (!sameSource) {
+            InAppLogger.info(
+                "MPV/Android",
+                "loadfile url=${sourceUrl.redactedPlaybackUrlForLogs()} audio=${!sourceAudioUrl.isNullOrBlank()} subtitles=${externalSubtitles.size} playWhenReady=$playWhenReady",
+            )
             playFile(sourceUrl)
             if (!sourceAudioUrl.isNullOrBlank()) {
                 mpv.command("audio-add", sourceAudioUrl, "auto")
@@ -1163,12 +1178,19 @@ private class NuvioLibmpvView(
     private fun applyRequestHeaders(headers: Map<String, String>) {
         val userAgent = headers.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value
         if (!userAgent.isNullOrBlank()) {
+            InAppLogger.debug("MPV/Android", "Applying User-Agent header")
             mpv.setPropertyString("user-agent", userAgent)
         }
         val serialized = headers
             .filterKeys { !it.equals("User-Agent", ignoreCase = true) }
             .map { (key, value) -> "${key}: ${value.replace(",", "\\,")}" }
             .joinToString(",")
+        if (headers.isNotEmpty()) {
+            InAppLogger.debug(
+                "MPV/Android",
+                "Applying request header keys=${headers.keys.sorted().joinToString(",")}",
+            )
+        }
         mpv.setPropertyString("http-header-fields", serialized)
     }
 
@@ -1212,7 +1234,19 @@ private fun libmpvCacheBytes(): Int =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) 64 * 1024 * 1024 else 32 * 1024 * 1024
 
 private fun Int.logIfMpvError(option: String) {
-    if (this < 0) Log.w(TAG, "libmpv option failed: $option status=$this")
+    if (this < 0) {
+        Log.w(TAG, "libmpv option failed: $option status=$this")
+        InAppLogger.warn("MPV/Android", "libmpv option failed: $option status=$this")
+    }
+}
+
+private fun String.redactedPlaybackUrlForLogs(maxLength: Int = 180): String {
+    val withoutQuery = substringBefore('?')
+    return if (withoutQuery.length <= maxLength) {
+        withoutQuery
+    } else {
+        withoutQuery.take(maxLength) + "…"
+    }
 }
 
 private fun Double?.toMillis(): Long =

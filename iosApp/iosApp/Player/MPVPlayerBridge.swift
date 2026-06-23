@@ -342,9 +342,11 @@ final class MPVPlayerViewController: UIViewController {
         mpv = mpv_create()
         guard mpv != nil else {
             print("[MPV] Failed to create mpv instance")
+            InAppLogBridge.shared.error(tag: "MPV/iOS", message: "Failed to create mpv instance")
             return
         }
 
+        InAppLogBridge.shared.info(tag: "MPV/iOS", message: "Initializing mpv vo=gpu-next gpu-api=vulkan gpu-context=moltenvk hwdec=videotoolbox")
         checkError(mpv_request_log_messages(mpv, "warn"))
 
         checkError(mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &metalLayer))
@@ -448,6 +450,10 @@ final class MPVPlayerViewController: UIViewController {
         layoutMetalLayer()
         clearPlaybackError()
         let sanitizedHeaders = sanitizeRequestHeaders(request.requestHeaders)
+        InAppLogBridge.shared.info(
+            tag: "MPV/iOS",
+            message: "loadfile url=\(redactedPlaybackUrlForLogs(request.urlString)) audio=\(!(request.audioUrl ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) subtitles=\(request.subtitles.count) headers=\(sanitizedHeaders.keys.sorted().joined(separator: ","))"
+        )
         activeRequestHeaders = sanitizedHeaders
         applyRequestHeaders(sanitizedHeaders)
         isPlayerLoading = true
@@ -887,6 +893,8 @@ final class MPVPlayerViewController: UIViewController {
         guard !trimmed.isEmpty else { return }
         guard level == "warn" || level == "error" || level == "fatal" else { return }
 
+        InAppLogBridge.shared.mpv(platform: "iOS", prefix: prefix, level: level, message: trimmed)
+
         let formatted = "[\(prefix)] \(trimmed)"
         errorStateLock.lock()
         recentPlaybackLogs.append(formatted)
@@ -934,6 +942,7 @@ final class MPVPlayerViewController: UIViewController {
                         if endFile.reason == MPV_END_FILE_REASON_ERROR {
                             let errorText = String(cString: mpv_error_string(endFile.error))
                             self.setPlaybackError("[mpv] \(errorText)")
+                            InAppLogBridge.shared.error(tag: "MPV/iOS", message: "End file error: \(errorText)")
                             print("[MPV] End file error: \(errorText)")
                         }
                     }
@@ -1026,14 +1035,26 @@ final class MPVPlayerViewController: UIViewController {
                 ?? "unknown"
             let channelCount = self.getInt("audio-out-params/channel-count")
             let codec = self.getString("audio-codec-name") ?? "unknown"
-            print("[MPV] Audio output: ao=\(currentAo), channels=\(channels), channelCount=\(channelCount), codec=\(codec)")
+            let message = "Audio output: ao=\(currentAo), channels=\(channels), channelCount=\(channelCount), codec=\(codec)"
+            InAppLogBridge.shared.info(tag: "MPV/iOS", message: message)
+            print("[MPV] \(message)")
         }
     }
 
     private func checkError(_ status: CInt) {
         if status < 0 {
-            print("[MPV] API error: \(String(cString: mpv_error_string(status)))")
+            let message = "API error: \(String(cString: mpv_error_string(status)))"
+            InAppLogBridge.shared.warn(tag: "MPV/iOS", message: message)
+            print("[MPV] \(message)")
         }
+    }
+
+    private func redactedPlaybackUrlForLogs(_ urlString: String, maxLength: Int = 180) -> String {
+        let withoutQuery = urlString.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? urlString
+        if withoutQuery.count <= maxLength {
+            return withoutQuery
+        }
+        return String(withoutQuery.prefix(maxLength)) + "…"
     }
 
     private func sanitizeRequestHeaders(_ headers: [String: String]) -> [String: String] {

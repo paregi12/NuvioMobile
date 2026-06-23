@@ -81,6 +81,7 @@ import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.deeplink.AppDeepLink
 import com.nuvio.app.core.deeplink.AppDeepLinkRepository
+import com.nuvio.app.core.logging.InAppLogger
 import com.nuvio.app.core.network.NetworkCondition
 import com.nuvio.app.core.network.NetworkStatusRepository
 import com.nuvio.app.core.network.SupabaseProvider
@@ -427,6 +428,7 @@ fun App() {
     val amoledEnabled by remember { ThemeSettingsRepository.amoledEnabled }.collectAsStateWithLifecycle()
     NuvioTheme(appTheme = selectedTheme, amoled = amoledEnabled) {
         LaunchedEffect(Unit) {
+            InAppLogger.info("App", "Application started")
             refreshSyncBackendSelection()
             AuthRepository.initialize()
         }
