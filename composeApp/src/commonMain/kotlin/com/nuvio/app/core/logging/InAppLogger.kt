@@ -73,6 +73,45 @@ object InAppLogger {
         log(normalizedLevel, tag, message)
     }
 
+
+
+    fun redactUrl(url: String?, maxLength: Int = 180): String {
+        val raw = url?.trim().orEmpty()
+        if (raw.isEmpty()) return "<empty>"
+
+        val withoutQuery = raw.substringBefore('?').substringBefore('#')
+        val schemeSeparator = withoutQuery.indexOf("://")
+        val withoutCredentials = if (schemeSeparator >= 0) {
+            val prefix = withoutQuery.take(schemeSeparator + 3)
+            val rest = withoutQuery.drop(schemeSeparator + 3)
+            val slashIndex = rest.indexOf('/')
+            val authority = if (slashIndex >= 0) rest.take(slashIndex) else rest
+            val path = if (slashIndex >= 0) rest.drop(slashIndex) else ""
+            prefix + authority.substringAfter('@') + path
+        } else {
+            withoutQuery
+        }
+        return if (withoutCredentials.length <= maxLength) {
+            withoutCredentials
+        } else {
+            withoutCredentials.take(maxLength) + "…"
+        }
+    }
+
+    fun headerKeys(headers: Map<String, String>?): String {
+        val keys = headers.orEmpty().keys
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .sortedBy { it.lowercase() }
+        return keys.joinToString(separator = ",").ifBlank { "none" }
+    }
+
+    fun throwableSummary(error: Throwable): String {
+        val type = error::class.simpleName ?: "Throwable"
+        val message = error.message?.trim().orEmpty()
+        return if (message.isBlank()) type else "$type: $message"
+    }
+
     fun dump(): String = lines.value.joinToString(separator = "\n")
 
     fun clear() {
