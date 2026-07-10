@@ -42,6 +42,7 @@ fun handleAppUrl(url: String) {
     if (normalizedUrl.isBlank()) return
 
     handleTraktAuthCallbackUrl(normalizedUrl)
+    com.nuvio.app.features.anilist.AniListAuthRepository.onAuthCallbackReceived(normalizedUrl)
     AppDeepLinkRepository.handleUrl(normalizedUrl)
 }
 

@@ -1,0 +1,12 @@
+package com.nuvio.app.features.anilist
+
+internal expect object AniListStorage {
+    fun loadAuthPayload(): String?
+    fun saveAuthPayload(payload: String)
+
+    fun loadSettingsPayload(): String?
+    fun saveSettingsPayload(payload: String)
+
+    fun loadLibraryPayload(): String?
+    fun saveLibraryPayload(payload: String)
+}

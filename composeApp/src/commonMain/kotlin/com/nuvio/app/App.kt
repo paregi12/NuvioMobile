@@ -859,6 +859,13 @@ private fun MainAppContent(
         }
     }
 
+    LaunchedEffect(Unit) {
+        com.nuvio.app.features.anilist.AniListAuthRepository.ensureLoaded()
+        com.nuvio.app.features.anilist.AniListSettingsRepository.ensureLoaded()
+        com.nuvio.app.features.anilist.AniListLibraryRepository.ensureLoaded()
+        com.nuvio.app.features.anilist.AniListSyncCoordinator.syncOnLaunchIfNeeded()
+    }
+
     var profileSwitchLoading by remember { mutableStateOf(false) }
 
     DisposableEffect(

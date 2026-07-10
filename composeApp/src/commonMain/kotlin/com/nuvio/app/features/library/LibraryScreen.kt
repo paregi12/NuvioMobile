@@ -72,6 +72,10 @@ import com.nuvio.app.features.cloud.CloudLibraryItem
 import com.nuvio.app.features.cloud.CloudLibraryItemType
 import com.nuvio.app.features.cloud.CloudLibraryRepository
 import com.nuvio.app.features.cloud.CloudLibraryUiState
+import com.nuvio.app.features.anilist.components.aniListLibraryContent
+import com.nuvio.app.features.anilist.AniListLibraryRepository
+import com.nuvio.app.features.anilist.AniListSyncCoordinator
+import com.nuvio.app.features.anilist.AniListAuthRepository
 import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
@@ -101,6 +105,10 @@ fun LibraryScreen(
         LibraryRepository.uiState
     }.collectAsStateWithLifecycle()
     val cloudUiState by CloudLibraryRepository.uiState.collectAsStateWithLifecycle()
+    val aniListUiState by remember {
+        AniListLibraryRepository.ensureLoaded()
+        AniListLibraryRepository.uiState
+    }.collectAsStateWithLifecycle()
     val cloudSettings by remember {
         DebridSettingsRepository.ensureLoaded()
         DebridSettingsRepository.uiState
@@ -126,6 +134,8 @@ fun LibraryScreen(
     }
     var selectedCloudItemKey by rememberSaveable { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val json = remember { kotlinx.serialization.json.Json { ignoreUnknownKeys = true } }
     val listState = rememberLazyListState()
     val isTraktSource = uiState.sourceMode == LibrarySourceMode.TRAKT
     val retryLibraryLoad: () -> Unit = {
@@ -172,9 +182,16 @@ fun LibraryScreen(
         }
     }
 
+    LaunchedEffect(sourceMode) {
+        if (sourceMode == LibraryViewMode.AniList) {
+            AniListLibraryRepository.ensureLoaded()
+            AniListLibraryRepository.ensureFresh()
+        }
+    }
+
     val disintegration = remember { LibraryDisintegrationHolder() }
     val librarySectionsDisplay = if (
-        sourceMode != LibraryViewMode.Cloud && uiState.isLoaded && uiState.sections.isNotEmpty()
+        sourceMode == LibraryViewMode.Saved && uiState.isLoaded && uiState.sections.isNotEmpty()
     ) {
         disintegration.sync(uiState.sections, LIBRARY_SECTION_PREVIEW_LIMIT)
     } else {
@@ -246,6 +263,56 @@ fun LibraryScreen(
                 onBackToItems = { selectedCloudItemKey = null },
                 onRefresh = { CloudLibraryRepository.refresh() },
                 onConnectCloudClick = onConnectCloudClick,
+            )
+        } else if (sourceMode == LibraryViewMode.AniList) {
+            aniListLibraryContent(
+                uiState = aniListUiState,
+                onPosterClick = { item ->
+                    coroutineScope.launch {
+                        val url = "https://api.ani.zip/mappings?anilist_id=${item.id}"
+                        val resolvedImdbId = item.imdbId ?: run {
+                            runCatching {
+                                val text = com.nuvio.app.features.addons.httpGetText(url)
+                                val jsonElement = json.parseToJsonElement(text) as? kotlinx.serialization.json.JsonObject
+                                val mappings = jsonElement?.get("mappings") as? kotlinx.serialization.json.JsonObject
+                                mappings?.get("imdb_id")?.jsonPrimitive?.content
+                            }.getOrNull()
+                        }
+                        if (resolvedImdbId != null) {
+                            onPosterClick?.invoke(
+                                LibraryItem(
+                                    id = resolvedImdbId,
+                                    type = "series",
+                                    name = item.title,
+                                    poster = item.posterUrl,
+                                    savedAtEpochMs = item.updatedAt * 1000L,
+                                    imdbId = resolvedImdbId
+                                )
+                            )
+                        } else {
+                            onPosterClick?.invoke(
+                                LibraryItem(
+                                    id = "search:${item.title}",
+                                    type = "series",
+                                    name = item.title,
+                                    poster = item.posterUrl,
+                                    savedAtEpochMs = item.updatedAt * 1000L,
+                                    imdbId = null
+                                )
+                            )
+                        }
+                    }
+                },
+                onConnectAniListClick = {
+                    val authUrl = AniListAuthRepository.onConnectRequested()
+                    runCatching { uriHandler.openUri(authUrl) }
+                },
+                onRefresh = {
+                    coroutineScope.launch {
+                        AniListLibraryRepository.refreshNow()
+                    }
+                },
+                isOffline = networkStatusUiState.isOfflineLike
             )
         } else {
             when {
@@ -473,6 +540,11 @@ private fun LibrarySourceSwitch(
             label = stringResource(Res.string.library_source_cloud),
             selected = selectedMode == LibraryViewMode.Cloud,
             onClick = { onModeSelected(LibraryViewMode.Cloud) },
+        )
+        LibraryChip(
+            label = "AniList",
+            selected = selectedMode == LibraryViewMode.AniList,
+            onClick = { onModeSelected(LibraryViewMode.AniList) },
         )
     }
 }
@@ -994,6 +1066,7 @@ private fun CloudSkeletonBlock(
 private enum class LibraryViewMode {
     Saved,
     Cloud,
+    AniList,
 }
 
 private fun LazyListScope.librarySections(

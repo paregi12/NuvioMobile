@@ -65,6 +65,7 @@ internal fun LazyListScope.settingsRootContent(
     onContentDiscoveryClick: () -> Unit,
     onIntegrationsClick: () -> Unit,
     onTraktClick: () -> Unit,
+    onAniListClick: () -> Unit,
     onSupportersContributorsClick: () -> Unit,
     onLicensesAttributionsClick: () -> Unit,
     onCheckForUpdatesClick: (() -> Unit)? = null,
@@ -108,6 +109,14 @@ internal fun LazyListScope.settingsRootContent(
                         iconPainter = integrationLogoPainter(IntegrationLogo.Trakt),
                         isTablet = isTablet,
                         onClick = onTraktClick,
+                    )
+                    SettingsGroupDivider(isTablet = isTablet)
+                    SettingsNavigationRow(
+                        title = stringResource(Res.string.compose_settings_page_anilist),
+                        description = stringResource(Res.string.compose_settings_root_anilist_description),
+                        icon = Icons.Rounded.Link,
+                        isTablet = isTablet,
+                        onClick = onAniListClick,
                     )
                 }
             }

@@ -154,6 +154,11 @@ internal enum class SettingsPage(
         category = SettingsCategory.Account,
         parentPage = Root,
     ),
+    AniListAuthentication(
+        titleRes = Res.string.compose_settings_page_anilist,
+        category = SettingsCategory.Account,
+        parentPage = Root,
+    ),
 }
 
 internal val SettingsPage.opensInlineOnTablet: Boolean

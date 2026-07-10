@@ -954,6 +954,7 @@ object WatchProgressRepository {
         }
         if (syncRemote) {
             pushScrobbleToServer(entry = entry, profileId = targetProfileId)
+            com.nuvio.app.features.anilist.AniListSyncCoordinator.handlePlaybackProgressUpdated(entry)
         }
         if (shouldCascadeCompletedProgressToWatchedHistory(entry, useTraktProgress)) {
             WatchingActions.onProgressEntryUpdated(entry, syncRemote = syncRemote)
