@@ -40,8 +40,8 @@ fun AniListPosterCard(
     val tokens = MaterialTheme.nuvio
     val posterCardStyle = rememberPosterCardStyleUiState()
     
-    val cardWidth = androidx.compose.ui.unit.dp(posterCardStyle.widthDp.toFloat())
-    val cardShape = RoundedCornerShape(posterCardStyle.cornerRadiusDp.dp)
+    val cardWidth = androidx.compose.ui.unit.Dp(posterCardStyle.widthDp.toFloat())
+    val cardShape = RoundedCornerShape(androidx.compose.ui.unit.Dp(posterCardStyle.cornerRadiusDp.toFloat()))
 
     Column(
         modifier = modifier.width(cardWidth),
