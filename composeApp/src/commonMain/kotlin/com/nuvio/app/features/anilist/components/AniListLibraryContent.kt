@@ -22,7 +22,7 @@ import com.nuvio.app.core.ui.NuvioShelfSection
 import com.nuvio.app.features.anilist.AniListLibraryUiState
 import com.nuvio.app.features.anilist.AniListLibraryItem
 import com.nuvio.app.features.home.components.HomeSkeletonRow
-import com.nuvio.app.features.settings.HomeEmptyStateCard
+import com.nuvio.app.features.home.components.HomeEmptyStateCard
 
 fun LazyListScope.aniListLibraryContent(
     uiState: AniListLibraryUiState,

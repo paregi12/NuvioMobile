@@ -142,7 +142,9 @@ object AniListResolutionService {
 
         val request = AniListGraphQLRequest(
             query = graphQuery,
-            variables = mapOf("search" to title)
+            variables = kotlinx.serialization.json.buildJsonObject {
+                put("search", title)
+            }
         )
         
         return try {

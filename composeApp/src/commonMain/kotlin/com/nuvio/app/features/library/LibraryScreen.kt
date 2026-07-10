@@ -87,6 +87,7 @@ import com.nuvio.app.features.watching.application.WatchingState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonPrimitive
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -271,12 +272,13 @@ fun LibraryScreen(
                     coroutineScope.launch {
                         val url = "https://api.ani.zip/mappings?anilist_id=${item.id}"
                         val resolvedImdbId = item.imdbId ?: run {
-                            runCatching {
+                            val result = runCatching {
                                 val text = com.nuvio.app.features.addons.httpGetText(url)
                                 val jsonElement = json.parseToJsonElement(text) as? kotlinx.serialization.json.JsonObject
                                 val mappings = jsonElement?.get("mappings") as? kotlinx.serialization.json.JsonObject
                                 mappings?.get("imdb_id")?.jsonPrimitive?.content
-                            }.getOrNull()
+                            }
+                            result.getOrNull()
                         }
                         if (resolvedImdbId != null) {
                             onPosterClick?.invoke(

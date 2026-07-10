@@ -40,8 +40,7 @@ fun AniListPosterCard(
     val tokens = MaterialTheme.nuvio
     val posterCardStyle = rememberPosterCardStyleUiState()
     
-    // Conforms with local Nuvio card sizing rules
-    val cardWidth = NuvioPosterShape.Poster.cardWidth(basePosterWidthDp = posterCardStyle.widthDp)
+    val cardWidth = androidx.compose.ui.unit.dp(posterCardStyle.widthDp.toFloat())
     val cardShape = RoundedCornerShape(posterCardStyle.cornerRadiusDp.dp)
 
     Column(
@@ -51,7 +50,7 @@ fun AniListPosterCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(NuvioPosterShape.Poster.aspectRatio)
+                .aspectRatio(0.675f)
                 .clip(cardShape)
                 .background(tokens.colors.surface)
                 .clickable(enabled = onClick != null) { onClick?.invoke() },
@@ -109,7 +108,7 @@ fun AniListPosterCard(
                         .align(Alignment.TopStart)
                         .padding(6.dp)
                         .background(
-                            tokens.colors.surfaceMuted.copy(alpha = 0.85f),
+                            tokens.colors.surface.copy(alpha = 0.85f),
                             RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
