@@ -302,10 +302,25 @@ object AniListResolutionService {
     }
 
     /**
-     * Resolves the IMDb ID for a given AniList ID via the ani.zip mappings API.
+     * Resolves the IMDb ID for a given AniList ID.
+     * Uses the ARM API mapping first, then falls back to ani.zip.
      * Returns null if not found or on network/parse failure.
      */
     suspend fun resolveImdbId(anilistId: Int): String? {
+        // 1. Try ARM API mapping
+        try {
+            val url = "$ARM_API/ids?source=anilist&id=$anilistId"
+            val text = httpGetText(url)
+            val jsonElement = json.parseToJsonElement(text) as? JsonObject
+            val imdbId = jsonElement?.get("imdb")?.jsonPrimitive?.content
+            if (!imdbId.isNullOrBlank()) {
+                return imdbId
+            }
+        } catch (e: Exception) {
+            log.w(e) { "resolveImdbId: ARM API failed for anilist:$anilistId" }
+        }
+
+        // 2. Fallback to ani.zip
         val url = "$ANIZIP_API?anilist_id=$anilistId"
         return try {
             val text = httpGetText(url)

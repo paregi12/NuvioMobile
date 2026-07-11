@@ -299,24 +299,13 @@ object AniListSyncCoordinator {
         // Check cache first
         anilistToImdbCache[anilistId]?.let { return it }
 
-        // Fetch from ani.zip mappings
-        val url = "https://api.ani.zip/mappings?anilist_id=$anilistId"
-        return try {
-            val text = httpGetText(url)
-            val jsonElement = json.parseToJsonElement(text) as? JsonObject
-            val mappings = jsonElement?.get("mappings") as? JsonObject
-            val imdbId = mappings?.get("imdb_id")?.jsonPrimitive?.content
-            if (!imdbId.isNullOrBlank()) {
-                anilistToImdbCache[anilistId] = imdbId
-                saveCacheToStorage()
-                imdbId
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            log.w(e) { "Failed to resolve IMDb ID from ani.zip mappings for AniList ID: $anilistId" }
-            null
+        val imdbId = AniListResolutionService.resolveImdbId(anilistId)
+        if (!imdbId.isNullOrBlank()) {
+            anilistToImdbCache[anilistId] = imdbId
+            saveCacheToStorage()
+            return imdbId
         }
+        return null
     }
 }
 
