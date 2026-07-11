@@ -106,6 +106,13 @@ object AniListSettingsRepository {
         persist()
     }
 
+    fun setAutoAddNewAnime(enabled: Boolean) {
+        ensureLoaded()
+        if (_uiState.value.autoAddNewAnime == enabled) return
+        _uiState.value = _uiState.value.copy(autoAddNewAnime = enabled)
+        persist()
+    }
+
     private fun loadFromDisk() {
         hasLoaded = true
         val payload = AniListStorage.loadSettingsPayload().orEmpty().trim()

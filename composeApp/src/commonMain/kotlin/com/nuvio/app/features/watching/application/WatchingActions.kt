@@ -133,7 +133,8 @@ object WatchingActions {
     private fun syncEpisodeToAniList(meta: MetaDetails, episode: MetaVideo) {
         actionScope.launch {
             val token = com.nuvio.app.features.anilist.AniListAuthRepository.getAccessToken() ?: return@launch
-            
+            val settings = com.nuvio.app.features.anilist.AniListSettingsRepository.uiState.value
+
             var directAniListId: Int? = null
             var directEpisode: Int? = null
 
@@ -150,6 +151,11 @@ object WatchingActions {
             }
 
             if (directAniListId != null) {
+                // Guard: skip if not in library and auto-add is off
+                if (!settings.autoAddNewAnime &&
+                    !com.nuvio.app.features.anilist.AniListLibraryRepository.isInLibrary(directAniListId)
+                ) return@launch
+
                 val epNum = directEpisode ?: episode.episode ?: 1
                 com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
                     token = token,
@@ -169,6 +175,11 @@ object WatchingActions {
                     isMovie = meta.type.equals("movie", ignoreCase = true)
                 )
                 if (resolved != null) {
+                    // Guard: skip if not in library and auto-add is off
+                    if (!settings.autoAddNewAnime &&
+                        !com.nuvio.app.features.anilist.AniListLibraryRepository.isInLibrary(resolved.anilistId)
+                    ) return@launch
+
                     com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
                         token = token,
                         mediaId = resolved.anilistId,

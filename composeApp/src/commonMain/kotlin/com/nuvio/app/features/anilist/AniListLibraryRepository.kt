@@ -50,6 +50,17 @@ object AniListLibraryRepository {
         runCatching { AniListStorage.saveLibraryPayload("") }
     }
 
+    /**
+     * Returns true if [anilistId] is already in the user's library (any status).
+     * Uses the in-memory snapshot — does NOT trigger a network call.
+     */
+    fun isInLibrary(anilistId: Int): Boolean {
+        val state = _uiState.value
+        return (state.watching + state.completed + state.planning +
+                state.paused + state.dropped + state.rewatching)
+            .any { it.id == anilistId }
+    }
+
     suspend fun refreshNow() {
         refresh(force = true)
     }

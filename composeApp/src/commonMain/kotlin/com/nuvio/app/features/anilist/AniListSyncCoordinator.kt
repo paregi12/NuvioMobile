@@ -89,6 +89,12 @@ object AniListSyncCoordinator {
 
                 if (resolved != null) {
                     val token = AniListAuthRepository.getAccessToken() ?: return@launch
+
+                    // Guard: skip if not in library and auto-add is disabled
+                    if (!settings.autoAddNewAnime &&
+                        !AniListLibraryRepository.isInLibrary(resolved.anilistId)
+                    ) return@launch
+
                     val status = if (entry.isCompleted) "COMPLETED" else "CURRENT"
                     val progress = resolved.anilistEpisode
                     

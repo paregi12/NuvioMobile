@@ -49,7 +49,8 @@ data class AniListSettingsUiState(
     val syncOnLaunch: Boolean = true,
     val lastSyncTimestamp: Long = 0L,
     val librarySections: List<AniListSectionSettings> = defaultLibrarySections,
-    val markWatchedThreshold: Float = 0.90f
+    val markWatchedThreshold: Float = 0.90f,
+    val autoAddNewAnime: Boolean = false
 ) {
     companion object {
         val defaultLibrarySections = listOf(

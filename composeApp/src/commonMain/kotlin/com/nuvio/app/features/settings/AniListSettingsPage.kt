@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -97,6 +98,15 @@ internal fun LazyListScope.aniListSettingsContent(
                     AniListWatchedThresholdRow(
                         isTablet = isTablet,
                         threshold = settingsUiState.markWatchedThreshold
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = if (isTablet) 24.dp else 16.dp))
+                    SettingsSwitchRow(
+                        title = "Automatically Add New Anime to AniList",
+                        description = "When enabled, watching an anime not in your AniList library will automatically add it to your Watching list and sync your progress.",
+                        checked = settingsUiState.autoAddNewAnime,
+                        enabled = settingsUiState.enableSync,
+                        isTablet = isTablet,
+                        onCheckedChange = { AniListSettingsRepository.setAutoAddNewAnime(it) }
                     )
                 }
             }
