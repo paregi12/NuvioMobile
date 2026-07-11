@@ -98,6 +98,14 @@ object AniListSettingsRepository {
         persist()
     }
 
+    fun setMarkWatchedThreshold(threshold: Float) {
+        ensureLoaded()
+        val clamped = threshold.coerceIn(0f, 1f)
+        if (_uiState.value.markWatchedThreshold == clamped) return
+        _uiState.value = _uiState.value.copy(markWatchedThreshold = clamped)
+        persist()
+    }
+
     private fun loadFromDisk() {
         hasLoaded = true
         val payload = AniListStorage.loadSettingsPayload().orEmpty().trim()

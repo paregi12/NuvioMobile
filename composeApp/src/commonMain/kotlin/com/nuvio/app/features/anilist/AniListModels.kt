@@ -48,7 +48,8 @@ data class AniListSettingsUiState(
     val autoSync: Boolean = true,
     val syncOnLaunch: Boolean = true,
     val lastSyncTimestamp: Long = 0L,
-    val librarySections: List<AniListSectionSettings> = defaultLibrarySections
+    val librarySections: List<AniListSectionSettings> = defaultLibrarySections,
+    val markWatchedThreshold: Float = 0.90f
 ) {
     companion object {
         val defaultLibrarySections = listOf(

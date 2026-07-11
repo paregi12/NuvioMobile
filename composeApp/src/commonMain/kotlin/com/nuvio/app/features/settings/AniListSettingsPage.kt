@@ -54,12 +54,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Slider
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.heightIn
 import com.nuvio.app.core.ui.NuvioActionLabel
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import kotlin.math.roundToInt
 
 internal fun LazyListScope.aniListSettingsContent(
     isTablet: Boolean
@@ -86,6 +88,18 @@ internal fun LazyListScope.aniListSettingsContent(
         val settingsUiState by AniListSettingsRepository.uiState.collectAsState()
 
         if (authUiState.mode == AniListConnectionMode.CONNECTED) {
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingsSection(
+                title = "Playback",
+                isTablet = isTablet,
+            ) {
+                SettingsGroup(isTablet = isTablet) {
+                    AniListWatchedThresholdRow(
+                        isTablet = isTablet,
+                        threshold = settingsUiState.markWatchedThreshold
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             SettingsSection(
                 title = "Customize Library Sections",
@@ -498,6 +512,73 @@ private fun AniListSectionsList(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AniListWatchedThresholdRow(
+    isTablet: Boolean,
+    threshold: Float,
+) {
+    val percent = (threshold * 100f).roundToInt()
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = if (isTablet) 24.dp else 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Mark Episode as Watched At",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Episode is marked as watched after reaching this point",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "$percent%",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Slider(
+            value = threshold,
+            onValueChange = { newValue ->
+                AniListSettingsRepository.setMarkWatchedThreshold(newValue)
+            },
+            valueRange = 0f..1f,
+            steps = 19, // 5% increments: 0%, 5%, 10% ... 100%
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = "0%",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "100%",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

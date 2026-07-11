@@ -1,6 +1,6 @@
 package com.nuvio.app.features.watching.domain
 
-private const val CompletionThresholdFraction = 0.90
+private const val DefaultCompletionThresholdFraction = 0.90
 private const val ProgressStoreThresholdMs = 1_000L
 private const val UpcomingNextSeasonWindowDays = 7
 
@@ -23,8 +23,14 @@ fun isProgressComplete(
     if (isEnded) return true
     if (durationMs <= 0L) return false
 
+    val threshold = runCatching {
+        val settings = com.nuvio.app.features.anilist.AniListSettingsRepository.uiState.value
+        if (settings.enableSync) settings.markWatchedThreshold.toDouble()
+        else DefaultCompletionThresholdFraction
+    }.getOrDefault(DefaultCompletionThresholdFraction)
+
     val watchedFraction = positionMs.toDouble() / durationMs.toDouble()
-    return watchedFraction >= CompletionThresholdFraction
+    return watchedFraction >= threshold
 }
 
 fun isReleasedBy(
