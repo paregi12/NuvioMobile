@@ -87,6 +87,8 @@ fun SearchScreen(
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
     searchFocusRequestCount: Int = 0,
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
+    prefilledQuery: String? = null,
+    onPrefilledQueryConsumed: (() -> Unit)? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -94,12 +96,6 @@ fun SearchScreen(
         if (searchFocusRequestCount > 0) {
             focusRequester.requestFocus()
         }
-    }
-
-    LaunchedEffect(Unit) {
-        AddonRepository.initialize()
-        WatchedRepository.ensureLoaded()
-        SearchHistoryRepository.ensureLoaded()
     }
 
     val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
@@ -114,6 +110,19 @@ fun SearchScreen(
     val fullyWatchedSeriesKeys by WatchedRepository.fullyWatchedSeriesKeys.collectAsStateWithLifecycle()
     val networkStatusUiState by NetworkStatusRepository.uiState.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(prefilledQuery) {
+        if (!prefilledQuery.isNullOrBlank()) {
+            query = prefilledQuery
+            onPrefilledQueryConsumed?.invoke()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        AddonRepository.initialize()
+        WatchedRepository.ensureLoaded()
+        SearchHistoryRepository.ensureLoaded()
+    }
     var lastRequestedQuery by rememberSaveable { mutableStateOf<String?>(null) }
     var observedOfflineState by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()

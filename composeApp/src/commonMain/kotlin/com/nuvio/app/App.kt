@@ -779,6 +779,7 @@ private fun MainAppContent(
         val coroutineScope = rememberCoroutineScope()
         var selectedTab by rememberSaveable(initialTab) { mutableStateOf(initialTab) }
         var searchFocusRequestCount by remember { mutableStateOf(0) }
+        var prefilledSearchQuery by remember { mutableStateOf<String?>(null) }
         val homeScrollToTopRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
         val searchScrollToTopRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
         val libraryScrollToTopRequests = remember { MutableSharedFlow<Unit>(extraBufferCapacity = 1) }
@@ -3578,6 +3579,10 @@ private fun AppTabHost(
                         onPosterLongClick = onPosterLongClick,
                         searchFocusRequestCount = searchFocusRequestCount,
                         scrollToTopRequests = searchScrollToTopRequests,
+                        prefilledQuery = prefilledSearchQuery,
+                        onPrefilledQueryConsumed = {
+                            prefilledSearchQuery = null
+                        }
                     )
                 }
 
@@ -3590,6 +3595,10 @@ private fun AppTabHost(
                         onSectionViewAllClick = onLibrarySectionViewAllClick,
                         onCloudFilePlay = onCloudFilePlay,
                         onConnectCloudClick = onConnectCloudClick,
+                        onAniListPosterClick = { animeTitle ->
+                            prefilledSearchQuery = animeTitle
+                            activateTab(AppScreenTab.Search)
+                        }
                     )
                 }
 

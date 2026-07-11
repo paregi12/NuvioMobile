@@ -100,6 +100,7 @@ fun LibraryScreen(
     onSectionViewAllClick: ((LibrarySection) -> Unit)? = null,
     onCloudFilePlay: ((CloudLibraryItem, CloudLibraryFile) -> Unit)? = null,
     onConnectCloudClick: (() -> Unit)? = null,
+    onAniListPosterClick: ((String) -> Unit)? = null,
 ) {
     val uiState by remember {
         LibraryRepository.ensureLoaded()
@@ -269,41 +270,7 @@ fun LibraryScreen(
             aniListLibraryContent(
                 uiState = aniListUiState,
                 onPosterClick = { item ->
-                    coroutineScope.launch {
-                        val url = "https://api.ani.zip/mappings?anilist_id=${item.id}"
-                        val resolvedImdbId = item.imdbId ?: run {
-                            val result = runCatching {
-                                val text = com.nuvio.app.features.addons.httpGetText(url)
-                                val jsonElement = json.parseToJsonElement(text) as? kotlinx.serialization.json.JsonObject
-                                val mappings = jsonElement?.get("mappings") as? kotlinx.serialization.json.JsonObject
-                                mappings?.get("imdb_id")?.jsonPrimitive?.content
-                            }
-                            result.getOrNull()
-                        }
-                        if (resolvedImdbId != null) {
-                            onPosterClick?.invoke(
-                                LibraryItem(
-                                    id = resolvedImdbId,
-                                    type = "series",
-                                    name = item.title,
-                                    poster = item.posterUrl,
-                                    savedAtEpochMs = item.updatedAt * 1000L,
-                                    imdbId = resolvedImdbId
-                                )
-                            )
-                        } else {
-                            onPosterClick?.invoke(
-                                LibraryItem(
-                                    id = "search:${item.title}",
-                                    type = "series",
-                                    name = item.title,
-                                    poster = item.posterUrl,
-                                    savedAtEpochMs = item.updatedAt * 1000L,
-                                    imdbId = null
-                                )
-                            )
-                        }
-                    }
+                    onAniListPosterClick?.invoke(item.title)
                 },
                 onConnectAniListClick = {
                     val authUrl = AniListAuthRepository.onConnectRequested()
