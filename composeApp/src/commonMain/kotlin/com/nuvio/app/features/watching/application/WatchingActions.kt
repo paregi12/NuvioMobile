@@ -98,6 +98,7 @@ object WatchingActions {
         } else {
             WatchedRepository.markWatched(watchedItem)
             WatchProgressRepository.clearProgress(meta.episodePlaybackId(episode))
+            syncEpisodeToAniList(meta, episode)
         }
         reconcileSeriesWatchedState(meta)
     }
@@ -124,6 +125,93 @@ object WatchingActions {
             episodes = episodes,
             areCurrentlyWatched = areCurrentlyWatched,
         )
+        if (!areCurrentlyWatched) {
+            syncSeasonToAniList(meta, episodes)
+        }
+    }
+
+    private fun syncEpisodeToAniList(meta: MetaDetails, episode: MetaVideo) {
+        actionScope.launch {
+            val token = com.nuvio.app.features.anilist.AniListAuthRepository.getAccessToken() ?: return@launch
+            
+            var directAniListId: Int? = null
+            var directEpisode: Int? = null
+
+            if (episode.id.startsWith("anilist:", ignoreCase = true)) {
+                val parts = episode.id.split(":")
+                directAniListId = parts.getOrNull(1)?.toIntOrNull()
+                directEpisode = parts.getOrNull(2)?.toIntOrNull()
+            }
+
+            if (directAniListId == null && meta.id.startsWith("anilist:", ignoreCase = true)) {
+                val parts = meta.id.split(":")
+                directAniListId = parts.getOrNull(1)?.toIntOrNull()
+                directEpisode = parts.getOrNull(2)?.toIntOrNull()
+            }
+
+            if (directAniListId != null) {
+                val epNum = directEpisode ?: episode.episode ?: 1
+                com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
+                    token = token,
+                    mediaId = directAniListId,
+                    status = "CURRENT",
+                    progress = epNum,
+                    scoreRaw = null
+                )
+            } else {
+                val resolved = com.nuvio.app.features.anilist.AniListResolutionService.resolveAniListId(
+                    imdbId = meta.id,
+                    seasonNumber = episode.season ?: 1,
+                    episodeNumber = episode.episode ?: 1,
+                    episodeReleaseDate = episode.released,
+                    showTitle = meta.name,
+                    videoId = episode.id
+                )
+                if (resolved != null) {
+                    com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
+                        token = token,
+                        mediaId = resolved.anilistId,
+                        status = "CURRENT",
+                        progress = resolved.anilistEpisode,
+                        scoreRaw = null
+                    )
+                }
+            }
+        }
+    }
+
+    private fun syncSeasonToAniList(meta: MetaDetails, episodes: Collection<MetaVideo>) {
+        actionScope.launch {
+            val token = com.nuvio.app.features.anilist.AniListAuthRepository.getAccessToken() ?: return@launch
+
+            var directAniListId: Int? = null
+
+            if (meta.id.startsWith("anilist:", ignoreCase = true)) {
+                val parts = meta.id.split(":")
+                directAniListId = parts.getOrNull(1)?.toIntOrNull()
+            }
+
+            if (directAniListId == null) {
+                for (ep in episodes) {
+                    if (ep.id.startsWith("anilist:", ignoreCase = true)) {
+                        val parts = ep.id.split(":")
+                        directAniListId = parts.getOrNull(1)?.toIntOrNull()
+                        if (directAniListId != null) break
+                    }
+                }
+            }
+
+            if (directAniListId != null) {
+                val totalEpisodeCount = episodes.size
+                com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
+                    token = token,
+                    mediaId = directAniListId,
+                    status = "COMPLETED",
+                    progress = totalEpisodeCount,
+                    scoreRaw = null
+                )
+            }
+        }
     }
 
     fun reconcileSeriesWatchedState(
