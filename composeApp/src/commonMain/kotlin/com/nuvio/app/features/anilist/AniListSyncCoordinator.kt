@@ -231,7 +231,12 @@ object AniListSyncCoordinator {
                         // Push local to AniList
                         log.i { "Sync: Local is newer for ${item.title}. Syncing to AniList." }
                         val totalEps = item.totalEpisodes
-                        val isAllCompleted = localMatch.isCompleted && totalEps != null && totalEps > 0 && (localMatch.episodeNumber ?: 1) >= totalEps
+                        val targetProgress = if (localMatch.isCompleted) {
+                            localMatch.episodeNumber ?: 1
+                        } else {
+                            maxOf(item.progress, (localMatch.episodeNumber ?: 1) - 1)
+                        }
+                        val isAllCompleted = localMatch.isCompleted && totalEps != null && totalEps > 0 && targetProgress >= totalEps
                         val status = if (isAllCompleted) {
                             "COMPLETED"
                         } else {
@@ -241,7 +246,7 @@ object AniListSyncCoordinator {
                             token = token,
                             mediaId = item.id,
                             status = status,
-                            progress = localMatch.episodeNumber ?: 1,
+                            progress = targetProgress,
                             scoreRaw = item.score
                         )
                     }
