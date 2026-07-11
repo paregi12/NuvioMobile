@@ -1903,6 +1903,14 @@ private fun MainAppContent(
                                         libraryScrollToTopRequests = libraryScrollToTopRequests,
                                         settingsRootActionRequests = settingsRootActionRequests,
                                         animateHomeCollectionGifs = tabsRouteActive,
+                                        prefilledSearchQuery = prefilledSearchQuery,
+                                        onPrefilledSearchQueryConsumed = {
+                                            prefilledSearchQuery = null
+                                        },
+                                        onAniListPosterClick = { animeTitle ->
+                                            prefilledSearchQuery = animeTitle
+                                            activateTab(AppScreenTab.Search)
+                                        },
                                         onCatalogClick = onCatalogClick,
                                         onPosterClick = { meta ->
                                             navController.navigate(DetailRoute(type = meta.type, id = meta.id, title = meta.name))
@@ -3524,6 +3532,9 @@ private fun AppTabHost(
     libraryScrollToTopRequests: Flow<Unit>,
     settingsRootActionRequests: Flow<Unit>,
     animateHomeCollectionGifs: Boolean = true,
+    prefilledSearchQuery: String? = null,
+    onPrefilledSearchQueryConsumed: (() -> Unit)? = null,
+    onAniListPosterClick: ((String) -> Unit)? = null,
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
@@ -3581,7 +3592,7 @@ private fun AppTabHost(
                         scrollToTopRequests = searchScrollToTopRequests,
                         prefilledQuery = prefilledSearchQuery,
                         onPrefilledQueryConsumed = {
-                            prefilledSearchQuery = null
+                            onPrefilledSearchQueryConsumed?.invoke()
                         }
                     )
                 }
@@ -3596,8 +3607,7 @@ private fun AppTabHost(
                         onCloudFilePlay = onCloudFilePlay,
                         onConnectCloudClick = onConnectCloudClick,
                         onAniListPosterClick = { animeTitle ->
-                            prefilledSearchQuery = animeTitle
-                            activateTab(AppScreenTab.Search)
+                            onAniListPosterClick?.invoke(animeTitle)
                         }
                     )
                 }
