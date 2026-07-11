@@ -166,7 +166,8 @@ data class AniListMediaDetails(
     val title: AniListTitle? = null,
     val coverImage: AniListCoverImage? = null,
     val status: String? = null, // Airing status, e.g. FINISHED, RELEASING
-    val nextAiringEpisode: AniListNextAiringEpisode? = null
+    val nextAiringEpisode: AniListNextAiringEpisode? = null,
+    val format: String? = null
 )
 
 @Serializable
