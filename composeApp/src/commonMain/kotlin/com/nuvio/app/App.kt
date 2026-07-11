@@ -3540,6 +3540,7 @@ private fun AppTabHost(
     prefilledSearchQuery: String? = null,
     onPrefilledSearchQueryConsumed: (() -> Unit)? = null,
     onAniListPosterClick: ((String) -> Unit)? = null,
+    onAniListDirectOpen: ((id: String, manifestUrl: String) -> Unit)? = null,
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,
@@ -3614,9 +3615,7 @@ private fun AppTabHost(
                         onAniListPosterClick = { animeTitle ->
                             onAniListPosterClick?.invoke(animeTitle)
                         },
-                        onAniListDirectOpen = { id, manifestUrl ->
-                            // Forward to caller — handled by the top-level nav host
-                        }
+                        onAniListDirectOpen = onAniListDirectOpen
                     )
                 }
 

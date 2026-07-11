@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -49,7 +50,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -232,31 +232,40 @@ private fun MenuSegmentedSelector(
     onTabSelected: (MenuTab) -> Unit,
 ) {
     val tabs = MenuTab.entries
+    val selectedIndex = tabs.indexOf(selectedTab)
 
-    SubcomposeLayout(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50.dp))
             .background(ElevatedSurface)
             .padding(4.dp)
-    ) { constraints ->
-        val tabWidth = constraints.maxWidth / tabs.size
-        val pillIndex = tabs.indexOf(selectedTab)
-
-        // Animated pill x offset
-        val pillOffsetPx by animateDpAsState(
-            targetValue = (tabWidth * pillIndex / constraints.density).dp,
+    ) {
+        val tabWidthDp = maxWidth / tabs.size
+        val pillOffsetDp by animateDpAsState(
+            targetValue = tabWidthDp * selectedIndex,
             animationSpec = spring(dampingRatio = 0.8f, stiffness = 500f),
-            label = "pill_offset"
+            label = "pill"
         )
 
-        // Measure tabs
-        val tabPlaceables = tabs.map { tab ->
-            subcompose("tab_${tab.name}") {
+        // Pill background
+        Box(
+            modifier = Modifier
+                .offset(x = pillOffsetDp)
+                .width(tabWidthDp)
+                .height(40.dp)
+                .shadow(4.dp, RoundedCornerShape(50.dp))
+                .clip(RoundedCornerShape(50.dp))
+                .background(SelectedPillBg)
+        )
+
+        // Tab labels
+        Row(modifier = Modifier.fillMaxWidth()) {
+            tabs.forEach { tab ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .width((tabWidth / constraints.density).dp)
+                        .width(tabWidthDp)
                         .height(40.dp)
                         .clip(RoundedCornerShape(50.dp))
                         .clickable(
@@ -273,29 +282,6 @@ private fun MenuSegmentedSelector(
                         )
                     )
                 }
-            }.map { it.measure(constraints.copy(maxWidth = tabWidth)) }
-        }
-
-        // Measure pill background
-        val pillPlaceable = subcompose("pill") {
-            Box(
-                modifier = Modifier
-                    .width((tabWidth / constraints.density).dp)
-                    .height(40.dp)
-                    .shadow(4.dp, RoundedCornerShape(50.dp))
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(SelectedPillBg)
-            )
-        }.map { it.measure(constraints.copy(maxWidth = tabWidth)) }
-
-        val height = 40.dp.roundToPx() + 8.dp.roundToPx() // content + padding
-        layout(constraints.maxWidth, height) {
-            // Draw pill first (behind tabs)
-            pillPlaceable.forEach { it.place(pillOffsetPx.roundToPx(), 4.dp.roundToPx()) }
-            // Draw tabs on top
-            tabPlaceables.forEachIndexed { index, placeables ->
-                val x = tabWidth * index
-                placeables.forEach { it.place(x, 4.dp.roundToPx()) }
             }
         }
     }

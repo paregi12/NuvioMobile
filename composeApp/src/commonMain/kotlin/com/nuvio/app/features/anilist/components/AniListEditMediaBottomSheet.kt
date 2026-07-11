@@ -273,7 +273,7 @@ fun AniListEditMediaBottomSheet(
                     )
                 )
                 Text(
-                    text = "${"%.1f".format(score)} / 10",
+                    text = "${(score * 10).toLong() / 10.0} / 10",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Medium,
                         color = textMuted
