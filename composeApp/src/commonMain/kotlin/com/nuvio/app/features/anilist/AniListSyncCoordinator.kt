@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -131,10 +132,29 @@ object AniListSyncCoordinator {
 
                 val token = AniListAuthRepository.getAccessToken().orEmpty()
 
-                log.d { "Starting bidirectional sync. Local entries: ${localEntries.size}, AniList items: ${anilistItems.size}" }
+                ensureCacheLoaded()
+                val lastSyncTimestampMs = settings.lastSyncTimestamp ?: 0L
+                val lastSyncTimestampSec = lastSyncTimestampMs / 1000L
+                val activeWatchingIds = AniListLibraryRepository.uiState.value.watching.map { it.id }.toSet() +
+                        AniListLibraryRepository.uiState.value.rewatching.map { it.id }.toSet()
+
+                val itemsToProcess = anilistItems.filter { item ->
+                    val isUpdatedOnRemote = item.updatedAt > lastSyncTimestampSec
+                    val isActive = item.id in activeWatchingIds
+                    val cachedImdbId = anilistToImdbCache[item.id]
+                    val hasLocalProgress = cachedImdbId != null && localEntries.any { it.parentMetaId == cachedImdbId }
+                    isUpdatedOnRemote || isActive || hasLocalProgress
+                }
+
+                log.d { "Starting bidirectional sync. Local entries: ${localEntries.size}, total AniList: ${anilistItems.size}, process queue: ${itemsToProcess.size}" }
 
                 // 2. Sync AniList -> Local
-                for (item in anilistItems) {
+                var processedCount = 0
+                for (item in itemsToProcess) {
+                    processedCount++
+                    if (itemsToProcess.size > 3) {
+                        _syncMessage.value = "Synchronizing AniList ($processedCount/${itemsToProcess.size})..."
+                    }
                     val imdbId = resolveImdbId(item.id) ?: continue
                     val localMatch = localEntries.find { it.parentMetaId == imdbId }
 
@@ -186,7 +206,39 @@ object AniListSyncCoordinator {
         }
     }
 
+    private var isCacheLoaded = false
+
+    private fun ensureCacheLoaded() {
+        if (isCacheLoaded) return
+        isCacheLoaded = true
+        try {
+            val payload = AniListStorage.loadMappingCachePayload()
+            if (!payload.isNullOrBlank()) {
+                val map = json.decodeFromString<Map<String, String>>(payload)
+                map.forEach { (k, v) ->
+                    k.toIntOrNull()?.let { anilistId ->
+                        anilistToImdbCache[anilistId] = v
+                    }
+                }
+                log.d { "Loaded ${anilistToImdbCache.size} items from persistent AniList mapping cache." }
+            }
+        } catch (e: Exception) {
+            log.w(e) { "Failed to load persistent AniList mapping cache" }
+        }
+    }
+
+    private fun saveCacheToStorage() {
+        try {
+            val mapToSave = anilistToImdbCache.mapKeys { it.key.toString() }
+            val payload = json.encodeToString(mapToSave)
+            AniListStorage.saveMappingCachePayload(payload)
+        } catch (e: Exception) {
+            log.w(e) { "Failed to save persistent AniList mapping cache" }
+        }
+    }
+
     private suspend fun resolveImdbId(anilistId: Int): String? {
+        ensureCacheLoaded()
         // Check cache first
         anilistToImdbCache[anilistId]?.let { return it }
 
@@ -199,6 +251,7 @@ object AniListSyncCoordinator {
             val imdbId = mappings?.get("imdb_id")?.jsonPrimitive?.content
             if (!imdbId.isNullOrBlank()) {
                 anilistToImdbCache[anilistId] = imdbId
+                saveCacheToStorage()
                 imdbId
             } else {
                 null

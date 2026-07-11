@@ -9,4 +9,7 @@ internal expect object AniListStorage {
 
     fun loadLibraryPayload(): String?
     fun saveLibraryPayload(payload: String)
+
+    fun loadMappingCachePayload(): String?
+    fun saveMappingCachePayload(payload: String)
 }

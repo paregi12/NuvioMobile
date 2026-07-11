@@ -314,7 +314,7 @@ fun LibraryScreen(
                         AniListLibraryRepository.refreshNow()
                     }
                 },
-                isOffline = networkStatusUiState.isOfflineLike
+                isOffline = networkStatusUiState.condition == NetworkCondition.NoInternet
             )
         } else {
             when {

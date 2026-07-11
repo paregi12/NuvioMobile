@@ -36,4 +36,13 @@ internal actual object AniListStorage {
     actual fun saveLibraryPayload(payload: String) {
         preferences?.edit()?.putString(ProfileScopedKey.of(libraryPayloadKey), payload)?.apply()
     }
+
+    private const val mappingCachePayloadKey = "anilist_mapping_cache_payload"
+
+    actual fun loadMappingCachePayload(): String? =
+        preferences?.getString(ProfileScopedKey.of(mappingCachePayloadKey), null)
+
+    actual fun saveMappingCachePayload(payload: String) {
+        preferences?.edit()?.putString(ProfileScopedKey.of(mappingCachePayloadKey), payload)?.apply()
+    }
 }

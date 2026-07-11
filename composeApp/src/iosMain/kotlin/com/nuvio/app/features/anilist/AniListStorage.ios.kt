@@ -28,4 +28,13 @@ internal actual object AniListStorage {
     actual fun saveLibraryPayload(payload: String) {
         NSUserDefaults.standardUserDefaults.setObject(payload, forKey = ProfileScopedKey.of(libraryPayloadKey))
     }
+
+    private const val mappingCachePayloadKey = "anilist_mapping_cache_payload"
+
+    actual fun loadMappingCachePayload(): String? =
+        NSUserDefaults.standardUserDefaults.stringForKey(ProfileScopedKey.of(mappingCachePayloadKey))
+
+    actual fun saveMappingCachePayload(payload: String) {
+        NSUserDefaults.standardUserDefaults.setObject(payload, forKey = ProfileScopedKey.of(mappingCachePayloadKey))
+    }
 }

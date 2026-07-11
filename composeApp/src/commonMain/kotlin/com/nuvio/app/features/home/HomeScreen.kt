@@ -178,8 +178,9 @@ fun HomeScreen(
         } else {
             watchProgressUiState.entries
         }
+        val nonAniList = filtered.filter { !it.parentMetaId.startsWith("anilist:", ignoreCase = true) }
         filterEntriesForTraktContinueWatchingWindow(
-            entries = filtered,
+            entries = nonAniList,
             isTraktProgressActive = isTraktProgressActive,
             daysCap = traktSettingsUiState.continueWatchingDaysCap,
             nowEpochMs = WatchProgressClock.nowEpochMs(),
@@ -197,13 +198,14 @@ fun HomeScreen(
         } else {
             watchProgressUiState.entries
         }
+        val nonAniList = filteredEntries.filter { !it.parentMetaId.startsWith("anilist:", ignoreCase = true) }
         val filteredWatchedItems = if (isTraktProgressActive) {
             watchedUiState.items.filter { !WatchProgressRepository.isDroppedShow(it.id) }
         } else {
             watchedUiState.items
         }
         buildHomeNextUpSeedCandidates(
-            progressEntries = filteredEntries,
+            progressEntries = nonAniList,
             watchedItems = filteredWatchedItems,
             isTraktProgressActive = isTraktProgressActive,
             preferFurthestEpisode = continueWatchingPreferences.upNextFromFurthestEpisode,
