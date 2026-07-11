@@ -165,7 +165,8 @@ object WatchingActions {
                     episodeNumber = episode.episode ?: 1,
                     episodeReleaseDate = episode.released,
                     showTitle = meta.name,
-                    videoId = episode.id
+                    videoId = episode.id,
+                    isMovie = meta.type.equals("movie", ignoreCase = true)
                 )
                 if (resolved != null) {
                     com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(

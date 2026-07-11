@@ -70,6 +70,34 @@ object AniListSettingsRepository {
         persist()
     }
 
+    fun setSectionEnabled(type: String, enabled: Boolean) {
+        ensureLoaded()
+        val currentSections = _uiState.value.librarySections.toMutableList()
+        val index = currentSections.indexOfFirst { it.type == type }
+        if (index != -1) {
+            currentSections[index] = currentSections[index].copy(enabled = enabled)
+            _uiState.value = _uiState.value.copy(librarySections = currentSections)
+            persist()
+        }
+    }
+
+    fun moveSection(fromIndex: Int, toIndex: Int) {
+        ensureLoaded()
+        val currentSections = _uiState.value.librarySections.toMutableList()
+        if (fromIndex in currentSections.indices && toIndex in currentSections.indices) {
+            val item = currentSections.removeAt(fromIndex)
+            currentSections.add(toIndex, item)
+            _uiState.value = _uiState.value.copy(librarySections = currentSections)
+            persist()
+        }
+    }
+
+    fun resetLibrarySections() {
+        ensureLoaded()
+        _uiState.value = _uiState.value.copy(librarySections = AniListSettingsUiState.defaultLibrarySections)
+        persist()
+    }
+
     private fun loadFromDisk() {
         hasLoaded = true
         val payload = AniListStorage.loadSettingsPayload().orEmpty().trim()

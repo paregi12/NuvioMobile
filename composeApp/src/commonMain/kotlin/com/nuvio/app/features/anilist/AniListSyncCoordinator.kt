@@ -196,6 +196,10 @@ object AniListSyncCoordinator {
 
                 // Update settings sync stamp
                 AniListSettingsRepository.updateLastSyncTimestamp(WatchProgressClock.nowEpochMs())
+                
+                // Refresh library sections after sync completes to pull latest list states
+                AniListLibraryRepository.refreshNow()
+
                 _syncMessage.value = "Synchronization completed successfully."
             } catch (e: Exception) {
                 log.e(e) { "Error during AniList sync" }

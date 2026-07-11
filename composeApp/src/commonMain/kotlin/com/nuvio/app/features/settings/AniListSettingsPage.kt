@@ -45,6 +45,21 @@ import com.nuvio.app.features.anilist.AniListSyncCoordinator
 import org.jetbrains.compose.resources.stringResource
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_settings_page_anilist
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.heightIn
+import com.nuvio.app.core.ui.NuvioActionLabel
+import sh.calvin.reorderable.ReorderableCollectionItemScope
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 internal fun LazyListScope.aniListSettingsContent(
     isTablet: Boolean
@@ -62,6 +77,32 @@ internal fun LazyListScope.aniListSettingsContent(
         ) {
             SettingsGroup(isTablet = isTablet) {
                 AniListConnectionCard(isTablet = isTablet)
+            }
+        }
+    }
+
+    item {
+        val authUiState by AniListAuthRepository.uiState.collectAsState()
+        val settingsUiState by AniListSettingsRepository.uiState.collectAsState()
+
+        if (authUiState.mode == AniListConnectionMode.CONNECTED) {
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingsSection(
+                title = "Customize Library Sections",
+                isTablet = isTablet,
+                actions = {
+                    NuvioActionLabel(
+                        text = "Reset",
+                        onClick = {
+                            AniListSettingsRepository.resetLibrarySections()
+                        }
+                    )
+                }
+            ) {
+                AniListSectionsList(
+                    isTablet = isTablet,
+                    items = settingsUiState.librarySections
+                )
             }
         }
     }
@@ -338,6 +379,121 @@ private fun AniListConnectionCard(
                             )
                         ) {
                             Text("Disconnect")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AniListSectionSettingsRow(
+    item: com.nuvio.app.features.anilist.AniListSectionSettings,
+    isTablet: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    dragHandleScope: ReorderableCollectionItemScope,
+) {
+    val tokens = MaterialTheme.nuvio
+    val horizontalPadding = if (isTablet) 20.dp else 16.dp
+    val verticalPadding = if (isTablet) 18.dp else 16.dp
+    val hapticFeedback = LocalHapticFeedback.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = item.type,
+                style = MaterialTheme.typography.bodyLarge,
+                color = tokens.colors.textPrimary,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            androidx.compose.material3.Switch(
+                checked = item.enabled,
+                onCheckedChange = onEnabledChange,
+                colors = androidx.compose.material3.SwitchDefaults.colors(
+                    checkedThumbColor = tokens.colors.onAccent,
+                    checkedTrackColor = tokens.colors.accent,
+                    uncheckedThumbColor = tokens.colors.textMuted,
+                    uncheckedTrackColor = tokens.colors.borderDefault,
+                ),
+            )
+            IconButton(
+                modifier = with(dragHandleScope) {
+                    Modifier.draggableHandle(
+                        onDragStarted = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        onDragStopped = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        },
+                    )
+                },
+                onClick = {},
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Menu,
+                    contentDescription = "Reorder",
+                    tint = tokens.colors.textMuted,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AniListSectionsList(
+    isTablet: Boolean,
+    items: List<com.nuvio.app.features.anilist.AniListSectionSettings>,
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+    val lazyListState = rememberLazyListState()
+    val reorderableLazyListState = rememberReorderableLazyListState(
+        lazyListState = lazyListState,
+    ) { from, to ->
+        AniListSettingsRepository.moveSection(from.index, to.index)
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    }
+
+    SettingsGroup(isTablet = isTablet) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = if (isTablet) 550.dp else 400.dp),
+            state = lazyListState,
+        ) {
+            itemsIndexed(items, key = { _, item -> item.type }) { index, item ->
+                ReorderableItem(
+                    reorderableLazyListState,
+                    key = item.type,
+                ) { isDragging ->
+                    val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
+
+                    Surface(shadowElevation = elevation) {
+                        Column {
+                            if (index > 0) {
+                                SettingsGroupDivider(isTablet = isTablet)
+                            }
+                            AniListSectionSettingsRow(
+                                item = item,
+                                isTablet = isTablet,
+                                onEnabledChange = { enabled ->
+                                    AniListSettingsRepository.setSectionEnabled(item.type, enabled)
+                                },
+                                dragHandleScope = this@ReorderableItem,
+                            )
                         }
                     }
                 }

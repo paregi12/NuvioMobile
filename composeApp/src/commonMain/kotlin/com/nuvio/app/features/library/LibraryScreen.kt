@@ -76,6 +76,9 @@ import com.nuvio.app.features.anilist.components.aniListLibraryContent
 import com.nuvio.app.features.anilist.AniListLibraryRepository
 import com.nuvio.app.features.anilist.AniListSyncCoordinator
 import com.nuvio.app.features.anilist.AniListAuthRepository
+import com.nuvio.app.features.anilist.AniListSettingsRepository
+import com.nuvio.app.core.ui.NuvioToastController
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
@@ -129,6 +132,23 @@ fun LibraryScreen(
         HomeCatalogSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val networkStatusUiState by NetworkStatusRepository.uiState.collectAsStateWithLifecycle()
+    val aniListSettings by remember {
+        AniListSettingsRepository.ensureLoaded()
+        AniListSettingsRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val isAniListSyncing by AniListSyncCoordinator.isSyncing.collectAsStateWithLifecycle()
+    val syncMessage by AniListSyncCoordinator.syncMessage.collectAsStateWithLifecycle()
+
+    var wasSyncing by remember { mutableStateOf(false) }
+    LaunchedEffect(isAniListSyncing) {
+        if (wasSyncing && !isAniListSyncing) {
+            val msg = syncMessage
+            if (!msg.isNullOrBlank()) {
+                NuvioToastController.show(msg)
+            }
+        }
+        wasSyncing = isAniListSyncing
+    }
     var observedOfflineState by remember { mutableStateOf(false) }
     var sourceModeName by rememberSaveable { mutableStateOf(LibraryViewMode.Saved.name) }
     val sourceMode = remember(sourceModeName) {
@@ -208,165 +228,183 @@ fun LibraryScreen(
         emptyList()
     }
 
-    NuvioScreen(
-        modifier = modifier,
-        horizontalPadding = 0.dp,
-        listState = listState,
-    ) {
-        stickyHeader {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(MaterialTheme.colorScheme.background)
-                        .nuvioConsumePointerEvents(),
-                )
-                androidx.compose.foundation.layout.Column(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    NuvioScreenHeader(
-                        title = if (sourceMode == LibraryViewMode.Cloud) {
-                            stringResource(Res.string.library_title)
-                        } else if (isTraktSource) {
-                            stringResource(Res.string.library_trakt_title)
-                        } else {
-                            stringResource(Res.string.library_title)
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp),
+    val isAniListMode = sourceMode == LibraryViewMode.AniList
+    val screenContent = @Composable {
+        NuvioScreen(
+            modifier = if (isAniListMode) Modifier.fillMaxSize() else modifier,
+            horizontalPadding = 0.dp,
+            listState = listState,
+        ) {
+            stickyHeader {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(MaterialTheme.colorScheme.background)
+                            .nuvioConsumePointerEvents(),
                     )
-                    LibrarySourceSwitch(
-                        selectedMode = sourceMode,
-                        onModeSelected = { mode ->
-                            sourceModeName = mode.name
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    androidx.compose.foundation.layout.Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        NuvioScreenHeader(
+                            title = if (sourceMode == LibraryViewMode.Cloud) {
+                                stringResource(Res.string.library_title)
+                            } else if (isTraktSource) {
+                                stringResource(Res.string.library_trakt_title)
+                            } else {
+                                stringResource(Res.string.library_title)
+                            },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                        LibrarySourceSwitch(
+                            selectedMode = sourceMode,
+                            onModeSelected = { mode ->
+                                sourceModeName = mode.name
+                            },
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
                 }
             }
-        }
 
-        if (sourceMode == LibraryViewMode.Cloud) {
-            cloudLibraryContent(
-                uiState = cloudUiState,
-                selectedProviderId = selectedProviderId,
-                selectedType = selectedType,
-                selectedCloudItemKey = selectedCloudItemKey,
-                onProviderSelected = {
-                    selectedProviderId = it
-                    selectedTypeName = null
-                    selectedCloudItemKey = null
-                },
-                onTypeSelected = {
-                    selectedTypeName = it?.name
-                    selectedCloudItemKey = null
-                },
-                onItemSelected = { item ->
-                    val playableFiles = item.playableFiles
-                    when {
-                        playableFiles.size == 1 -> onCloudFilePlay?.invoke(item, playableFiles.first())
-                        playableFiles.size > 1 -> selectedCloudItemKey = item.stableKey
+            if (sourceMode == LibraryViewMode.Cloud) {
+                cloudLibraryContent(
+                    uiState = cloudUiState,
+                    selectedProviderId = selectedProviderId,
+                    selectedType = selectedType,
+                    selectedCloudItemKey = selectedCloudItemKey,
+                    onProviderSelected = {
+                        selectedProviderId = it
+                        selectedTypeName = null
+                        selectedCloudItemKey = null
+                    },
+                    onTypeSelected = {
+                        selectedTypeName = it?.name
+                        selectedCloudItemKey = null
+                    },
+                    onItemSelected = { item ->
+                        val playableFiles = item.playableFiles
+                        when {
+                            playableFiles.size == 1 -> onCloudFilePlay?.invoke(item, playableFiles.first())
+                            playableFiles.size > 1 -> selectedCloudItemKey = item.stableKey
+                        }
+                    },
+                    onFileSelected = { item, file -> onCloudFilePlay?.invoke(item, file) },
+                    onBackToItems = { selectedCloudItemKey = null },
+                    onRefresh = { CloudLibraryRepository.refresh() },
+                    onConnectCloudClick = onConnectCloudClick,
+                )
+            } else if (sourceMode == LibraryViewMode.AniList) {
+                aniListLibraryContent(
+                    uiState = aniListUiState,
+                    sectionsConfig = aniListSettings.librarySections,
+                    onPosterClick = { item ->
+                        onAniListPosterClick?.invoke(item.title)
+                    },
+                    onEditClick = { item ->
+                        editingMediaItemState.value = item
+                    },
+                    onConnectAniListClick = {
+                        val authUrl = AniListAuthRepository.onConnectRequested()
+                        runCatching { uriHandler.openUri(authUrl) }
+                    },
+                    onRefresh = {
+                        coroutineScope.launch {
+                            AniListLibraryRepository.refreshNow()
+                        }
+                    },
+                    isOffline = networkStatusUiState.condition == NetworkCondition.NoInternet
+                )
+            } else {
+                when {
+                    !uiState.isLoaded || (uiState.isLoading && uiState.sections.isEmpty()) -> {
+                        items(3) {
+                            HomeSkeletonRow(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
+                            )
+                        }
                     }
-                },
-                onFileSelected = { item, file -> onCloudFilePlay?.invoke(item, file) },
-                onBackToItems = { selectedCloudItemKey = null },
-                onRefresh = { CloudLibraryRepository.refresh() },
-                onConnectCloudClick = onConnectCloudClick,
-            )
-        } else if (sourceMode == LibraryViewMode.AniList) {
-            aniListLibraryContent(
-                uiState = aniListUiState,
-                onPosterClick = { item ->
-                    onAniListPosterClick?.invoke(item.title)
-                },
-                onEditClick = { item ->
-                    editingMediaItemState.value = item
-                },
-                onConnectAniListClick = {
-                    val authUrl = AniListAuthRepository.onConnectRequested()
-                    runCatching { uriHandler.openUri(authUrl) }
-                },
-                onRefresh = {
-                    coroutineScope.launch {
-                        AniListLibraryRepository.refreshNow()
+
+                    !uiState.errorMessage.isNullOrBlank() && uiState.sections.isEmpty() -> {
+                        item {
+                            if (networkStatusUiState.isOfflineLike) {
+                                NuvioNetworkOfflineCard(
+                                    condition = networkStatusUiState.condition,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    onRetry = retryLibraryLoad,
+                                )
+                            } else {
+                                HomeEmptyStateCard(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    title = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_load_failed)
+                                    } else {
+                                        stringResource(Res.string.library_load_failed)
+                                    },
+                                    message = uiState.errorMessage.orEmpty(),
+                                    actionLabel = stringResource(Res.string.action_retry),
+                                    onActionClick = retryLibraryLoad,
+                                )
+                            }
+                        }
                     }
-                },
-                isOffline = networkStatusUiState.condition == NetworkCondition.NoInternet
-            )
-        } else {
-            when {
-                !uiState.isLoaded || (uiState.isLoading && uiState.sections.isEmpty()) -> {
-                    items(3) {
-                        HomeSkeletonRow(
-                            modifier = Modifier.padding(horizontal = 16.dp),
+
+                    uiState.sections.isEmpty() -> {
+                        item {
+                            if (networkStatusUiState.isOfflineLike && isTraktSource) {
+                                NuvioNetworkOfflineCard(
+                                    condition = networkStatusUiState.condition,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    onRetry = retryLibraryLoad,
+                                )
+                            } else {
+                                HomeEmptyStateCard(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    title = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_empty_title)
+                                    } else {
+                                        stringResource(Res.string.library_empty_title)
+                                    },
+                                    message = if (isTraktSource) {
+                                        stringResource(Res.string.library_trakt_empty_message)
+                                    } else {
+                                        stringResource(Res.string.library_empty_message)
+                                    },
+                                )
+                            }
+                        }
+                    }
+
+                    else -> {
+                        librarySections(
+                            displaySections = librarySectionsDisplay,
+                            watchedKeys = watchedUiState.watchedKeys,
                             showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
+                            onPosterClick = onPosterClick,
+                            onSectionViewAllClick = onSectionViewAllClick,
+                            onPosterLongClick = onPosterLongClick,
+                            onDisintegrated = disintegration::onExited,
                         )
                     }
                 }
-
-                !uiState.errorMessage.isNullOrBlank() && uiState.sections.isEmpty() -> {
-                    item {
-                        if (networkStatusUiState.isOfflineLike) {
-                            NuvioNetworkOfflineCard(
-                                condition = networkStatusUiState.condition,
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                onRetry = retryLibraryLoad,
-                            )
-                        } else {
-                            HomeEmptyStateCard(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                title = if (isTraktSource) {
-                                    stringResource(Res.string.library_trakt_load_failed)
-                                } else {
-                                    stringResource(Res.string.library_load_failed)
-                                },
-                                message = uiState.errorMessage.orEmpty(),
-                                actionLabel = stringResource(Res.string.action_retry),
-                                onActionClick = retryLibraryLoad,
-                            )
-                        }
-                    }
-                }
-
-                uiState.sections.isEmpty() -> {
-                    item {
-                        if (networkStatusUiState.isOfflineLike && isTraktSource) {
-                            NuvioNetworkOfflineCard(
-                                condition = networkStatusUiState.condition,
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                onRetry = retryLibraryLoad,
-                            )
-                        } else {
-                            HomeEmptyStateCard(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                title = if (isTraktSource) {
-                                    stringResource(Res.string.library_trakt_empty_title)
-                                } else {
-                                    stringResource(Res.string.library_empty_title)
-                                },
-                                message = if (isTraktSource) {
-                                    stringResource(Res.string.library_trakt_empty_message)
-                                } else {
-                                    stringResource(Res.string.library_empty_message)
-                                },
-                            )
-                        }
-                    }
-                }
-
-                else -> {
-                    librarySections(
-                        displaySections = librarySectionsDisplay,
-                        watchedKeys = watchedUiState.watchedKeys,
-                        showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
-                        onPosterClick = onPosterClick,
-                        onSectionViewAllClick = onSectionViewAllClick,
-                        onPosterLongClick = onPosterLongClick,
-                        onDisintegrated = disintegration::onExited,
-                    )
-                }
             }
         }
+    }
+
+    if (isAniListMode) {
+        PullToRefreshBox(
+            isRefreshing = isAniListSyncing,
+            onRefresh = {
+                AniListSyncCoordinator.syncNow()
+            },
+            modifier = modifier
+        ) {
+            screenContent()
+        }
+    } else {
+        screenContent()
     }
 
     val editingMediaItem = editingMediaItemState.value

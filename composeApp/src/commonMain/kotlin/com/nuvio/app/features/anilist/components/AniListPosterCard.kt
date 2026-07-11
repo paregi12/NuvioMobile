@@ -103,32 +103,6 @@ fun AniListPosterCard(
                 }
             }
 
-            // Airing Status Badge (Top Left)
-            if (!item.airingStatus.isNullOrBlank()) {
-                val airingColor = if (item.airingStatus.equals("RELEASING", ignoreCase = true)) {
-                    MaterialTheme.colorScheme.tertiary
-                } else {
-                    tokens.colors.textMuted
-                }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(6.dp)
-                        .background(
-                            tokens.colors.surface.copy(alpha = 0.85f),
-                            RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = item.airingStatus.replace("_", " "),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = airingColor,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
             // Small Progress Indicator (Linear progress indicator at the bottom of the image)
             if (item.totalEpisodes != null && item.totalEpisodes > 0) {
                 val progressFraction = item.progress.toFloat() / item.totalEpisodes.toFloat()

@@ -36,13 +36,32 @@ data class AniListAuthUiState(
 // --- Sync Settings State ---
 
 @Serializable
+data class AniListSectionSettings(
+    val type: String,
+    val enabled: Boolean = true
+)
+
+@Serializable
 data class AniListSettingsUiState(
     val enableSync: Boolean = false,
     val syncWatching: Boolean = true,
     val autoSync: Boolean = true,
     val syncOnLaunch: Boolean = true,
-    val lastSyncTimestamp: Long = 0L
-)
+    val lastSyncTimestamp: Long = 0L,
+    val librarySections: List<AniListSectionSettings> = defaultLibrarySections
+) {
+    companion object {
+        val defaultLibrarySections = listOf(
+            AniListSectionSettings("Watching", true),
+            AniListSectionSettings("Completed", true),
+            AniListSectionSettings("Planning", true),
+            AniListSectionSettings("Paused", true),
+            AniListSectionSettings("Dropped", true),
+            AniListSectionSettings("Rewatching", true),
+            AniListSectionSettings("Favorites", true)
+        )
+    }
+}
 
 // --- Library List Items ---
 

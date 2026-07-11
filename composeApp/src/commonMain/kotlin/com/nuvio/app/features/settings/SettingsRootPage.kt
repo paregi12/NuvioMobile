@@ -116,7 +116,7 @@ internal fun LazyListScope.settingsRootContent(
                     SettingsNavigationRow(
                         title = stringResource(Res.string.compose_settings_page_anilist),
                         description = stringResource(Res.string.compose_settings_root_anilist_description),
-                        icon = Icons.Rounded.Link,
+                        iconPainter = integrationLogoPainter(IntegrationLogo.AniList),
                         isTablet = isTablet,
                         onClick = onAniListClick,
                     )

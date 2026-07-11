@@ -3,6 +3,7 @@ package com.nuvio.app.features.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.anilist_favicon
 import nuvio.composeapp.generated.resources.introdb_favicon
 import nuvio.composeapp.generated.resources.mdblist_logo
 import nuvio.composeapp.generated.resources.rating_tmdb
@@ -16,4 +17,5 @@ internal actual fun integrationLogoPainter(logo: IntegrationLogo): Painter =
         IntegrationLogo.Trakt -> painterResource(Res.drawable.trakt_tv_favicon)
         IntegrationLogo.MdbList -> painterResource(Res.drawable.mdblist_logo)
         IntegrationLogo.IntroDb -> painterResource(Res.drawable.introdb_favicon)
+        IntegrationLogo.AniList -> painterResource(Res.drawable.anilist_favicon)
     }

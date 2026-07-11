@@ -30,7 +30,9 @@ object AniListResolutionService {
         episodeNumber: Int,
         episodeReleaseDate: String?, // YYYY-MM-DD
         showTitle: String,
-        videoId: String? = null
+        videoId: String? = null,
+        isMovie: Boolean = false,
+        tmdbId: String? = null
     ): ResolvedAniListMatch? {
         var directAniListId: Int? = null
         var directEpisode: Int? = null
@@ -64,12 +66,38 @@ object AniListResolutionService {
             )
         }
 
+        val resolvedTmdbId = tmdbId ?: when {
+            imdbId.startsWith("tmdb:", ignoreCase = true) -> imdbId.removePrefix("tmdb:")
+            videoId != null && videoId.startsWith("tmdb:", ignoreCase = true) -> {
+                videoId.split(":").getOrNull(1)
+            }
+            else -> null
+        }
+
+        if (isMovie) {
+            log.d { "Movie mode detected. Querying ARM API directly for IMDb ID: $imdbId, TMDB: $resolvedTmdbId" }
+            val armCandidates = fetchCandidatesFromArm(imdbId, resolvedTmdbId)
+            val resolvedId = armCandidates.firstOrNull()
+            if (resolvedId != null) {
+                log.i { "SUCCESS (Movie): Resolved directly to AniList ID: $resolvedId via ARM API" }
+                return ResolvedAniListMatch(
+                    anilistId = resolvedId,
+                    anilistEpisode = 1,
+                    title = showTitle
+                )
+            }
+            log.w { "Failed to resolve AniList ID for Movie: $showTitle (IMDb: $imdbId) via ARM API" }
+            return null
+        }
+
         if (episodeReleaseDate.isNullOrBlank()) return null
         
         log.d { "Starting AniList resolution for $showTitle (IMDb: $imdbId, S${seasonNumber}E${episodeNumber}, Date: $episodeReleaseDate)" }
 
+        val dayIndex = calculateDayIndex(imdbId, seasonNumber, episodeNumber, episodeReleaseDate)
+
         // 1. Fetch direct candidate AniList IDs from ARM mappings
-        val candidates = fetchCandidatesFromArm(imdbId).toMutableList()
+        val candidates = fetchCandidatesFromArm(imdbId, resolvedTmdbId).toMutableList()
 
         // 2. If ARM fails or returns nothing, fetch candidates via AniList Title Search
         if (candidates.isEmpty()) {
@@ -84,14 +112,23 @@ object AniListResolutionService {
             val zipData = fetchAniZipMappings(candId) ?: continue
             val episodes = zipData.episodes ?: continue
             
-            val matchedEpisodeEntry = episodes.entries.find { (_, ep) ->
+            var matchedEpisodeEntry = episodes.entries.find { (_, ep) ->
                 // Try matching by season and episode number first (TVDB alignment)
                 ep.seasonNumber == seasonNumber && ep.episodeNumber == episodeNumber
-            } ?: episodes.entries.find { (_, ep) ->
+            }
+
+            if (matchedEpisodeEntry == null) {
                 // Fallback: match by dates within 2 days tolerance
-                val airDate = ep.airDate?.split("T")?.get(0)
-                val airDateUtc = ep.airDateUtc?.split("T")?.get(0)
-                areDatesClose(episodeReleaseDate, airDate, 2) || areDatesClose(episodeReleaseDate, airDateUtc, 2)
+                val closeEpisodes = episodes.entries.filter { (_, ep) ->
+                    val airDate = ep.airDate?.split("T")?.get(0)
+                    val airDateUtc = ep.airDateUtc?.split("T")?.get(0)
+                    areDatesClose(episodeReleaseDate, airDate, 2) || areDatesClose(episodeReleaseDate, airDateUtc, 2)
+                }.sortedBy { it.key.toIntOrNull() ?: 0 }
+
+                if (closeEpisodes.isNotEmpty()) {
+                    val targetIdx = (dayIndex - 1).coerceIn(0, closeEpisodes.lastIndex)
+                    matchedEpisodeEntry = closeEpisodes[targetIdx]
+                }
             }
 
             if (matchedEpisodeEntry != null) {
@@ -110,23 +147,46 @@ object AniListResolutionService {
         return null
     }
 
-    private suspend fun fetchCandidatesFromArm(imdbId: String): List<Int> {
-        val url = "$ARM_API/imdb?id=$imdbId&include=anilist"
-        return try {
-            val text = httpGetText(url)
-            val jsonElement = json.parseToJsonElement(text)
-            if (jsonElement is JsonArray) {
-                jsonElement.mapNotNull { element ->
-                    val obj = element as? JsonObject
-                    obj?.get("anilist")?.jsonPrimitive?.intOrNull
+    private suspend fun fetchCandidatesFromArm(imdbId: String, tmdbId: String? = null): List<Int> {
+        val candidates = mutableListOf<Int>()
+        
+        // 1. Query by IMDb ID if it is a valid IMDb ID (starts with "tt")
+        if (imdbId.startsWith("tt", ignoreCase = true)) {
+            val url = "$ARM_API/imdb?id=$imdbId&include=anilist"
+            try {
+                val text = httpGetText(url)
+                val jsonElement = json.parseToJsonElement(text)
+                if (jsonElement is JsonArray) {
+                    val list = jsonElement.mapNotNull { element ->
+                        val obj = element as? JsonObject
+                        obj?.get("anilist")?.jsonPrimitive?.intOrNull
+                    }
+                    candidates.addAll(list)
                 }
-            } else {
-                emptyList()
+            } catch (e: Exception) {
+                log.w(e) { "ARM imdb lookup failed" }
             }
-        } catch (e: Exception) {
-            log.w(e) { "ARM lookup failed" }
-            emptyList()
         }
+        
+        // 2. Query by TMDB ID as fallback/additional if candidates are empty and TMDB ID is available
+        if (candidates.isEmpty() && !tmdbId.isNullOrBlank()) {
+            val url = "$ARM_API/themoviedb?id=$tmdbId&include=anilist"
+            try {
+                val text = httpGetText(url)
+                val jsonElement = json.parseToJsonElement(text)
+                if (jsonElement is JsonArray) {
+                    val list = jsonElement.mapNotNull { element ->
+                        val obj = element as? JsonObject
+                        obj?.get("anilist")?.jsonPrimitive?.intOrNull
+                    }
+                    candidates.addAll(list)
+                }
+            } catch (e: Exception) {
+                log.w(e) { "ARM themoviedb lookup failed for $tmdbId" }
+            }
+        }
+        
+        return candidates
     }
 
     private suspend fun fetchCandidatesFromAniList(title: String): List<Int> {
@@ -199,5 +259,45 @@ object AniListResolutionService {
         }
         days += (day - 1)
         return days * 24 * 60 * 60 * 1000L
+    }
+
+    private suspend fun calculateDayIndex(
+        imdbId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        episodeReleaseDate: String?
+    ): Int {
+        if (episodeReleaseDate.isNullOrBlank()) return 1
+        val cleanTargetDate = episodeReleaseDate.split("T")[0]
+        
+        try {
+            val url = "https://v3-cinemeta.strem.io/meta/series/$imdbId.json"
+            val text = httpGetText(url)
+            val jsonElement = json.parseToJsonElement(text) as? JsonObject
+            val meta = jsonElement?.get("meta") as? JsonObject
+            val videos = meta?.get("videos") as? JsonArray ?: return 1
+            
+            // Filter all videos that belong to the same season and share the same release date
+            val sameDayVideos = videos.mapNotNull { element ->
+                val obj = element as? JsonObject ?: return@mapNotNull null
+                val epSeason = obj["season"]?.jsonPrimitive?.intOrNull ?: return@mapNotNull null
+                val releasedRaw = obj["released"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                val releasedClean = releasedRaw.split("T")[0]
+                
+                if (epSeason == seasonNumber && releasedClean == cleanTargetDate) {
+                    obj["episode"]?.jsonPrimitive?.intOrNull
+                } else {
+                    null
+                }
+            }.sorted()
+            
+            val targetIndex = sameDayVideos.indexOf(episodeNumber)
+            if (targetIndex != -1) {
+                return targetIndex + 1
+            }
+        } catch (e: Exception) {
+            log.w(e) { "Failed to calculate day index from Cinemeta for $imdbId" }
+        }
+        return 1
     }
 }

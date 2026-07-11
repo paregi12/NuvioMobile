@@ -26,6 +26,7 @@ import com.nuvio.app.features.home.components.HomeEmptyStateCard
 
 fun LazyListScope.aniListLibraryContent(
     uiState: AniListLibraryUiState,
+    sectionsConfig: List<com.nuvio.app.features.anilist.AniListSectionSettings>,
     onPosterClick: (AniListLibraryItem) -> Unit,
     onEditClick: (AniListLibraryItem) -> Unit,
     onConnectAniListClick: () -> Unit,
@@ -67,14 +68,19 @@ fun LazyListScope.aniListLibraryContent(
         }
 
         else -> {
-            val sections = listOf(
-                Pair("Watching", uiState.watching),
-                Pair("Completed", uiState.completed),
-                Pair("Planning", uiState.planning),
-                Pair("Paused", uiState.paused),
-                Pair("Dropped", uiState.dropped),
-                Pair("Rewatching", uiState.rewatching)
-            )
+            val sections = sectionsConfig.mapNotNull { sectionConfig ->
+                if (!sectionConfig.enabled) return@mapNotNull null
+                val list = when (sectionConfig.type) {
+                    "Watching" -> uiState.watching
+                    "Completed" -> uiState.completed
+                    "Planning" -> uiState.planning
+                    "Paused" -> uiState.paused
+                    "Dropped" -> uiState.dropped
+                    "Rewatching" -> uiState.rewatching
+                    else -> emptyList()
+                }
+                Pair(sectionConfig.type, list)
+            }
 
             var displayedAnySection = false
 
