@@ -40,6 +40,9 @@ object AniListSyncCoordinator {
     // Cache to map AniList ID -> IMDb ID to avoid redundant network hits during a sync cycle
     private val anilistToImdbCache = mutableMapOf<Int, String>()
 
+    // Cache to track the last successfully synced progress/status to avoid duplicate/redundant sync calls during active playback
+    private val lastSyncedProgress = mutableMapOf<Int, Pair<Int, String>>()
+
     fun syncNow() {
         if (_isSyncing.value) return
         syncJob = syncScope.launch {
@@ -95,17 +98,55 @@ object AniListSyncCoordinator {
                         !AniListLibraryRepository.isInLibrary(resolved.anilistId)
                     ) return@launch
 
-                    val status = if (entry.isCompleted) "COMPLETED" else "CURRENT"
-                    val progress = resolved.anilistEpisode
-                    
-                    log.i { "Auto Sync: Uploading progress to AniList for ${entry.title} (Episode $progress, Status: $status)" }
-                    AniListApi.saveMediaListEntry(
+                    val libraryItem = (AniListLibraryRepository.uiState.value.watching +
+                            AniListLibraryRepository.uiState.value.completed +
+                            AniListLibraryRepository.uiState.value.planning +
+                            AniListLibraryRepository.uiState.value.paused +
+                            AniListLibraryRepository.uiState.value.dropped +
+                            AniListLibraryRepository.uiState.value.rewatching)
+                        .find { it.id == resolved.anilistId }
+
+                    val targetProgress = if (entry.isCompleted) {
+                        resolved.anilistEpisode
+                    } else {
+                        maxOf(libraryItem?.progress ?: 0, resolved.anilistEpisode - 1)
+                    }
+
+                    val totalEpisodes = libraryItem?.totalEpisodes
+                    val isEntireShowCompleted = entry.isCompleted && totalEpisodes != null && totalEpisodes > 0 && targetProgress >= totalEpisodes
+                    val targetStatus = if (isEntireShowCompleted) {
+                        "COMPLETED"
+                    } else {
+                        if (libraryItem?.status.equals("REPEATING", ignoreCase = true)) "REPEATING" else "CURRENT"
+                    }
+
+                    // Check cache to avoid duplicate/redundant sync calls during active playback
+                    val lastSynced = lastSyncedProgress[resolved.anilistId]
+                    if (lastSynced != null && lastSynced.first == targetProgress && lastSynced.second == targetStatus) {
+                        return@launch
+                    }
+
+                    // Check if already matches library state
+                    if (libraryItem != null && libraryItem.progress == targetProgress && libraryItem.status.equals(targetStatus, ignoreCase = true)) {
+                        return@launch
+                    }
+
+                    // Optimistically cache status to prevent duplicate updates
+                    lastSyncedProgress[resolved.anilistId] = Pair(targetProgress, targetStatus)
+
+                    log.i { "Auto Sync: Uploading progress to AniList for ${entry.title} (Episode $targetProgress, Status: $targetStatus)" }
+                    val success = AniListApi.saveMediaListEntry(
                         token = token,
                         mediaId = resolved.anilistId,
-                        status = status,
-                        progress = progress,
+                        status = targetStatus,
+                        progress = targetProgress,
                         scoreRaw = 0
                     )
+                    if (success) {
+                        AniListLibraryRepository.refreshNow()
+                    } else {
+                        lastSyncedProgress.remove(resolved.anilistId)
+                    }
                 }
             }
         }
@@ -189,7 +230,13 @@ object AniListSyncCoordinator {
                     } else if (localUpdatedAtMs > anilistUpdatedAtMs && localMatch != null) {
                         // Push local to AniList
                         log.i { "Sync: Local is newer for ${item.title}. Syncing to AniList." }
-                        val status = if (localMatch.isCompleted) "COMPLETED" else "CURRENT"
+                        val totalEps = item.totalEpisodes
+                        val isAllCompleted = localMatch.isCompleted && totalEps != null && totalEps > 0 && (localMatch.episodeNumber ?: 1) >= totalEps
+                        val status = if (isAllCompleted) {
+                            "COMPLETED"
+                        } else {
+                            if (item.status.equals("REPEATING", ignoreCase = true)) "REPEATING" else "CURRENT"
+                        }
                         AniListApi.saveMediaListEntry(
                             token = token,
                             mediaId = item.id,
