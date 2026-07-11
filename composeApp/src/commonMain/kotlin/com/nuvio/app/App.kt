@@ -1911,6 +1911,11 @@ private fun MainAppContent(
                                             prefilledSearchQuery = animeTitle
                                             activateTab(AppScreenTab.Search)
                                         },
+                                        onAniListDirectOpen = { id, manifestUrl ->
+                                            navController.navigate(
+                                                DetailRoute(type = "series", id = id, title = "")
+                                            )
+                                        },
                                         onCatalogClick = onCatalogClick,
                                         onPosterClick = { meta ->
                                             navController.navigate(DetailRoute(type = meta.type, id = meta.id, title = meta.name))
@@ -3608,6 +3613,9 @@ private fun AppTabHost(
                         onConnectCloudClick = onConnectCloudClick,
                         onAniListPosterClick = { animeTitle ->
                             onAniListPosterClick?.invoke(animeTitle)
+                        },
+                        onAniListDirectOpen = { id, manifestUrl ->
+                            // Forward to caller — handled by the top-level nav host
                         }
                     )
                 }

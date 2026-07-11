@@ -21,12 +21,15 @@ import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.NuvioShelfSection
 import com.nuvio.app.features.anilist.AniListLibraryUiState
 import com.nuvio.app.features.anilist.AniListLibraryItem
+import com.nuvio.app.features.anilist.AniListSortBy
 import com.nuvio.app.features.home.components.HomeSkeletonRow
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 
 fun LazyListScope.aniListLibraryContent(
     uiState: AniListLibraryUiState,
     sectionsConfig: List<com.nuvio.app.features.anilist.AniListSectionSettings>,
+    sortBy: AniListSortBy,
+    sortAscending: Boolean,
     onPosterClick: (AniListLibraryItem) -> Unit,
     onEditClick: (AniListLibraryItem) -> Unit,
     onConnectAniListClick: () -> Unit,
@@ -70,7 +73,7 @@ fun LazyListScope.aniListLibraryContent(
         else -> {
             val sections = sectionsConfig.mapNotNull { sectionConfig ->
                 if (!sectionConfig.enabled) return@mapNotNull null
-                val list = when (sectionConfig.type) {
+                val rawList = when (sectionConfig.type) {
                     "Watching" -> uiState.watching
                     "Completed" -> uiState.completed
                     "Planning" -> uiState.planning
@@ -79,7 +82,15 @@ fun LazyListScope.aniListLibraryContent(
                     "Rewatching" -> uiState.rewatching
                     else -> emptyList()
                 }
-                Pair(sectionConfig.type, list)
+                val sorted = rawList.sortedWith(
+                    when (sortBy) {
+                        AniListSortBy.LAST_UPDATED -> compareBy { it.updatedAt }
+                        AniListSortBy.SCORE -> compareBy { it.score ?: 0 }
+                        AniListSortBy.TITLE -> compareBy { it.title.lowercase() }
+                        AniListSortBy.RELEASE_DATE -> compareBy { it.updatedAt } // updatedAt as proxy
+                    }
+                ).let { if (sortAscending) it else it.reversed() }
+                Pair(sectionConfig.type, sorted)
             }
 
             var displayedAnySection = false

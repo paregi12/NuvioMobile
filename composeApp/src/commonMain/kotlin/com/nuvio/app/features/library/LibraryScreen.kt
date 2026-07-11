@@ -74,10 +74,14 @@ import com.nuvio.app.features.cloud.CloudLibraryItemType
 import com.nuvio.app.features.cloud.CloudLibraryRepository
 import com.nuvio.app.features.cloud.CloudLibraryUiState
 import com.nuvio.app.features.anilist.components.aniListLibraryContent
+import com.nuvio.app.features.anilist.components.AniListLibraryActionMenu
 import com.nuvio.app.features.anilist.AniListLibraryRepository
 import com.nuvio.app.features.anilist.AniListSyncCoordinator
 import com.nuvio.app.features.anilist.AniListAuthRepository
 import com.nuvio.app.features.anilist.AniListSettingsRepository
+import com.nuvio.app.features.anilist.AniListLibraryMenuPrefs
+import com.nuvio.app.features.anilist.AniListOpenByResolver
+import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.core.ui.NuvioToastController
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.nuvio.app.features.debrid.DebridSettingsRepository
@@ -110,6 +114,7 @@ fun LibraryScreen(
     onCloudFilePlay: ((CloudLibraryItem, CloudLibraryFile) -> Unit)? = null,
     onConnectCloudClick: (() -> Unit)? = null,
     onAniListPosterClick: ((String) -> Unit)? = null,
+    onAniListDirectOpen: ((id: String, manifestUrl: String) -> Unit)? = null,
 ) {
     val uiState by remember {
         LibraryRepository.ensureLoaded()
@@ -137,6 +142,11 @@ fun LibraryScreen(
         AniListSettingsRepository.ensureLoaded()
         AniListSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
+    val menuPrefs by remember {
+        AniListLibraryMenuPrefs.ensureLoaded()
+        AniListLibraryMenuPrefs.state
+    }.collectAsStateWithLifecycle()
+    val addonUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
     val isAniListSyncing by AniListSyncCoordinator.isSyncing.collectAsStateWithLifecycle()
     val syncMessage by AniListSyncCoordinator.syncMessage.collectAsStateWithLifecycle()
 
@@ -300,8 +310,28 @@ fun LibraryScreen(
                 aniListLibraryContent(
                     uiState = aniListUiState,
                     sectionsConfig = aniListSettings.librarySections,
+                    sortBy = menuPrefs.sortBy,
+                    sortAscending = menuPrefs.sortAscending,
                     onPosterClick = { item ->
-                        onAniListPosterClick?.invoke(item.title)
+                        val selectedUrl = menuPrefs.openByCatalogUrl
+                        val selectedAddon = selectedUrl?.let { url ->
+                            addonUiState.addons.firstOrNull { it.manifestUrl == url && it.isActive }
+                        }
+                        if (selectedAddon == null) {
+                            // None selected — fall back to title search
+                            onAniListPosterClick?.invoke(item.title)
+                        } else {
+                            coroutineScope.launch {
+                                when (val result = AniListOpenByResolver.resolve(item, selectedAddon)) {
+                                    is AniListOpenByResolver.Result.OpenDirect ->
+                                        onAniListDirectOpen?.invoke(result.id, result.manifestUrl)
+                                    is AniListOpenByResolver.Result.SearchByTitle ->
+                                        onAniListPosterClick?.invoke(result.title)
+                                    is AniListOpenByResolver.Result.NotSupported ->
+                                        NuvioToastController.show("\"${result.addonName}\" doesn't support anime IDs. Try a different catalogue.")
+                                }
+                            }
+                        }
                     },
                     onEditClick = { item ->
                         editingMediaItemState.value = item
@@ -395,14 +425,20 @@ fun LibraryScreen(
     }
 
     if (isAniListMode) {
-        PullToRefreshBox(
-            isRefreshing = isAniListSyncing,
-            onRefresh = {
-                AniListSyncCoordinator.syncNow()
-            },
-            modifier = modifier
+        val animeAddons = remember(addonUiState.addons) {
+            AniListOpenByResolver.animeAddons()
+        }
+        AniListLibraryActionMenu(
+            animeAddons = animeAddons,
+            modifier = modifier,
         ) {
-            screenContent()
+            PullToRefreshBox(
+                isRefreshing = isAniListSyncing,
+                onRefresh = { AniListSyncCoordinator.syncNow() },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                screenContent()
+            }
         }
     } else {
         screenContent()

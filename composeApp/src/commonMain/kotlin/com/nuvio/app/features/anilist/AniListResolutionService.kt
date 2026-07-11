@@ -300,4 +300,20 @@ object AniListResolutionService {
         }
         return 1
     }
+
+    /**
+     * Resolves the IMDb ID for a given AniList ID via the ani.zip mappings API.
+     * Returns null if not found or on network/parse failure.
+     */
+    suspend fun resolveImdbId(anilistId: Int): String? {
+        val url = "$ANIZIP_API?anilist_id=$anilistId"
+        return try {
+            val text = httpGetText(url)
+            val parsed = json.decodeFromString<AniZipResponse>(text)
+            parsed.mappings?.imdbId?.takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            log.w(e) { "resolveImdbId: ani.zip failed for anilist:$anilistId" }
+            null
+        }
+    }
 }

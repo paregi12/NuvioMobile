@@ -37,4 +37,13 @@ internal actual object AniListStorage {
     actual fun saveMappingCachePayload(payload: String) {
         NSUserDefaults.standardUserDefaults.setObject(payload, forKey = ProfileScopedKey.of(mappingCachePayloadKey))
     }
+
+    private const val menuPrefsPayloadKey = "anilist_menu_prefs_payload"
+
+    actual fun loadMenuPrefsPayload(): String? =
+        NSUserDefaults.standardUserDefaults.stringForKey(ProfileScopedKey.of(menuPrefsPayloadKey))
+
+    actual fun saveMenuPrefsPayload(payload: String) {
+        NSUserDefaults.standardUserDefaults.setObject(payload, forKey = ProfileScopedKey.of(menuPrefsPayloadKey))
+    }
 }
