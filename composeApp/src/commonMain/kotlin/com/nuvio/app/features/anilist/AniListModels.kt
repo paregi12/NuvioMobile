@@ -57,7 +57,8 @@ data class AniListLibraryItem(
     val airingStatus: String? = null,
     val status: String,           // Watching, Completed, Planning, Paused, Dropped, Repeating
     val updatedAt: Long = 0L,     // Epoch seconds from AniList
-    val imdbId: String? = null
+    val imdbId: String? = null,
+    val entryId: Int? = null
 )
 
 data class AniListLibraryUiState(
@@ -127,6 +128,7 @@ data class AniListMediaListGroup(
 
 @Serializable
 data class AniListMediaListEntry(
+    val id: Int? = null,
     val status: String? = null,
     val progress: Int = 0,
     val score: Int? = null,

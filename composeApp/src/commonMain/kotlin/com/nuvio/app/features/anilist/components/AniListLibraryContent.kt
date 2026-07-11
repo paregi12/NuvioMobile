@@ -27,6 +27,7 @@ import com.nuvio.app.features.home.components.HomeEmptyStateCard
 fun LazyListScope.aniListLibraryContent(
     uiState: AniListLibraryUiState,
     onPosterClick: (AniListLibraryItem) -> Unit,
+    onEditClick: (AniListLibraryItem) -> Unit,
     onConnectAniListClick: () -> Unit,
     onRefresh: () -> Unit,
     isOffline: Boolean
@@ -90,7 +91,8 @@ fun LazyListScope.aniListLibraryContent(
                         ) { entry ->
                             AniListPosterCard(
                                 item = entry,
-                                onClick = { onPosterClick(entry) }
+                                onClick = { onPosterClick(entry) },
+                                onEditClick = { onEditClick(entry) }
                             )
                         }
                     }

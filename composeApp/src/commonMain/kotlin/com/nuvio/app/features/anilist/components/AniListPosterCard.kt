@@ -26,6 +26,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
 import com.nuvio.app.core.ui.NuvioPosterShape
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
@@ -35,6 +41,7 @@ import com.nuvio.app.features.anilist.AniListLibraryItem
 fun AniListPosterCard(
     item: AniListLibraryItem,
     onClick: (() -> Unit)? = null,
+    onEditClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val tokens = MaterialTheme.nuvio
@@ -137,6 +144,27 @@ fun AniListPosterCard(
                             .fillMaxWidth(progressFraction.coerceIn(0f, 1f))
                             .fillMaxHeight()
                             .background(MaterialTheme.colorScheme.primary)
+                    )
+                }
+            }
+
+            // Edit button overlay at bottom-right
+            if (onEditClick != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = if (item.totalEpisodes != null && item.totalEpisodes > 0) 10.dp else 6.dp, end = 6.dp)
+                        .size(28.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                        .clip(CircleShape)
+                        .clickable { onEditClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit Entry",
+                        tint = Color.White,
+                        modifier = Modifier.size(14.dp)
                     )
                 }
             }

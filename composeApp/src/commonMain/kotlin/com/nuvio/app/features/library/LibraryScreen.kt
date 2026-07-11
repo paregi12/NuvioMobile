@@ -90,7 +90,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 import nuvio.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberModalBottomSheetState
+import com.nuvio.app.features.anilist.components.AniListEditMediaBottomSheet
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     modifier: Modifier = Modifier,
@@ -136,6 +140,8 @@ fun LibraryScreen(
     }
     var selectedCloudItemKey by rememberSaveable { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    var editingMediaItem by remember { mutableStateOf<AniListLibraryItem?>(null) }
+    val editMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val json = remember { kotlinx.serialization.json.Json { ignoreUnknownKeys = true } }
     val listState = rememberLazyListState()
@@ -272,6 +278,9 @@ fun LibraryScreen(
                 onPosterClick = { item ->
                     onAniListPosterClick?.invoke(item.title)
                 },
+                onEditClick = { item ->
+                    editingMediaItem = item
+                },
                 onConnectAniListClick = {
                     val authUrl = AniListAuthRepository.onConnectRequested()
                     runCatching { uriHandler.openUri(authUrl) }
@@ -357,6 +366,56 @@ fun LibraryScreen(
                 }
             }
         }
+    }
+
+    if (editingMediaItem != null) {
+        AniListEditMediaBottomSheet(
+            item = editingMediaItem!!,
+            sheetState = editMediaSheetState,
+            onDismissRequest = {
+                coroutineScope.launch {
+                    editMediaSheetState.hide()
+                    editingMediaItem = null
+                }
+            },
+            onSave = { status, progress, score ->
+                coroutineScope.launch {
+                    val token = AniListAuthRepository.accessToken()
+                    if (!token.isNullOrBlank()) {
+                        val scoreRaw = score?.let { (it * 10).toInt() }
+                        val success = com.nuvio.app.features.anilist.AniListApi.saveMediaListEntry(
+                            token = token,
+                            mediaId = editingMediaItem!!.id,
+                            status = status,
+                            progress = progress,
+                            scoreRaw = scoreRaw
+                        )
+                        if (success) {
+                            AniListLibraryRepository.refreshNow()
+                        }
+                    }
+                    editMediaSheetState.hide()
+                    editingMediaItem = null
+                }
+            },
+            onDelete = {
+                coroutineScope.launch {
+                    val token = AniListAuthRepository.accessToken()
+                    val entryId = editingMediaItem!!.entryId
+                    if (!token.isNullOrBlank() && entryId != null) {
+                        val success = com.nuvio.app.features.anilist.AniListApi.deleteMediaListEntry(
+                            token = token,
+                            mediaListEntryId = entryId
+                        )
+                        if (success) {
+                            AniListLibraryRepository.refreshNow()
+                        }
+                    }
+                    editMediaSheetState.hide()
+                    editingMediaItem = null
+                }
+            }
+        )
     }
 }
 

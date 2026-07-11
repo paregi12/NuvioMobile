@@ -80,6 +80,7 @@ object AniListApi {
                     lists {
                         status
                         entries {
+                            id
                             status
                             progress
                             score(format: POINT_100)
@@ -129,7 +130,8 @@ object AniListApi {
                         score = entry.score,
                         airingStatus = media.status,
                         status = groupStatus,
-                        updatedAt = entry.updatedAt
+                        updatedAt = entry.updatedAt,
+                        entryId = entry.id
                     )
                 }
             }
