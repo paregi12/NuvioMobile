@@ -45,9 +45,10 @@ object AniListOpenByResolver {
     /** Returns anime-capable addons (type == series or anime) from the current addon list. */
     fun animeAddons(): List<ManagedAddon> =
         AddonRepository.uiState.value.addons.filter { addon ->
-            addon.isActive && addon.manifest?.types?.any {
-                it.equals("series", ignoreCase = true) || it.equals("anime", ignoreCase = true)
-            } == true
+            val manifest = addon.manifest
+            addon.isActive && manifest != null &&
+                manifest.types.any { it.equals("series", ignoreCase = true) || it.equals("anime", ignoreCase = true) } &&
+                manifest.resources.any { it.name.equals("meta", ignoreCase = true) }
         }
 
     private fun supportsAniListId(manifest: AddonManifest): Boolean =
