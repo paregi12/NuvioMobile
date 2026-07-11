@@ -1911,9 +1911,9 @@ private fun MainAppContent(
                                             prefilledSearchQuery = animeTitle
                                             activateTab(AppScreenTab.Search)
                                         },
-                                        onAniListDirectOpen = { id, manifestUrl ->
+                                        onAniListDirectOpen = { id, type, manifestUrl ->
                                             navController.navigate(
-                                                DetailRoute(type = "series", id = id, title = "")
+                                                DetailRoute(type = type, id = id, title = "")
                                             )
                                         },
                                         onCatalogClick = onCatalogClick,
@@ -3540,7 +3540,7 @@ private fun AppTabHost(
     prefilledSearchQuery: String? = null,
     onPrefilledSearchQueryConsumed: (() -> Unit)? = null,
     onAniListPosterClick: ((String) -> Unit)? = null,
-    onAniListDirectOpen: ((id: String, manifestUrl: String) -> Unit)? = null,
+    onAniListDirectOpen: ((id: String, type: String, manifestUrl: String) -> Unit)? = null,
     onCatalogClick: ((HomeCatalogSection) -> Unit)? = null,
     onPosterClick: ((MetaPreview) -> Unit)? = null,
     onPosterLongClick: ((MetaPreview) -> Unit)? = null,

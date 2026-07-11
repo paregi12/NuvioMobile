@@ -90,6 +90,7 @@ object AniListApi {
                                 idMal
                                 episodes
                                 status
+                                format
                                 title {
                                     english
                                     romaji
@@ -131,7 +132,8 @@ object AniListApi {
                         airingStatus = media.status,
                         status = groupStatus,
                         updatedAt = entry.updatedAt,
-                        entryId = entry.id
+                        entryId = entry.id,
+                        format = media.format
                     )
                 }
             }

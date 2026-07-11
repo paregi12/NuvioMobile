@@ -114,7 +114,7 @@ fun LibraryScreen(
     onCloudFilePlay: ((CloudLibraryItem, CloudLibraryFile) -> Unit)? = null,
     onConnectCloudClick: (() -> Unit)? = null,
     onAniListPosterClick: ((String) -> Unit)? = null,
-    onAniListDirectOpen: ((id: String, manifestUrl: String) -> Unit)? = null,
+    onAniListDirectOpen: ((id: String, type: String, manifestUrl: String) -> Unit)? = null,
 ) {
     val uiState by remember {
         LibraryRepository.ensureLoaded()
@@ -323,8 +323,10 @@ fun LibraryScreen(
                         } else {
                             coroutineScope.launch {
                                 when (val result = AniListOpenByResolver.resolve(item, selectedAddon)) {
-                                    is AniListOpenByResolver.Result.OpenDirect ->
-                                        onAniListDirectOpen?.invoke(result.id, result.manifestUrl)
+                                    is AniListOpenByResolver.Result.OpenDirect -> {
+                                        val mediaType = if (item.format.equals("MOVIE", ignoreCase = true)) "movie" else "series"
+                                        onAniListDirectOpen?.invoke(result.id, mediaType, result.manifestUrl)
+                                    }
                                     is AniListOpenByResolver.Result.SearchByTitle ->
                                         onAniListPosterClick?.invoke(result.title)
                                     is AniListOpenByResolver.Result.NotSupported ->
