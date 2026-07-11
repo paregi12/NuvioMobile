@@ -26,6 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nuvio.app.core.ui.NuvioModalBottomSheet
 import com.nuvio.app.features.anilist.AniListLibraryItem
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +63,22 @@ fun AniListEditMediaBottomSheet(
 
     var progress by remember(item) {
         mutableIntStateOf(item.progress)
+    }
+
+    var isEditingProgress by remember { mutableStateOf(false) }
+    var progressInputText by remember { mutableStateOf(progress.toString()) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(progress) {
+        if (!isEditingProgress) {
+            progressInputText = progress.toString()
+        }
+    }
+
+    LaunchedEffect(isEditingProgress) {
+        if (isEditingProgress) {
+            focusRequester.requestFocus()
+        }
     }
 
     var score by remember(item) {
@@ -224,16 +248,60 @@ fun AniListEditMediaBottomSheet(
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp)
-                        .background(cardBg, RoundedCornerShape(12.dp)),
+                        .background(cardBg, RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            isEditingProgress = true
+                            progressInputText = progress.toString()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = progress.toString(),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
+                    if (isEditingProgress) {
+                        BasicTextField(
+                            value = progressInputText,
+                            onValueChange = { newVal ->
+                                val filtered = newVal.filter { it.isDigit() }
+                                if (filtered.length <= 5) {
+                                    progressInputText = filtered
+                                    filtered.toIntOrNull()?.let { parsed ->
+                                        val max = item.totalEpisodes ?: Int.MAX_VALUE
+                                        progress = parsed.coerceIn(0, max)
+                                    }
+                                }
+                            },
+                            textStyle = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary,
+                                textAlign = TextAlign.Center
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (progressInputText.isEmpty()) {
+                                        progressInputText = progress.toString()
+                                    }
+                                    isEditingProgress = false
+                                }
+                            ),
+                            singleLine = true,
+                            cursorBrush = SolidColor(textPrimary),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .focusRequester(focusRequester)
                         )
-                    )
+                    } else {
+                        Text(
+                            text = progress.toString(),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary
+                            )
+                        )
+                    }
                 }
 
                 // Plus Button
@@ -329,7 +397,12 @@ fun AniListEditMediaBottomSheet(
                 // Save Button
                 Button(
                     onClick = {
-                        onSave(selectedStatus, progress, if (score > 0.0) score else null)
+                        val finalProgress = if (isEditingProgress) {
+                            progressInputText.toIntOrNull()?.coerceIn(0, item.totalEpisodes ?: Int.MAX_VALUE) ?: progress
+                        } else {
+                            progress
+                        }
+                        onSave(selectedStatus, finalProgress, if (score > 0.0) score else null)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = lavender,
