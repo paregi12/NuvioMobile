@@ -161,7 +161,8 @@ object AniListApi {
 
         val variables = buildJsonObject {
             put("mediaId", mediaId)
-            put("status", status.uppercase()) // AniList expects uppercase list status (CURRENT, COMPLETED, PLANNING, etc.)
+            // AniList GraphQL expects CURRENT for "Watching" — all other statuses map literally.
+            put("status", status.toAniListStatus())
             put("progress", progress)
             if (scoreRaw != null && scoreRaw > 0) {
                 put("scoreRaw", scoreRaw)
@@ -244,3 +245,14 @@ object AniListApi {
         }
     }
 }
+
+/**
+ * Maps display/internal status strings to the AniList GraphQL MediaListStatus enum.
+ * AniList uses CURRENT for "Watching" — all other statuses are their literal uppercase name.
+ */
+private fun String.toAniListStatus(): String = when (uppercase()) {
+    "WATCHING", "CURRENT" -> "CURRENT"
+    "REPEATING"           -> "REPEATING"
+    else                  -> uppercase() // COMPLETED, PLANNING, PAUSED, DROPPED
+}
+
