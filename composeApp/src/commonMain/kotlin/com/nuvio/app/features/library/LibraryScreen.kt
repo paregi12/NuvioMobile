@@ -1,5 +1,6 @@
 package com.nuvio.app.features.library
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -12,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,8 +31,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.ViewAgenda
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -89,6 +93,7 @@ import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.HomePosterCard
 import com.nuvio.app.features.home.components.HomeSkeletonRow
+import com.nuvio.app.features.home.components.posterGridColumnCountForWidth
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watching.application.WatchingState
@@ -110,7 +115,7 @@ fun LibraryScreen(
     scrollToTopRequests: Flow<Unit> = emptyFlow(),
     onPosterClick: ((LibraryItem) -> Unit)? = null,
     onPosterLongClick: ((LibraryItem, LibrarySection) -> Unit)? = null,
-    onSectionViewAllClick: ((LibrarySection) -> Unit)? = null,
+    onSectionViewAllClick: ((LibrarySection, LibrarySortOption) -> Unit)? = null,
     onCloudFilePlay: ((CloudLibraryItem, CloudLibraryFile) -> Unit)? = null,
     onConnectCloudClick: (() -> Unit)? = null,
     onAniListPosterClick: ((String) -> Unit)? = null,
@@ -132,6 +137,11 @@ fun LibraryScreen(
     val watchedUiState by remember {
         WatchedRepository.ensureLoaded()
         WatchedRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val fullyWatchedSeriesKeys by WatchedRepository.fullyWatchedSeriesKeys.collectAsStateWithLifecycle()
+    val displaySettings by remember {
+        LibraryDisplaySettingsRepository.ensureLoaded()
+        LibraryDisplaySettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val homeCatalogSettingsUiState by remember {
         HomeCatalogSettingsRepository.snapshot()
@@ -171,6 +181,8 @@ fun LibraryScreen(
         selectedTypeName?.let { runCatching { CloudLibraryItemType.valueOf(it) }.getOrNull() }
     }
     var selectedCloudItemKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedLibrarySectionKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedLibraryType by rememberSaveable { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val editingMediaItemState = remember { mutableStateOf<AniListLibraryItem?>(null) }
     val editMediaSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -178,6 +190,32 @@ fun LibraryScreen(
     val json = remember { kotlinx.serialization.json.Json { ignoreUnknownKeys = true } }
     val listState = rememberLazyListState()
     val isTraktSource = uiState.sourceMode == LibrarySourceMode.TRAKT
+    val effectiveSortOption = effectiveLibrarySortOption(
+        selected = displaySettings.sortOption,
+        sourceMode = uiState.sourceMode,
+    )
+    val sortedSections = remember(uiState.sections, displaySettings.sortOption, uiState.sourceMode) {
+        sortLibrarySections(
+            sections = uiState.sections,
+            selected = displaySettings.sortOption,
+            sourceMode = uiState.sourceMode,
+        )
+    }
+    val verticalProjection = remember(
+        uiState.sections,
+        uiState.sourceMode,
+        selectedLibrarySectionKey,
+        selectedLibraryType,
+        displaySettings.sortOption,
+    ) {
+        buildLibraryVerticalProjection(
+            sections = uiState.sections,
+            sourceMode = uiState.sourceMode,
+            selectedSectionKey = selectedLibrarySectionKey,
+            selectedType = selectedLibraryType,
+            sortOption = displaySettings.sortOption,
+        )
+    }
     val retryLibraryLoad: () -> Unit = {
         NetworkStatusRepository.requestRefresh(force = true)
         coroutineScope.launch {
@@ -231,9 +269,12 @@ fun LibraryScreen(
 
     val disintegration = remember { LibraryDisintegrationHolder() }
     val librarySectionsDisplay = if (
-        sourceMode == LibraryViewMode.Saved && uiState.isLoaded && uiState.sections.isNotEmpty()
+        sourceMode == LibraryViewMode.Saved &&
+        displaySettings.layoutMode == LibraryLayoutMode.HORIZONTAL &&
+        uiState.isLoaded &&
+        sortedSections.isNotEmpty()
     ) {
-        disintegration.sync(uiState.sections, LIBRARY_SECTION_PREVIEW_LIMIT)
+        disintegration.sync(sortedSections, LIBRARY_SECTION_PREVIEW_LIMIT)
     } else {
         disintegration.reset()
         emptyList()
@@ -241,8 +282,11 @@ fun LibraryScreen(
 
     val isAniListMode = sourceMode == LibraryViewMode.AniList
     val screenContent = @Composable {
-        NuvioScreen(
-            modifier = if (isAniListMode) Modifier.fillMaxSize() else modifier,
+        BoxWithConstraints(modifier = if (isAniListMode) Modifier.fillMaxSize() else modifier) {
+            val gridColumns = remember(maxWidth) { posterGridColumnCountForWidth(maxWidth) }
+
+            NuvioScreen(
+                modifier = Modifier.fillMaxSize(),
             horizontalPadding = 0.dp,
             listState = listState,
         ) {
@@ -266,6 +310,40 @@ fun LibraryScreen(
                                 stringResource(Res.string.library_title)
                             },
                             modifier = Modifier.padding(horizontal = 16.dp),
+                            actions = {
+                                if (sourceMode == LibraryViewMode.Saved) {
+                                    val targetLayout = if (displaySettings.layoutMode == LibraryLayoutMode.HORIZONTAL) {
+                                        LibraryLayoutMode.VERTICAL
+                                    } else {
+                                        LibraryLayoutMode.HORIZONTAL
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            LibraryDisplaySettingsRepository.setLayoutMode(targetLayout)
+                                        },
+                                    ) {
+                                        Crossfade(
+                                            targetState = targetLayout,
+                                            animationSpec = tween(durationMillis = 140),
+                                            label = "libraryLayoutAction",
+                                        ) { animatedTargetLayout ->
+                                            Icon(
+                                                imageVector = if (animatedTargetLayout == LibraryLayoutMode.VERTICAL) {
+                                                    Icons.Rounded.GridView
+                                                } else {
+                                                    Icons.Rounded.ViewAgenda
+                                                },
+                                                contentDescription = if (animatedTargetLayout == LibraryLayoutMode.VERTICAL) {
+                                                    stringResource(Res.string.library_layout_show_vertical)
+                                                } else {
+                                                    stringResource(Res.string.library_layout_show_horizontal)
+                                                },
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+                                }
+                            },
                         )
                         LibrarySourceSwitch(
                             selectedMode = sourceMode,
@@ -352,11 +430,15 @@ fun LibraryScreen(
             } else {
                 when {
                     !uiState.isLoaded || (uiState.isLoading && uiState.sections.isEmpty()) -> {
-                        items(3) {
-                            HomeSkeletonRow(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
-                            )
+                        if (displaySettings.layoutMode == LibraryLayoutMode.VERTICAL) {
+                            libraryVerticalSkeletonItems(gridColumns)
+                        } else {
+                            items(3) {
+                                HomeSkeletonRow(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
+                                )
+                            }
                         }
                     }
 
@@ -411,15 +493,45 @@ fun LibraryScreen(
                     }
 
                     else -> {
-                        librarySections(
-                            displaySections = librarySectionsDisplay,
-                            watchedKeys = watchedUiState.watchedKeys,
-                            showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
-                            onPosterClick = onPosterClick,
-                            onSectionViewAllClick = onSectionViewAllClick,
-                            onPosterLongClick = onPosterLongClick,
-                            onDisintegrated = disintegration::onExited,
-                        )
+                        item(
+                            key = "library-saved-controls:${uiState.sourceMode}:" +
+                                "${displaySettings.layoutMode}:$effectiveSortOption",
+                        ) {
+                            LibrarySavedControls(
+                                layoutMode = displaySettings.layoutMode,
+                                sourceMode = uiState.sourceMode,
+                                sortOption = effectiveSortOption,
+                                verticalProjection = verticalProjection,
+                                onSectionSelected = { sectionKey ->
+                                    selectedLibrarySectionKey = sectionKey
+                                    selectedLibraryType = null
+                                },
+                                onTypeSelected = { type -> selectedLibraryType = type },
+                                onSortSelected = LibraryDisplaySettingsRepository::setSortOption,
+                                modifier = libraryContentTransitionModifier()
+                                    .padding(horizontal = 16.dp),
+                            )
+                        }
+                        when (displaySettings.layoutMode) {
+                            LibraryLayoutMode.HORIZONTAL -> librarySections(
+                                displaySections = librarySectionsDisplay,
+                                watchedKeys = watchedUiState.watchedKeys,
+                                showHeaderAccent = !homeCatalogSettingsUiState.hideCatalogUnderline,
+                                sortOption = effectiveSortOption,
+                                onPosterClick = onPosterClick,
+                                onSectionViewAllClick = onSectionViewAllClick,
+                                onPosterLongClick = onPosterLongClick,
+                                onDisintegrated = disintegration::onExited,
+                            )
+                            LibraryLayoutMode.VERTICAL -> libraryVerticalContent(
+                                projection = verticalProjection,
+                                columns = gridColumns,
+                                watchedKeys = watchedUiState.watchedKeys,
+                                fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
+                                onPosterClick = onPosterClick,
+                                onPosterLongClick = onPosterLongClick,
+                            )
+                        }
                     }
                 }
             }
@@ -1180,24 +1292,26 @@ private fun LazyListScope.librarySections(
     displaySections: List<LibraryDisplaySection>,
     watchedKeys: Set<String>,
     showHeaderAccent: Boolean,
+    sortOption: LibrarySortOption,
     onPosterClick: ((LibraryItem) -> Unit)?,
-    onSectionViewAllClick: ((LibrarySection) -> Unit)?,
+    onSectionViewAllClick: ((LibrarySection, LibrarySortOption) -> Unit)?,
     onPosterLongClick: ((LibraryItem, LibrarySection) -> Unit)?,
     onDisintegrated: (String) -> Unit,
 ) {
     items(
         items = displaySections,
-        key = { section -> section.type },
+        key = { section -> "library-horizontal:${section.type}" },
     ) { section ->
         NuvioShelfSection(
             title = section.displayTitle,
             entries = section.previewEntries,
+            modifier = libraryContentTransitionModifier(),
             headerHorizontalPadding = 16.dp,
             rowContentPadding = PaddingValues(horizontal = 16.dp),
             showHeaderAccent = showHeaderAccent,
             onViewAllClick = section.source
                 ?.takeIf { it.items.size > LIBRARY_SECTION_PREVIEW_LIMIT }
-                ?.let { source -> onSectionViewAllClick?.let { { it(source) } } },
+                ?.let { source -> onSectionViewAllClick?.let { { it(source, sortOption) } } },
             viewAllPillSize = NuvioViewAllPillSize.Compact,
             key = { entry -> entry.globalKey },
             animatePlacement = true,
