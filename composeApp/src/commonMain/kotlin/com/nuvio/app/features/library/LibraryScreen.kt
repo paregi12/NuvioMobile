@@ -537,6 +537,7 @@ fun LibraryScreen(
             }
         }
     }
+}
 
     if (isAniListMode) {
         val animeAddons = remember(addonUiState.addons) {
