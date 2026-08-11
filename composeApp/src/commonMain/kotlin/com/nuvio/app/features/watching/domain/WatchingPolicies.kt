@@ -65,7 +65,8 @@ internal fun shouldSurfaceNextEpisode(
             todayIsoDate = todayIsoDate,
             releasedDate = releasedDate,
         ) ?: return false
-        if (!showUnairedNextUp || daysUntilRelease <= 0) return false
+        if (daysUntilRelease <= 0) return true
+        if (!showUnairedNextUp) return false
         return !isSeasonRollover || daysUntilRelease <= UpcomingNextSeasonWindowDays
     }
     if (!isSeasonRollover) {
