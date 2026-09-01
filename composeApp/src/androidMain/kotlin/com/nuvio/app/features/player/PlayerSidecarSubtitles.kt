@@ -49,11 +49,12 @@ internal class SidecarSubtitleController(
 
     fun canAttachAddonSubtitleViaSidecar(url: String, useLibass: Boolean): Boolean {
         val mime = PlayerSubtitleUtils.mimeTypeFromUrl(url)
-        if (mime == MimeTypes.TEXT_SSA && useLibass) {
-            return false
-        }
         val format = Format.Builder().setSampleMimeType(mime).build()
-        return sidecarParserFactory.supportsFormat(format)
+        return sidecarParserFactory.supportsFormat(format) ||
+            mime == MimeTypes.TEXT_SSA ||
+            mime == MimeTypes.APPLICATION_SUBRIP ||
+            mime == MimeTypes.TEXT_VTT ||
+            mime == MimeTypes.APPLICATION_TTML
     }
 
     fun bindSubtitleView(subtitleView: SubtitleView?) {
@@ -208,11 +209,7 @@ internal fun parseSidecarTimedCuesRobust(rawText: String, sourceUrl: String): Si
     }
 
     val sniffedMime = PlayerSubtitleUtils.sniffSubtitleMimeType(cleaned, sourceUrl)
-    val lenient = if (sniffedMime == MimeTypes.TEXT_SSA || sniffedMime == MimeTypes.APPLICATION_TTML) {
-        emptyList()
-    } else {
-        parseSidecarTimedCuesLenient(cleaned, sourceUrl)
-    }
+    val lenient = parseSidecarTimedCuesLenient(cleaned, sourceUrl)
     if (lenient.isNotEmpty()) {
         val fixed = PlayerSubtitleRtlFix.fixTimedCues(lenient, isBuiltInSubtitle = false)
         val normalized = if (sniffedMime == MimeTypes.TEXT_VTT) normalizeTimedCuePositions(fixed) else fixed

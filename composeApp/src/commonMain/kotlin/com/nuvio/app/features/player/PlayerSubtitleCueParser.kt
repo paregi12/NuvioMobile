@@ -20,7 +20,8 @@ object PlayerSubtitleCueParser {
         return when (detectSubtitleFormat(sourceUrl, cleanedText)) {
             SubtitleFormatHint.WebVtt -> parseVtt(cleanedText)
             SubtitleFormatHint.Srt -> parseSrt(cleanedText)
-            SubtitleFormatHint.Ass, SubtitleFormatHint.Ttml -> emptyList()
+            SubtitleFormatHint.Ass -> parseAss(cleanedText)
+            SubtitleFormatHint.Ttml -> parseTtml(cleanedText)
         }
     }
 
@@ -46,10 +47,14 @@ object PlayerSubtitleCueParser {
         val sample = text.take(4_096).lowercase()
 
         return when {
-            sourcePath.endsWith(".vtt") || sourcePath.endsWith(".webvtt") || text.trimStart().startsWith("WEBVTT") ->
+            sourcePath.endsWith(".vtt") || sourcePath.endsWith(".webvtt") || text.trimStart().startsWith("WEBVTT", ignoreCase = true) ->
                 SubtitleFormatHint.WebVtt
             sourcePath.endsWith(".ass") || sourcePath.endsWith(".ssa") ||
-                (sample.contains("[events]") && sample.contains("dialogue:")) ->
+                sample.contains("[script info]") ||
+                sample.contains("[v4+ styles]") ||
+                sample.contains("[v4 styles]") ||
+                sample.contains("[events]") ||
+                Regex("""(?im)^\s*dialogue:""").containsMatchIn(sample) ->
                 SubtitleFormatHint.Ass
             sourcePath.endsWith(".ttml") || sourcePath.endsWith(".dfxp") || sourcePath.endsWith(".xml") ||
                 Regex("""<tt[\s>]""", RegexOption.IGNORE_CASE).containsMatchIn(text.take(512)) ->
@@ -166,8 +171,9 @@ object PlayerSubtitleCueParser {
         return text.lines()
             .mapNotNull { rawLine ->
                 val line = rawLine.trim()
+                val cleanLine = line.replace(" ", "")
                 when {
-                    line.equals("[Events]", ignoreCase = true) -> {
+                    cleanLine.equals("[Events]", ignoreCase = true) || cleanLine.startsWith("[Events", ignoreCase = true) -> {
                         inEventsSection = true
                         null
                     }
@@ -175,13 +181,13 @@ object PlayerSubtitleCueParser {
                         inEventsSection = false
                         null
                     }
-                    inEventsSection && line.startsWith("Format:", ignoreCase = true) -> {
+                    (inEventsSection || formatFields == null) && line.startsWith("Format:", ignoreCase = true) -> {
                         formatFields = line.substringAfter(':')
                             .split(',')
                             .map { it.trim() }
                         null
                     }
-                    inEventsSection && line.startsWith("Dialogue:", ignoreCase = true) ->
+                    line.startsWith("Dialogue:", ignoreCase = true) ->
                         parseAssDialogue(line.substringAfter(':'), formatFields)
                     else -> null
                 }

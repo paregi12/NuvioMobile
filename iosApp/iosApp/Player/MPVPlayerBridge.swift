@@ -743,10 +743,9 @@ final class MPVPlayerViewController: UIViewController {
     private func addSubtitle(_ subtitle: PluginSubtitle, mode: String) {
         guard mpv != nil else { return }
         let subtitleHeaders = sanitizeRequestHeaders(subtitle.headers ?? [:])
-        let previousHeaders = activeRequestHeaders
 
         if !subtitleHeaders.isEmpty {
-            applyRequestHeaders(previousHeaders.merging(subtitleHeaders) { _, subtitleValue in subtitleValue })
+            applyRequestHeaders(activeRequestHeaders.merging(subtitleHeaders) { _, subtitleValue in subtitleValue })
         }
 
         command(
@@ -754,10 +753,6 @@ final class MPVPlayerViewController: UIViewController {
             args: [subtitle.url, mode, subtitle.name ?? subtitle.language, subtitle.language],
             checkForErrors: false
         )
-
-        if !subtitleHeaders.isEmpty {
-            applyRequestHeaders(previousHeaders)
-        }
     }
 
     func removeExternalSubtitles() {

@@ -44,8 +44,10 @@ internal object PlayerSubtitleUtils {
         val head = text.take(4_000)
         if (
             head.startsWith("[Script Info]", ignoreCase = true) ||
+            head.contains("[Script Info]", ignoreCase = true) ||
             head.contains("[V4+ Styles]", ignoreCase = true) ||
             head.contains("[V4 Styles]", ignoreCase = true) ||
+            head.contains("[Events]", ignoreCase = true) ||
             Regex("""(?im)^\s*Dialogue:""").containsMatchIn(head)
         ) {
             return MimeTypes.TEXT_SSA

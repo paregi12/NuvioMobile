@@ -1375,7 +1375,8 @@ private class NuvioLibmpvView(
         }
         currentExternalSubtitles.forEachIndexed { index, subtitle ->
             val flag = if (index == 0) "auto" else "cached"
-            mpv.command("sub-add", subtitle.url, flag)
+            val title = subtitle.name ?: subtitle.language
+            mpv.command("sub-add", subtitle.url, flag, title, subtitle.language)
         }
         setPausedNow(!playWhenReady)
     }
