@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateBottomPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,9 +35,9 @@ import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Tune
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,16 +60,11 @@ import coil3.compose.AsyncImage
 import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.anilist.AniListLibraryMenuPrefs
 import com.nuvio.app.features.anilist.AniListSortBy
+import com.nuvio.app.core.ui.floatingNavigationBarPadding
+import com.nuvio.app.core.ui.LocalNuvioNavBarScrollState
+import com.nuvio.app.core.ui.nuvio
 
 // ── Colour palette ──────────────────────────────────────────────────────────
-private val PopupSurface   = Color(0xFF1A1A22)
-private val ElevatedSurface = Color(0xFF26262F)
-private val Lavender       = Color(0xFFB7B8FF)
-private val PrimaryText    = Color(0xFFFFFFFF)
-private val SecondaryText  = Color(0xFFA8A8B5)
-private val SelectedPillBg = Lavender
-private val SelectedPillText = Color(0xFF17171D)
-
 private enum class MenuTab { SORT, OPEN_BY }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -82,6 +78,8 @@ fun AniListLibraryActionMenu(
     content: @Composable () -> Unit,
 ) {
     val prefs by AniListLibraryMenuPrefs.state.collectAsStateWithLifecycle()
+    val tokens = MaterialTheme.nuvio
+    val navBarLabelVisibility = LocalNuvioNavBarScrollState.current?.labelVisibility ?: 1f
 
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -115,7 +113,10 @@ fun AniListLibraryActionMenu(
             verticalArrangement = Arrangement.Bottom,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 16.dp)
+                .padding(
+                    end = 16.dp,
+                    bottom = floatingNavigationBarPadding().calculateBottomPadding() + (8.dp * navBarLabelVisibility),
+                )
                 .zIndex(2f)
         ) {
             // Popup
@@ -145,19 +146,27 @@ fun AniListLibraryActionMenu(
             Spacer(modifier = Modifier.height(12.dp))
 
             // FAB
-            FloatingActionButton(
-                onClick = { menuOpen = !menuOpen },
-                containerColor = ElevatedSurface,
-                contentColor = Lavender,
-                shape = CircleShape,
-                modifier = Modifier.size(52.dp)
+            Surface(
+                modifier = Modifier
+                    .height(48.dp)
+                    .clickable(
+                        role = Role.Button,
+                        onClickLabel = "Open library options",
+                        onClick = { menuOpen = !menuOpen },
+                    ),
+                shape = RoundedCornerShape(50),
+                color = if (menuOpen) tokens.colors.accent else tokens.colors.surfaceElevated,
+                contentColor = tokens.colors.textPrimary,
+                shadowElevation = tokens.elevation.overlay,
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Tune,
-                    contentDescription = "Library options",
-                    tint = Lavender,
-                    modifier = Modifier.size(22.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Rounded.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Open with", style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }
@@ -175,11 +184,12 @@ private fun AniListMenuPopup(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableStateOf(MenuTab.SORT) }
+    val colors = MaterialTheme.nuvio.colors
 
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(PopupSurface)
+            .background(colors.surfaceElevated)
             .padding(16.dp)
     ) {
         // Segmented selector
@@ -233,12 +243,13 @@ private fun MenuSegmentedSelector(
 ) {
     val tabs = MenuTab.entries
     val selectedIndex = tabs.indexOf(selectedTab)
+    val colors = MaterialTheme.nuvio.colors
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50.dp))
-            .background(ElevatedSurface)
+            .background(colors.surface)
             .padding(4.dp)
     ) {
         val tabWidthDp = maxWidth / tabs.size
@@ -256,7 +267,7 @@ private fun MenuSegmentedSelector(
                 .height(40.dp)
                 .shadow(4.dp, RoundedCornerShape(50.dp))
                 .clip(RoundedCornerShape(50.dp))
-                .background(SelectedPillBg)
+                .background(colors.accent)
         )
 
         // Tab labels
@@ -278,7 +289,7 @@ private fun MenuSegmentedSelector(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = if (tab == selectedTab) SelectedPillText else SecondaryText
+                            color = if (tab == selectedTab) colors.textPrimary else colors.textMuted
                         )
                     )
                 }
@@ -299,6 +310,7 @@ private fun SortContent(
     onOptionSelected: (AniListSortBy) -> Unit,
     onToggleDirection: () -> Unit,
 ) {
+    val colors = MaterialTheme.nuvio.colors
     val options = listOf(
         SortOption("Last Updated", AniListSortBy.LAST_UPDATED, Icons.Rounded.Tune),
         SortOption("Score",        AniListSortBy.SCORE,        Icons.Rounded.Tune),
@@ -317,13 +329,13 @@ private fun SortContent(
                 text = "Sort By",
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryText
+                    color = colors.textPrimary
                 )
             )
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50.dp))
-                    .background(ElevatedSurface)
+                    .background(colors.overlaySelected)
                     .clickable { onToggleDirection() }
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
@@ -331,14 +343,14 @@ private fun SortContent(
                     Icon(
                         imageVector = if (prefs.sortAscending) Icons.Rounded.ArrowUpward else Icons.Rounded.ArrowDownward,
                         contentDescription = null,
-                        tint = Lavender,
+                        tint = colors.accent,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (prefs.sortAscending) "Ascending" else "Descending",
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = Lavender,
+                            color = colors.accent,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -364,10 +376,12 @@ private fun SortOptionRow(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.nuvio.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(50.dp))
+            .background(if (isSelected) colors.overlaySelected else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -376,7 +390,7 @@ private fun SortOptionRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = if (isSelected) Lavender else PrimaryText,
+                color = colors.textPrimary,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         )
@@ -384,7 +398,7 @@ private fun SortOptionRow(
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = Lavender,
+                tint = colors.accent,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -401,12 +415,13 @@ private fun OpenByContent(
     selectedUrl: String?,
     onSelected: (String?) -> Unit,
 ) {
+    val colors = MaterialTheme.nuvio.colors
     Column {
         Text(
             text = "Open By",
             style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Bold,
-                color = PrimaryText
+                color = colors.textPrimary
             )
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -440,10 +455,12 @@ private fun OpenByRow(
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.nuvio.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(50.dp))
+            .background(if (isSelected) colors.overlaySelected else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -453,7 +470,7 @@ private fun OpenByRow(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(ElevatedSurface),
+                .background(colors.surface),
             contentAlignment = Alignment.Center
         ) {
             if (logoUrl != null) {
@@ -466,7 +483,7 @@ private fun OpenByRow(
                 Text(
                     text = name.take(1).uppercase(),
                     style = MaterialTheme.typography.labelMedium.copy(
-                        color = Lavender,
+                        color = colors.accent,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -476,7 +493,7 @@ private fun OpenByRow(
         Text(
             text = name,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = if (isSelected) Lavender else PrimaryText,
+                color = colors.textPrimary,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             ),
             modifier = Modifier.weight(1f)
@@ -486,7 +503,7 @@ private fun OpenByRow(
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = Lavender,
+                tint = colors.accent,
                 modifier = Modifier.size(18.dp)
             )
         }

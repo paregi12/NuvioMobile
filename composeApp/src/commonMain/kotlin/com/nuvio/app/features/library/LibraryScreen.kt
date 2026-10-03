@@ -133,6 +133,11 @@ fun LibraryScreen(
         AniListLibraryRepository.ensureLoaded()
         AniListLibraryRepository.uiState
     }.collectAsStateWithLifecycle()
+    val aniListAuthUiState by remember {
+        AniListAuthRepository.ensureLoaded()
+        AniListAuthRepository.uiState
+    }.collectAsStateWithLifecycle()
+    val isAniListConnected = aniListAuthUiState.mode == com.nuvio.app.features.anilist.AniListConnectionMode.CONNECTED
     val cloudSettings by remember {
         DebridSettingsRepository.ensureLoaded()
         DebridSettingsRepository.uiState
@@ -171,8 +176,16 @@ fun LibraryScreen(
     }
     var observedOfflineState by remember { mutableStateOf(false) }
     var sourceModeName by rememberSaveable { mutableStateOf(LibraryViewMode.Saved.name) }
-    val sourceMode = remember(sourceModeName) {
+    val sourceMode = remember(sourceModeName, isAniListConnected) {
         runCatching { LibraryViewMode.valueOf(sourceModeName) }.getOrDefault(LibraryViewMode.Saved)
+            .let { mode ->
+                if (mode == LibraryViewMode.AniList && !isAniListConnected) LibraryViewMode.Saved else mode
+            }
+    }
+    LaunchedEffect(isAniListConnected, sourceModeName) {
+        if (!isAniListConnected && sourceModeName == LibraryViewMode.AniList.name) {
+            sourceModeName = LibraryViewMode.Saved.name
+        }
     }
     var selectedProviderId by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedTypeName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -392,6 +405,7 @@ fun LibraryScreen(
                         )
                         LibrarySourceSwitch(
                             selectedMode = sourceMode,
+                            isAniListConnected = isAniListConnected,
                             onModeSelected = { mode ->
                                 sourceModeName = mode.name
                             },
@@ -857,6 +871,7 @@ private fun LazyListScope.cloudLibrarySkeletonItems() {
 @Composable
 private fun LibrarySourceSwitch(
     selectedMode: LibraryViewMode,
+    isAniListConnected: Boolean,
     onModeSelected: (LibraryViewMode) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -874,11 +889,13 @@ private fun LibrarySourceSwitch(
             selected = selectedMode == LibraryViewMode.Cloud,
             onClick = { onModeSelected(LibraryViewMode.Cloud) },
         )
-        LibraryChip(
-            label = "AniList",
-            selected = selectedMode == LibraryViewMode.AniList,
-            onClick = { onModeSelected(LibraryViewMode.AniList) },
-        )
+        if (isAniListConnected) {
+            LibraryChip(
+                label = "AniList",
+                selected = selectedMode == LibraryViewMode.AniList,
+                onClick = { onModeSelected(LibraryViewMode.AniList) },
+            )
+        }
     }
 }
 

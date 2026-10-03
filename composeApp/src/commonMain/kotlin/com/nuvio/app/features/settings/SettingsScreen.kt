@@ -698,7 +698,6 @@ private fun MobileSettingsScreen(
                             onContentDiscoveryClick = { onPageChange(SettingsPage.ContentDiscovery) },
                             onIntegrationsClick = { onPageChange(SettingsPage.Integrations) },
                             onTrackingClick = { onPageChange(SettingsPage.TraktAuthentication) },
-                            onAniListClick = { onPageChange(SettingsPage.AniListAuthentication) },
                             onSupportersContributorsClick = onSupportersContributorsClick,
                             onLicensesAttributionsClick = onLicensesAttributionsClick,
                             onCheckForUpdatesClick = onCheckForUpdatesClick,
@@ -837,6 +836,7 @@ private fun MobileSettingsScreen(
                     settingsUiState = trackingSettingsUiState,
                     commentsEnabled = traktCommentsEnabled,
                     onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
+                    onAniListSettingsClick = { onPageChange(SettingsPage.AniListAuthentication) },
                 )
                 SettingsPage.AniListAuthentication -> aniListSettingsContent(
                     isTablet = false,
@@ -1123,7 +1123,6 @@ private fun TabletSettingsScreen(
                                 onContentDiscoveryClick = { openInlinePage(SettingsPage.ContentDiscovery) },
                                 onIntegrationsClick = { openInlinePage(SettingsPage.Integrations) },
                                 onTrackingClick = { openInlinePage(SettingsPage.TraktAuthentication) },
-                                onAniListClick = { openInlinePage(SettingsPage.AniListAuthentication) },
                                 onSupportersContributorsClick = { openInlinePage(SettingsPage.SupportersContributors) },
                                 onLicensesAttributionsClick = { openInlinePage(SettingsPage.LicensesAttributions) },
                                 onCheckForUpdatesClick = onCheckForUpdatesClick,
@@ -1266,6 +1265,7 @@ private fun TabletSettingsScreen(
                         settingsUiState = trackingSettingsUiState,
                         commentsEnabled = traktCommentsEnabled,
                         onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
+                        onAniListSettingsClick = { openInlinePage(SettingsPage.AniListAuthentication) },
                     )
                     SettingsPage.AniListAuthentication -> aniListSettingsContent(
                         isTablet = true,

@@ -57,8 +57,6 @@ import nuvio.composeapp.generated.resources.compose_settings_root_account_sectio
 import nuvio.composeapp.generated.resources.compose_settings_root_advanced_description
 import nuvio.composeapp.generated.resources.compose_settings_root_advanced_section
 import nuvio.composeapp.generated.resources.compose_settings_page_tracking
-import nuvio.composeapp.generated.resources.compose_settings_page_anilist
-import nuvio.composeapp.generated.resources.compose_settings_root_anilist_description
 import nuvio.composeapp.generated.resources.settings_playback_subtitle
 import nuvio.composeapp.generated.resources.updates_debug_test_description
 import nuvio.composeapp.generated.resources.updates_debug_test_title
@@ -77,7 +75,6 @@ internal fun LazyListScope.settingsRootContent(
     onContentDiscoveryClick: () -> Unit,
     onIntegrationsClick: () -> Unit,
     onTrackingClick: () -> Unit,
-    onAniListClick: () -> Unit,
     onSupportersContributorsClick: () -> Unit,
     onLicensesAttributionsClick: () -> Unit,
     onCheckForUpdatesClick: (() -> Unit)? = null,
@@ -121,14 +118,6 @@ internal fun LazyListScope.settingsRootContent(
                         icon = Icons.Default.Sync,
                         isTablet = isTablet,
                         onClick = onTrackingClick,
-                    )
-                    SettingsGroupDivider(isTablet = isTablet)
-                    SettingsNavigationRow(
-                        title = stringResource(Res.string.compose_settings_page_anilist),
-                        description = stringResource(Res.string.compose_settings_root_anilist_description),
-                        iconPainter = integrationLogoPainter(IntegrationLogo.AniList),
-                        isTablet = isTablet,
-                        onClick = onAniListClick,
                     )
                 }
             }

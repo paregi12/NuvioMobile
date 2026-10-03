@@ -160,7 +160,7 @@ internal enum class SettingsPage(
     AniListAuthentication(
         titleRes = Res.string.compose_settings_page_anilist,
         category = SettingsCategory.Account,
-        parentPage = Root,
+        parentPage = TraktAuthentication,
     ),
 }
 

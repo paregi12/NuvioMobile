@@ -115,6 +115,7 @@ internal fun LazyListScope.trackingSettingsContent(
     settingsUiState: TrackingSettingsUiState,
     commentsEnabled: Boolean,
     onCommentsEnabledChange: (Boolean) -> Unit,
+    onAniListSettingsClick: () -> Unit,
 ) {
     item {
         val aniListUiState by remember {
@@ -130,6 +131,7 @@ internal fun LazyListScope.trackingSettingsContent(
                 traktUiState = traktUiState,
                 simklUiState = simklUiState,
                 aniListUiState = aniListUiState,
+                onAniListSettingsClick = onAniListSettingsClick,
             )
         }
     }

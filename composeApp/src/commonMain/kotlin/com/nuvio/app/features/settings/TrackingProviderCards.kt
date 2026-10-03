@@ -174,6 +174,7 @@ internal fun TrackingProviderCards(
     traktUiState: TraktAuthUiState,
     simklUiState: SimklAuthUiState,
     aniListUiState: AniListAuthUiState,
+    onAniListSettingsClick: () -> Unit,
 ) {
     val syncState by remember {
         SimklSyncRepository.ensureLoaded()
@@ -209,7 +210,7 @@ internal fun TrackingProviderCards(
             onInfoRequested = { showSyncInfo = true },
             modifier = Modifier.fillMaxWidth(),
         )
-        AniListProviderCard(aniListUiState, Modifier.fillMaxWidth())
+        AniListProviderCard(aniListUiState, onAniListSettingsClick, Modifier.fillMaxWidth())
         MdbListProviderCard(Modifier.fillMaxWidth())
     }
 
@@ -219,7 +220,11 @@ internal fun TrackingProviderCards(
 }
 
 @Composable
-private fun AniListProviderCard(uiState: AniListAuthUiState, modifier: Modifier) {
+private fun AniListProviderCard(
+    uiState: AniListAuthUiState,
+    onSettingsClick: () -> Unit,
+    modifier: Modifier,
+) {
     TrackingProviderCard(
         brand = TrackingBrand.ANILIST,
         mode = if (uiState.mode == AniListConnectionMode.CONNECTED) {
@@ -239,9 +244,11 @@ private fun AniListProviderCard(uiState: AniListAuthUiState, modifier: Modifier)
         disconnectLabel = "Disconnect",
         missingCredentialsMessage = "AniList sign in is unavailable.",
         errorMessage = uiState.errorMessage,
+        infoLabel = "AniList Settings",
         onConnectRequested = { AniListAuthRepository.onConnectRequested() },
         onResumeAuthorization = { AniListAuthRepository.onConnectRequested() },
         onCancelAuthorization = {},
+        onInfoRequested = onSettingsClick,
         onDisconnect = AniListAuthRepository::disconnect,
         modifier = modifier,
     )
