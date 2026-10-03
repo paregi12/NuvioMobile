@@ -3,7 +3,6 @@ package com.nuvio.app.features.anilist.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -61,7 +60,10 @@ import com.nuvio.app.features.anilist.AniListLibraryMenuPrefs
 import com.nuvio.app.features.anilist.AniListSortBy
 import com.nuvio.app.core.ui.floatingNavigationBarPadding
 import com.nuvio.app.core.ui.LocalNuvioNavBarScrollState
+import com.nuvio.app.core.ui.LocalNuvioBottomNavigationOverlayPadding
 import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.features.settings.NavBarStyle
+import com.nuvio.app.features.settings.ThemeSettingsRepository
 
 // ── Colour palette ──────────────────────────────────────────────────────────
 private enum class MenuTab { SORT, OPEN_BY }
@@ -77,8 +79,24 @@ fun AniListLibraryActionMenu(
     content: @Composable () -> Unit,
 ) {
     val prefs by AniListLibraryMenuPrefs.state.collectAsStateWithLifecycle()
+    val navBarStyle by ThemeSettingsRepository.navBarStyle.collectAsStateWithLifecycle()
     val tokens = MaterialTheme.nuvio
-    val navBarLabelVisibility = LocalNuvioNavBarScrollState.current?.labelVisibility ?: 1f
+    val bottomNavOverlay = LocalNuvioBottomNavigationOverlayPadding.current
+    val adaptiveLabelVisibility = when (navBarStyle) {
+        NavBarStyle.EXPANDED -> 1f
+        NavBarStyle.COMPACT, NavBarStyle.CLASSIC -> 0f
+        NavBarStyle.ADAPTIVE -> LocalNuvioNavBarScrollState.current?.labelVisibility ?: 1f
+    }
+    val bottomNavClearance = when {
+        bottomNavOverlay >= 60.dp -> 56.dp + 16.dp * adaptiveLabelVisibility
+        bottomNavOverlay > 0.dp -> bottomNavOverlay
+        else -> 0.dp
+    }
+    val bottomNavPadding = when {
+        bottomNavOverlay > 0.dp -> floatingNavigationBarPadding().calculateBottomPadding() + bottomNavClearance + 56.dp
+        navBarStyle == NavBarStyle.CLASSIC -> 8.dp
+        else -> floatingNavigationBarPadding().calculateBottomPadding() + 8.dp
+    }
 
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -114,7 +132,7 @@ fun AniListLibraryActionMenu(
                 .align(Alignment.BottomEnd)
                 .padding(
                     end = 16.dp,
-                    bottom = floatingNavigationBarPadding().calculateBottomPadding() + (8.dp * navBarLabelVisibility),
+                    bottom = bottomNavPadding,
                 )
                 .zIndex(2f)
         ) {
@@ -154,8 +172,8 @@ fun AniListLibraryActionMenu(
                         onClick = { menuOpen = !menuOpen },
                     ),
                 shape = RoundedCornerShape(50),
-                color = if (menuOpen) tokens.colors.accent else tokens.colors.surfaceElevated,
-                contentColor = tokens.colors.textPrimary,
+                color = if (menuOpen) Color.White else tokens.colors.surfaceElevated,
+                contentColor = if (menuOpen) Color.Black else tokens.colors.textPrimary,
                 shadowElevation = tokens.elevation.overlay,
             ) {
                 Row(
@@ -266,7 +284,7 @@ private fun MenuSegmentedSelector(
                 .height(40.dp)
                 .shadow(4.dp, RoundedCornerShape(50.dp))
                 .clip(RoundedCornerShape(50.dp))
-                .background(colors.accent)
+                .background(Color.White)
         )
 
         // Tab labels
@@ -288,7 +306,7 @@ private fun MenuSegmentedSelector(
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = if (tab == selectedTab) colors.textPrimary else colors.textMuted
+                            color = if (tab == selectedTab) Color.Black else colors.textMuted
                         )
                     )
                 }
@@ -334,7 +352,7 @@ private fun SortContent(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50.dp))
-                    .background(colors.overlaySelected)
+                    .background(if (prefs.sortAscending) Color.White else colors.overlaySelected)
                     .clickable { onToggleDirection() }
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
@@ -342,14 +360,14 @@ private fun SortContent(
                     Icon(
                         imageVector = if (prefs.sortAscending) Icons.Rounded.ArrowUpward else Icons.Rounded.ArrowDownward,
                         contentDescription = null,
-                        tint = colors.accent,
+                        tint = if (prefs.sortAscending) Color.Black else colors.accent,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = if (prefs.sortAscending) "Ascending" else "Descending",
                         style = MaterialTheme.typography.labelMedium.copy(
-                            color = colors.accent,
+                            color = if (prefs.sortAscending) Color.Black else colors.accent,
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -380,7 +398,7 @@ private fun SortOptionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50.dp))
-            .background(if (isSelected) colors.overlaySelected else Color.Transparent)
+            .background(if (isSelected) Color.White else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -389,7 +407,7 @@ private fun SortOptionRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = colors.textPrimary,
+                color = if (isSelected) Color.Black else colors.textPrimary,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         )
@@ -397,7 +415,7 @@ private fun SortOptionRow(
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = colors.accent,
+                tint = Color.Black,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -459,7 +477,7 @@ private fun OpenByRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(50.dp))
-            .background(if (isSelected) colors.overlaySelected else Color.Transparent)
+            .background(if (isSelected) Color.White else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -492,7 +510,7 @@ private fun OpenByRow(
         Text(
             text = name,
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = colors.textPrimary,
+                color = if (isSelected) Color.Black else colors.textPrimary,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             ),
             modifier = Modifier.weight(1f)
@@ -502,7 +520,7 @@ private fun OpenByRow(
             Icon(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
-                tint = colors.accent,
+                tint = Color.Black,
                 modifier = Modifier.size(18.dp)
             )
         }
