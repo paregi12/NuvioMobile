@@ -12,6 +12,7 @@ internal actual object PlatformLocalAccountDataCleaner {
         "profile_payload",
         "avatar_catalog_payload",
         "anonymous_user_id",
+        "member_access_payload",
     )
     private val profilePinCachePrefixes = listOf("profile_pin_cache_")
     private val profileIndexedPrefixes = listOf(
@@ -22,7 +23,9 @@ internal actual object PlatformLocalAccountDataCleaner {
         "watch_progress_payload_",
     )
     private val profileScopedBaseKeys = listOf(
+        "episode_shuffle",
         "catalog_settings_payload",
+        "discover_catalog_key",
         "continue_watching_preferences_payload",
         "poster_card_style_payload",
         "episode_release_notifications_payload",
@@ -98,6 +101,10 @@ internal actual object PlatformLocalAccountDataCleaner {
         val scraperCodePath = "${NSHomeDirectory()}/Library/Application Support/nuvio_plugin_scrapers"
         if (NSFileManager.defaultManager.fileExistsAtPath(scraperCodePath)) {
             NSFileManager.defaultManager.removeItemAtPath(scraperCodePath, null)
+        }
+        val membershipPath = "${NSHomeDirectory()}/Library/Application Support/NuvioMembership"
+        if (NSFileManager.defaultManager.fileExistsAtPath(membershipPath)) {
+            NSFileManager.defaultManager.removeItemAtPath(membershipPath, null)
         }
     }
 }
