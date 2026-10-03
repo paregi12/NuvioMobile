@@ -41,7 +41,6 @@ fun LazyListScope.aniListLibraryContent(
             items(3) {
                 HomeSkeletonRow(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    showHeaderAccent = true
                 )
             }
         }

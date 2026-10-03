@@ -445,19 +445,6 @@ private fun AniListConnectionCard(
                     }
                 }
             }
-        } else {
-            SettingsSection(
-                title = "AniList Account",
-                isTablet = isTablet,
-            ) {
-                SettingsGroup(isTablet = isTablet) {
-                    Text(
-                        text = "Connect AniList from Settings > Tracking to manage your account.",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
         }
     }
 }

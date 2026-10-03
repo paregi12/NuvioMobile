@@ -31,6 +31,7 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_about_made_with
 import nuvio.composeapp.generated.resources.compose_about_version_format
 import nuvio.composeapp.generated.resources.compose_settings_page_account
+import nuvio.composeapp.generated.resources.compose_settings_page_content_discovery
 import nuvio.composeapp.generated.resources.compose_settings_page_advanced
 import nuvio.composeapp.generated.resources.compose_settings_page_appearance
 import nuvio.composeapp.generated.resources.compose_settings_page_integrations

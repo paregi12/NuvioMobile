@@ -100,7 +100,6 @@ fun AniListEditMediaBottomSheet(
         sheetState = sheetState,
         containerColor = sheetBg,
         contentColor = textPrimary,
-        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
         showDragHandle = true,
         modifier = modifier
     ) {
