@@ -68,27 +68,55 @@ internal fun LazyListScope.aniListSettingsContent(
     isTablet: Boolean
 ) {
     item {
-        SettingsGroup(isTablet = isTablet) {
-            AniListBrandIntro(isTablet = isTablet)
-        }
-    }
-
-    item {
-        SettingsSection(
-            title = "AniList Integration Settings",
-            isTablet = isTablet,
-        ) {
-            SettingsGroup(isTablet = isTablet) {
-                AniListConnectionCard(isTablet = isTablet)
-            }
-        }
-    }
-
-    item {
         val authUiState by AniListAuthRepository.uiState.collectAsState()
         val settingsUiState by AniListSettingsRepository.uiState.collectAsState()
+        val isSyncing by AniListSyncCoordinator.isSyncing.collectAsState()
 
         if (authUiState.mode == AniListConnectionMode.CONNECTED) {
+            SettingsSection(title = "Synchronization", isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    SettingsSwitchRow(
+                        title = "Enable AniList Sync",
+                        description = "Master sync control for AniList watch progress.",
+                        checked = settingsUiState.enableSync,
+                        isTablet = isTablet,
+                        onCheckedChange = AniListSettingsRepository::setEnableSync,
+                    )
+                    SettingsSwitchRow(
+                        title = "Sync Watching Progress",
+                        description = "Synchronize watching state changes with AniList.",
+                        checked = settingsUiState.syncWatching,
+                        enabled = settingsUiState.enableSync,
+                        isTablet = isTablet,
+                        onCheckedChange = AniListSettingsRepository::setSyncWatching,
+                    )
+                    SettingsSwitchRow(
+                        title = "Auto Sync While Watching",
+                        description = "Upload progress automatically while playing files.",
+                        checked = settingsUiState.autoSync,
+                        enabled = settingsUiState.enableSync,
+                        isTablet = isTablet,
+                        onCheckedChange = AniListSettingsRepository::setAutoSync,
+                    )
+                    SettingsSwitchRow(
+                        title = "Sync on App Launch",
+                        description = "Run a full sync check every time the app opens.",
+                        checked = settingsUiState.syncOnLaunch,
+                        enabled = settingsUiState.enableSync,
+                        isTablet = isTablet,
+                        onCheckedChange = AniListSettingsRepository::setSyncOnLaunch,
+                    )
+                    if (settingsUiState.enableSync) {
+                        Button(
+                            onClick = { AniListSyncCoordinator.syncNow() },
+                            enabled = !isSyncing,
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        ) {
+                            Text("Sync Now")
+                        }
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             SettingsSection(
                 title = "Playback",
@@ -127,6 +155,16 @@ internal fun LazyListScope.aniListSettingsContent(
                     isTablet = isTablet,
                     items = settingsUiState.librarySections
                 )
+            }
+        } else {
+            SettingsSection(title = "AniList Account", isTablet = isTablet) {
+                SettingsGroup(isTablet = isTablet) {
+                    Text(
+                        text = "Connect AniList from Settings > Tracking to manage your account.",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -405,6 +443,19 @@ private fun AniListConnectionCard(
                             Text("Disconnect")
                         }
                     }
+                }
+            }
+        } else {
+            SettingsSection(
+                title = "AniList Account",
+                isTablet = isTablet,
+            ) {
+                SettingsGroup(isTablet = isTablet) {
+                    Text(
+                        text = "Connect AniList from Settings > Tracking to manage your account.",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }

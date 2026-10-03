@@ -117,6 +117,10 @@ internal fun LazyListScope.trackingSettingsContent(
     onCommentsEnabledChange: (Boolean) -> Unit,
 ) {
     item {
+        val aniListUiState by remember {
+            com.nuvio.app.features.anilist.AniListAuthRepository.ensureLoaded()
+            com.nuvio.app.features.anilist.AniListAuthRepository.uiState
+        }.collectAsStateWithLifecycle()
         SettingsSection(
             title = stringResource(Res.string.settings_tracking_services),
             isTablet = isTablet,
@@ -125,6 +129,7 @@ internal fun LazyListScope.trackingSettingsContent(
                 isTablet = isTablet,
                 traktUiState = traktUiState,
                 simklUiState = simklUiState,
+                aniListUiState = aniListUiState,
             )
         }
     }

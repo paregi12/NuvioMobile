@@ -66,6 +66,9 @@ import com.nuvio.app.core.ui.DialogSurface
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
 import com.nuvio.app.core.ui.NuvioTokens
 import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.features.anilist.AniListAuthRepository
+import com.nuvio.app.features.anilist.AniListAuthUiState
+import com.nuvio.app.features.anilist.AniListConnectionMode
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.simkl.SimklAuthError
 import com.nuvio.app.features.simkl.SimklAuthRepository
@@ -127,6 +130,7 @@ internal enum class TrackingBrand(val displayName: String) {
     NUVIO("Nuvio"),
     TRAKT("Trakt"),
     SIMKL("Simkl"),
+    ANILIST("AniList"),
     MDBLIST("MDBList"),
     TMDB("TMDB"),
 }
@@ -148,6 +152,7 @@ internal fun isTrackingBrandAvailable(
     -> true
     TrackingBrand.TRAKT -> traktConnected
     TrackingBrand.SIMKL -> simklConnected
+    TrackingBrand.ANILIST -> true
     TrackingBrand.MDBLIST -> mdblistConnected
 }
 
@@ -168,6 +173,7 @@ internal fun TrackingProviderCards(
     isTablet: Boolean,
     traktUiState: TraktAuthUiState,
     simklUiState: SimklAuthUiState,
+    aniListUiState: AniListAuthUiState,
 ) {
     val syncState by remember {
         SimklSyncRepository.ensureLoaded()
@@ -203,12 +209,42 @@ internal fun TrackingProviderCards(
             onInfoRequested = { showSyncInfo = true },
             modifier = Modifier.fillMaxWidth(),
         )
+        AniListProviderCard(aniListUiState, Modifier.fillMaxWidth())
         MdbListProviderCard(Modifier.fillMaxWidth())
     }
 
     if (showSyncInfo) {
         SimklSyncInfoDialog(onDismiss = { showSyncInfo = false })
     }
+}
+
+@Composable
+private fun AniListProviderCard(uiState: AniListAuthUiState, modifier: Modifier) {
+    TrackingProviderCard(
+        brand = TrackingBrand.ANILIST,
+        mode = if (uiState.mode == AniListConnectionMode.CONNECTED) {
+            TrackingConnectionCardMode.CONNECTED
+        } else {
+            TrackingConnectionCardMode.DISCONNECTED
+        },
+        credentialsConfigured = true,
+        isLoading = uiState.isLoading || uiState.mode == AniListConnectionMode.LOADING,
+        connectedLabel = uiState.username?.let { "Connected as $it" } ?: "Connected to AniList",
+        connectedDescription = "AniList account is connected for anime library and watch progress sync.",
+        signInDescription = "Connect your AniList account to sync anime library and watch progress.",
+        finishSignInLabel = "Connect AniList",
+        approvalDescription = "Continue signing in with AniList.",
+        connectLabel = "Connect AniList",
+        openLoginLabel = "Open AniList",
+        disconnectLabel = "Disconnect",
+        missingCredentialsMessage = "AniList sign in is unavailable.",
+        errorMessage = uiState.errorMessage,
+        onConnectRequested = { AniListAuthRepository.onConnectRequested() },
+        onResumeAuthorization = { AniListAuthRepository.onConnectRequested() },
+        onCancelAuthorization = {},
+        onDisconnect = AniListAuthRepository::disconnect,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -677,6 +713,7 @@ private fun TrackingDisconnectDialog(
                 TrackingBrand.SIMKL ->
                     stringResource(Res.string.settings_simkl_disconnect_description)
                 TrackingBrand.MDBLIST -> stringResource(Res.string.settings_mdblist_disconnect_description)
+                TrackingBrand.ANILIST -> "Disconnect your AniList account?"
                 TrackingBrand.NUVIO,
                 TrackingBrand.TMDB,
                 -> stringResource(
@@ -726,6 +763,12 @@ internal fun TrackingBrandGlyph(
             modifier = modifier,
             contentScale = ContentScale.Fit,
         )
+        TrackingBrand.ANILIST -> Image(
+            painter = integrationLogoPainter(IntegrationLogo.AniList),
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Fit,
+        )
         TrackingBrand.TMDB -> Image(
             painter = integrationLogoPainter(IntegrationLogo.Tmdb),
             contentDescription = contentDescription,
@@ -749,6 +792,7 @@ private fun TrackingBrandWordmark(
     val painter: Painter = when (brand) {
         TrackingBrand.TRAKT -> traktBrandPainter(TraktBrandAsset.Wordmark)
         TrackingBrand.SIMKL -> simklBrandPainter(SimklBrandAsset.Wordmark)
+        TrackingBrand.ANILIST -> integrationLogoPainter(IntegrationLogo.AniList)
         TrackingBrand.MDBLIST -> integrationLogoPainter(IntegrationLogo.MdbList)
         TrackingBrand.NUVIO,
         TrackingBrand.TMDB,
@@ -772,6 +816,7 @@ private fun TrackingBrandWordmark(
                 .width(124.dp)
                 .height(30.dp)
             TrackingBrand.MDBLIST -> Modifier.width(130.dp).height(32.dp)
+            TrackingBrand.ANILIST -> Modifier.width(108.dp).height(32.dp)
             TrackingBrand.NUVIO,
             TrackingBrand.TMDB,
             -> Modifier
@@ -790,6 +835,9 @@ private fun TrackingBrand.cardBrush(): Brush = when (this) {
     )
     TrackingBrand.SIMKL -> Brush.linearGradient(
         colors = listOf(Color(0xFF050505), Color(0xFF292929), Color(0xFF111111)),
+    )
+    TrackingBrand.ANILIST -> Brush.linearGradient(
+        colors = listOf(Color(0xFF2D1748), Color(0xFF53206B), Color(0xFF25153D)),
     )
     TrackingBrand.NUVIO,
     TrackingBrand.TMDB,
