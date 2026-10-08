@@ -274,7 +274,7 @@ object PlayerStreamsRepository {
                     launch {
                         val completion = PluginRepository.executeScraper(
                             scraper = scraper,
-                            tmdbId = pluginContentId(
+                            mediaId = pluginContentId(
                                 videoId = videoId,
                                 season = season,
                                 episode = episode,

@@ -181,7 +181,6 @@ internal object PluginRuntime {
                     mapOf(
                         "id" to JsonPrimitive(contentId),
                         "mediaId" to JsonPrimitive(contentId),
-                        "tmdbId" to JsonPrimitive(contentId),
                     ),
                 ).toString()
                 val hostRegistry = HostApiRegistry().apply {
@@ -293,7 +292,6 @@ internal object PluginRuntime {
             mapOf(
                 "id" to JsonPrimitive(mediaId),
                 "mediaId" to JsonPrimitive(mediaId),
-                "tmdbId" to JsonPrimitive(mediaId),
                 "mediaType" to JsonPrimitive(mediaType),
                 "season" to (season?.let(::JsonPrimitive) ?: JsonNull),
                 "episode" to (episode?.let(::JsonPrimitive) ?: JsonNull),
@@ -396,6 +394,7 @@ internal object PluginRuntime {
                     size = item.stringOrNull("size"),
                     language = item.stringOrNull("language"),
                     provider = item.stringOrNull("provider"),
+                    server = item.stringOrNull("server") ?: item.stringOrNull("serverName"),
                     type = item.stringOrNull("type"),
                     seeders = item["seeders"]?.jsonPrimitive?.intOrNull,
                     peers = item["peers"]?.jsonPrimitive?.intOrNull,

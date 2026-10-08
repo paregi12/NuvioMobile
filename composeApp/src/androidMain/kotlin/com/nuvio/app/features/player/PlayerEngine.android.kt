@@ -811,6 +811,9 @@ private fun ExoPlayerSurface(
                 override fun getAudioTracks(): List<AudioTrack> =
                     exoPlayer.extractAudioTracks(context)
 
+                override fun getVideoTracks(): List<VideoTrack> =
+                    exoPlayer.extractVideoTracks(context)
+
                 override suspend fun getMediaInfo(): PlayerMediaInfo {
                     val video = exoPlayer.videoFormat
                     val audio = exoPlayer.audioFormat
@@ -837,6 +840,32 @@ private fun ExoPlayerSurface(
 
                 override fun selectAudioTrack(index: Int) {
                     exoPlayer.selectTrackByIndex(C.TRACK_TYPE_AUDIO, index)
+                }
+
+                override fun selectVideoTrack(index: Int) {
+                    if (index < 0) {
+                        exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+                            .buildUpon()
+                            .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+                            .build()
+                        return
+                    }
+                    var idx = 0
+                    for (group in exoPlayer.currentTracks.groups) {
+                        if (group.type != C.TRACK_TYPE_VIDEO) continue
+                        for (i in 0 until group.length) {
+                            if (idx == index) {
+                                exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+                                    .buildUpon()
+                                    .setOverrideForType(
+                                        TrackSelectionOverride(group.mediaTrackGroup, listOf(i))
+                                    )
+                                    .build()
+                                return
+                            }
+                            idx++
+                        }
+                    }
                 }
 
                 override fun applyAudioLanguagePreferences(languages: List<String>) {
@@ -1361,6 +1390,8 @@ private class NuvioLibmpvView(
     private var latestAudioTracks: List<LibmpvTrack> = emptyList()
     @Volatile
     private var latestSubtitleTracks: List<LibmpvTrack> = emptyList()
+    @Volatile
+    private var latestVideoTracks: List<VideoTrack> = emptyList()
 
     override fun initOptions() {
         setVo(videoOutput.mpvValue)
@@ -1601,12 +1632,27 @@ private class NuvioLibmpvView(
                     )
                 }
 
+            override fun getVideoTracks(): List<VideoTrack> = latestVideoTracks
+
             override fun selectAudioTrack(index: Int) {
                 if (index < 0) {
                     executeMpv { mpv.setPropertyString("aid", "no") }
                 } else {
                     latestAudioTracks.getOrNull(index)?.let { track ->
                         executeMpv { mpv.setPropertyInt("aid", track.id) }
+                    }
+                }
+            }
+
+            override fun selectVideoTrack(index: Int) {
+                if (index < 0) {
+                    executeMpv { mpv.setPropertyString("vid", "auto") }
+                } else {
+                    latestVideoTracks.getOrNull(index)?.let { track ->
+                        val trackId = track.id.toIntOrNull()
+                        if (trackId != null) {
+                            executeMpv { mpv.setPropertyInt("vid", trackId) }
+                        }
                     }
                 }
             }
@@ -1707,6 +1753,7 @@ private class NuvioLibmpvView(
         executeMpv {
             latestAudioTracks = extractLibmpvTracks(context, type = "audio")
             latestSubtitleTracks = extractLibmpvTracks(context, type = "sub")
+            latestVideoTracks = extractLibmpvVideoTracks(context)
         }
     }
 
@@ -1768,6 +1815,34 @@ private class NuvioLibmpvView(
                         trackId = id.toString(),
                         hasForcedSelectionFlag = node.nodeBoolean("forced") ?: false,
                     ),
+                )
+            }
+    }
+
+    private fun extractLibmpvVideoTracks(context: Context): List<VideoTrack> {
+        val nodes = mpv.getPropertyNode("track-list")?.asArray()?.toList().orEmpty()
+        return nodes
+            .filter { node -> node.nodeString("type") == "video" }
+            .mapIndexedNotNull { index, node ->
+                val id = node.nodeInt("id") ?: return@mapIndexedNotNull null
+                val w = node.nodeInt("demux-w") ?: node.nodeInt("width") ?: 0
+                val h = node.nodeInt("demux-h") ?: node.nodeInt("height") ?: 0
+                val bitrate = node.nodeInt("demux-bitrate") ?: node.nodeInt("hls-bitrate") ?: node.nodeInt("bitrate") ?: 0
+                val rawLabel = node.nodeString("title")
+                val label = when {
+                    !rawLabel.isNullOrBlank() -> rawLabel
+                    h > 0 -> "${h}p"
+                    w > 0 -> "${w}x${h}"
+                    else -> runBlocking { getString(Res.string.compose_player_track_number, index + 1) }
+                }
+                VideoTrack(
+                    index = index,
+                    id = id.toString(),
+                    label = label,
+                    width = w,
+                    height = h,
+                    bitrate = bitrate,
+                    isSelected = node.nodeBoolean("selected") ?: false,
                 )
             }
     }
@@ -2072,6 +2147,42 @@ private fun ExoPlayer.extractAudioTracks(context: Context): List<AudioTrack> {
             )
         )
         idx++
+    }
+    return tracks
+}
+
+private fun ExoPlayer.extractVideoTracks(context: Context): List<VideoTrack> {
+    val tracks = mutableListOf<VideoTrack>()
+    val trackNameProvider = CustomDefaultTrackNameProvider(context.resources)
+    var idx = 0
+    for (group in currentTracks.groups) {
+        if (group.type != C.TRACK_TYPE_VIDEO) continue
+        for (i in 0 until group.length) {
+            val format = group.mediaTrackGroup.getFormat(i)
+            val w = format.width.takeIf { it > 0 } ?: 0
+            val h = format.height.takeIf { it > 0 } ?: 0
+            val bitrate = format.bitrate.takeIf { it > 0 } ?: 0
+            val rawLabel = trackNameProvider.getTrackName(format).takeIf { it.isNotBlank() }
+                ?: format.label?.takeIf { it.isNotBlank() }
+            val label = when {
+                !rawLabel.isNullOrBlank() -> rawLabel
+                h > 0 -> "${h}p"
+                w > 0 -> "${w}x${h}"
+                else -> runBlocking { getString(Res.string.compose_player_track_number, idx + 1) }
+            }
+            tracks.add(
+                VideoTrack(
+                    index = idx,
+                    id = format.id ?: "${group.mediaTrackGroup.id}_$i",
+                    label = label,
+                    width = w,
+                    height = h,
+                    bitrate = bitrate,
+                    isSelected = group.isTrackSelected(i),
+                )
+            )
+            idx++
+        }
     }
     return tracks
 }

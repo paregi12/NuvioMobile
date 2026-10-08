@@ -155,10 +155,13 @@ internal fun PlayerScreenRuntime.refreshTracks() {
     val previousAudioIndex = selectedAudioIndex
     audioTracks = ctrl.getAudioTracks()
     subtitleTracks = ctrl.getSubtitleTracks()
+    videoTracks = ctrl.getVideoTracks()
     val selectedAudio = audioTracks.firstOrNull { it.isSelected }
     if (selectedAudio != null) selectedAudioIndex = selectedAudio.index
     val selectedSub = subtitleTracks.firstOrNull { it.isSelected }
     if (selectedSub != null && !useCustomSubtitles) selectedSubtitleIndex = selectedSub.index
+    val selectedVideo = videoTracks.firstOrNull { it.isSelected }
+    if (selectedVideo != null) selectedVideoIndex = selectedVideo.index
     if (!playbackSnapshot.isLoading) {
         hasScannedTextTracksOnce = true
     }
@@ -355,4 +358,9 @@ private fun PlayerScreenRuntime.disableAutomaticSubtitleSelection() {
     selectedSubtitleIndex = -1
     selectedAddonSubtitleId = null
     useCustomSubtitles = false
+}
+
+internal fun PlayerScreenRuntime.selectVideoTrack(index: Int) {
+    selectedVideoIndex = index
+    playerController?.selectVideoTrack(index)
 }

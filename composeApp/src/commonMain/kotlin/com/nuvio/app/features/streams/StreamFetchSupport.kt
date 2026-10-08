@@ -78,6 +78,7 @@ internal fun PluginRuntimeResult.toStreamItem(
 ): StreamItem {
     val subtitleParts = listOfNotNull(
         scraper.name.takeIf { includeScraperNameInSubtitle && it.isNotBlank() },
+        server?.takeIf { it.isNotBlank() },
         quality?.takeIf { it.isNotBlank() },
         size?.takeIf { it.isNotBlank() },
         language?.takeIf { it.isNotBlank() },
@@ -104,6 +105,8 @@ internal fun PluginRuntimeResult.toStreamItem(
         addonName = addonName,
         addonId = addonId,
         streamType = normalizeStreamType(type),
+        quality = quality,
+        server = server,
         behaviorHints = if (requestHeaders.isEmpty()) {
             StreamBehaviorHints()
         } else {

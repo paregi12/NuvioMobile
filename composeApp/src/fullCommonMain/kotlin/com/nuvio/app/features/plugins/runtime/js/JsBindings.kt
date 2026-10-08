@@ -34,7 +34,7 @@ internal object JsBindings {
                     var args = JSON.parse(__get_call_args());
                     var season = args.season == null ? undefined : args.season;
                     var episode = args.episode == null ? undefined : args.episode;
-                    var mediaId = args.id || args.mediaId || args.tmdbId;
+                    var mediaId = args.id || args.mediaId;
                     var result = await getStreams(mediaId, args.mediaType, season, episode);
                     __capture_result(JSON.stringify(result || []));
                 } catch (e) {
@@ -50,7 +50,7 @@ internal object JsBindings {
                     var getDetails = (typeof module !== 'undefined' && module.exports && (module.exports.getDetails || module.exports.getAnimeInfo || module.exports.getEpisodes)) || globalThis.getDetails || globalThis.getAnimeInfo || globalThis.getEpisodes;
                     if (typeof getDetails === 'function') {
                         var args = JSON.parse(__get_call_args());
-                        var mediaId = args.id || args.mediaId || args.tmdbId;
+                        var mediaId = args.id || args.mediaId;
                         var result = await getDetails(mediaId);
                         __capture_result(JSON.stringify(result || null));
                     } else {

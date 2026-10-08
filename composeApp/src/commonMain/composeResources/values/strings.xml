@@ -463,6 +463,9 @@
     <string name="compose_player_seek_feedback_forward">+%1$ds</string>
     <string name="compose_player_seek_forward_10">Seek forward 10 seconds</string>
     <string name="compose_player_sources">Sources</string>
+    <string name="compose_player_servers">Servers</string>
+    <string name="compose_player_quality">Quality</string>
+    <string name="compose_player_no_quality_tracks_available">No alternative quality tracks available</string>
     <string name="compose_player_style">Style</string>
     <string name="compose_player_select_addon_subtitle_first">Select an addon subtitle first</string>
     <string name="compose_player_subs">Subs</string>

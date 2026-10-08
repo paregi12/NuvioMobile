@@ -25,6 +25,16 @@ data class SubtitleTrack(
     val isForced: Boolean = false,
 )
 
+data class VideoTrack(
+    val index: Int,
+    val id: String,
+    val label: String,
+    val width: Int = 0,
+    val height: Int = 0,
+    val bitrate: Int = 0,
+    val isSelected: Boolean = false,
+)
+
 data class AddonSubtitle(
     val id: String,
     val url: String,

@@ -18,18 +18,6 @@ class PluginContentIdsTest {
     }
 
     @Test
-    fun `tmdb prefixed series playback id strips prefix and suffix`() {
-        assertEquals(
-            "12345",
-            pluginContentId(
-                videoId = "tmdb:12345:2:6",
-                season = 2,
-                episode = 6,
-            ),
-        )
-    }
-
-    @Test
     fun `movie id stays unchanged`() {
         assertEquals(
             "tt0133093",
@@ -42,11 +30,11 @@ class PluginContentIdsTest {
     }
 
     @Test
-    fun `slash prefixed tmdb id keeps base content id`() {
+    fun `slash formatted id keeps base content id`() {
         assertEquals(
             "999",
             pluginContentId(
-                videoId = "tmdb/999/1/2",
+                videoId = "999/1/2",
                 season = 1,
                 episode = 2,
             ),

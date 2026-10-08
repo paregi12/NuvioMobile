@@ -81,6 +81,7 @@ data class PluginRuntimeResult(
     val size: String? = null,
     val language: String? = null,
     val provider: String? = null,
+    val server: String? = null,
     val type: String? = null,
     val seeders: Int? = null,
     val peers: Int? = null,

@@ -35,7 +35,7 @@ expect object PluginRepository {
 
     suspend fun executeScraper(
         scraper: PluginScraper,
-        tmdbId: String,
+        mediaId: String,
         mediaType: String,
         season: Int?,
         episode: Int?,

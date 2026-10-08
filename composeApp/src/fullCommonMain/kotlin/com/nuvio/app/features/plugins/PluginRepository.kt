@@ -339,7 +339,7 @@ actual object PluginRepository {
         val episode = if (mediaType == "tv") 1 else null
         return executeScraperInternal(
             scraper = scraper,
-            tmdbId = "603",
+            mediaId = "tt0133093",
             mediaType = mediaType,
             season = season,
             episode = episode,
@@ -349,13 +349,13 @@ actual object PluginRepository {
 
     actual suspend fun executeScraper(
         scraper: PluginScraper,
-        tmdbId: String,
+        mediaId: String,
         mediaType: String,
         season: Int?,
         episode: Int?,
     ): Result<List<PluginRuntimeResult>> = executeScraperInternal(
         scraper = scraper,
-        tmdbId = tmdbId,
+        mediaId = mediaId,
         mediaType = mediaType,
         season = season,
         episode = episode,

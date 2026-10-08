@@ -25,6 +25,7 @@ import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -91,6 +92,7 @@ internal fun PlayerControlActions(
     resizeMode: PlayerResizeMode,
     onSubtitleClick: () -> Unit,
     onAudioClick: () -> Unit,
+    onQualityClick: (() -> Unit)? = null,
     onSourcesClick: (() -> Unit)?,
     onEpisodesClick: (() -> Unit)?,
     onNextEpisodeClick: (() -> Unit)?,
@@ -117,9 +119,15 @@ internal fun PlayerControlActions(
             stringResource(Res.string.compose_player_audio), onAudioClick,
             painter = appIconPainter(AppIconResource.PlayerAudioFilled),
         ),
+        onQualityClick?.let {
+            PlayerControlAction(
+                stringResource(Res.string.compose_player_quality), it,
+                icon = Icons.Rounded.Tune,
+            )
+        },
         onSourcesClick?.let {
             PlayerControlAction(
-                stringResource(Res.string.compose_player_sources), it,
+                stringResource(Res.string.compose_player_servers), it,
                 painter = appIconPainter(AppIconResource.PlayerSource),
             )
         },

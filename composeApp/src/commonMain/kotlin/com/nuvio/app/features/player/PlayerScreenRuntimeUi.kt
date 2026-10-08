@@ -211,6 +211,11 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
                 refreshTracks()
                 showAudioModal = true
             },
+            onQualityClick = {
+                refreshTracks()
+                showQualityModal = true
+                controlsVisible = true
+            },
             onVideoSettingsClick = if (isIos) {
                 {
                     showVideoSettingsModal = true
@@ -219,7 +224,9 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
             } else {
                 null
             },
-            onSourcesClick = if (activeVideoId != null) { { openSourcesPanel() } } else null,
+            onSourcesClick = if (activeVideoId != null || parentMetaId.isNotBlank() || sourceStreamsState.streams.isNotEmpty()) {
+                { openSourcesPanel() }
+            } else null,
             onEpisodesClick = if (isSeries) { { openEpisodesPanel() } } else null,
             onOpenInExternalPlayer = args.onOpenInExternalPlayer?.let { openExternal ->
                 {
@@ -372,6 +379,17 @@ private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
             }
         },
         onAudioModalDismissed = { showAudioModal = false },
+        showQualityModal = showQualityModal,
+        videoTracks = videoTracks,
+        selectedVideoIndex = selectedVideoIndex,
+        onVideoTrackSelected = { index ->
+            selectVideoTrack(index)
+            scope.launch {
+                kotlinx.coroutines.delay(200)
+                showQualityModal = false
+            }
+        },
+        onQualityModalDismissed = { showQualityModal = false },
         showSubtitleModal = showSubtitleModal,
         subtitleTracks = subtitleTracks,
         selectedSubtitleIndex = selectedSubtitleIndex,

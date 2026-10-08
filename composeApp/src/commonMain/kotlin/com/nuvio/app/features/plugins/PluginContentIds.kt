@@ -8,16 +8,10 @@ internal fun pluginContentId(
     val trimmed = videoId.trim()
     if (trimmed.isBlank()) return videoId
 
-    val withoutPrefix = when {
-        trimmed.startsWith("tmdb:") -> trimmed.removePrefix("tmdb:")
-        trimmed.startsWith("tmdb/") -> trimmed.removePrefix("tmdb/")
-        else -> trimmed
-    }
-
     val withoutEpisodeSuffix = if (season != null && episode != null) {
-        withoutPrefix.removeSuffix(":$season:$episode")
+        trimmed.removeSuffix(":$season:$episode")
     } else {
-        withoutPrefix
+        trimmed
     }
 
     return withoutEpisodeSuffix.substringBefore('/').ifBlank { trimmed }

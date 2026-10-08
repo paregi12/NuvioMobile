@@ -204,7 +204,7 @@ internal fun PlayerScreenRuntime.playNextEpisode(automatic: Boolean = false) {
 }
 
 internal fun PlayerScreenRuntime.openSourcesPanel() {
-    val vid = activeVideoId ?: return
+    val vid = activeVideoId ?: parentMetaId.takeIf { it.isNotBlank() } ?: return
     PlayerStreamsRepository.loadSources(
         type = contentType ?: parentMetaType,
         videoId = vid,
