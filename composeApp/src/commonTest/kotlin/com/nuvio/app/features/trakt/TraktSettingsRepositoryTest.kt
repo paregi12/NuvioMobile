@@ -62,16 +62,17 @@ class TraktSettingsRepositoryTest {
     }
 
     @Test
-    fun `more like this source defaults to Trakt for unset or invalid storage`() {
-        assertEquals(MoreLikeThisSourcePreference.TRAKT, MoreLikeThisSourcePreference.fromStorage(null))
-        assertEquals(MoreLikeThisSourcePreference.TRAKT, MoreLikeThisSourcePreference.fromStorage(""))
-        assertEquals(MoreLikeThisSourcePreference.TRAKT, MoreLikeThisSourcePreference.fromStorage("not-a-source"))
+    fun `more like this source defaults to AniList for unset or invalid storage`() {
+        assertEquals(MoreLikeThisSourcePreference.ANILIST, MoreLikeThisSourcePreference.fromStorage(null))
+        assertEquals(MoreLikeThisSourcePreference.ANILIST, MoreLikeThisSourcePreference.fromStorage(""))
+        assertEquals(MoreLikeThisSourcePreference.ANILIST, MoreLikeThisSourcePreference.fromStorage("not-a-source"))
     }
 
     @Test
     fun `more like this source restores valid storage values`() {
         assertEquals(MoreLikeThisSourcePreference.TRAKT, MoreLikeThisSourcePreference.fromStorage("TRAKT"))
-        assertEquals(MoreLikeThisSourcePreference.TMDB, MoreLikeThisSourcePreference.fromStorage("TMDB"))
+        assertEquals(MoreLikeThisSourcePreference.ANILIST, MoreLikeThisSourcePreference.fromStorage("ANILIST"))
+        assertEquals(MoreLikeThisSourcePreference.ANILIST, MoreLikeThisSourcePreference.fromStorage("TMDB"))
     }
 
     @Test
@@ -141,7 +142,7 @@ class TraktSettingsRepositoryTest {
         assertFalse(
             shouldUseTraktMoreLikeThis(
                 isAuthenticated = true,
-                source = MoreLikeThisSourcePreference.TMDB,
+                source = MoreLikeThisSourcePreference.ANILIST,
             ),
         )
         assertTrue(

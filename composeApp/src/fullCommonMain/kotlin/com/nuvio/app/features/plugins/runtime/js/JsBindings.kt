@@ -4,9 +4,6 @@ internal object JsBindings {
     val staticPolyfillCode: String = """
             globalThis.SCRAPER_ID = __get_scraper_id();
             globalThis.SCRAPER_SETTINGS = JSON.parse(__get_scraper_settings());
-            if (typeof TMDB_API_KEY === 'undefined') {
-                globalThis.TMDB_API_KEY = __get_tmdb_api_key();
-            }
             if (typeof globalThis.global === 'undefined') globalThis.global = globalThis;
             if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
             if (typeof globalThis.self === 'undefined') globalThis.self = globalThis;
@@ -37,11 +34,31 @@ internal object JsBindings {
                     var args = JSON.parse(__get_call_args());
                     var season = args.season == null ? undefined : args.season;
                     var episode = args.episode == null ? undefined : args.episode;
-                    var result = await getStreams(args.tmdbId, args.mediaType, season, episode);
+                    var mediaId = args.id || args.mediaId || args.tmdbId;
+                    var result = await getStreams(mediaId, args.mediaType, season, episode);
                     __capture_result(JSON.stringify(result || []));
                 } catch (e) {
                     console.error("getStreams error:", e && e.message ? e.message : e, e && e.stack ? e.stack : "");
                     __capture_result(JSON.stringify([]));
+                }
+            })();
+        """.trimIndent()
+
+    val staticDetailsCallCode: String = """
+            (async function() {
+                try {
+                    var getDetails = (typeof module !== 'undefined' && module.exports && (module.exports.getDetails || module.exports.getAnimeInfo || module.exports.getEpisodes)) || globalThis.getDetails || globalThis.getAnimeInfo || globalThis.getEpisodes;
+                    if (typeof getDetails === 'function') {
+                        var args = JSON.parse(__get_call_args());
+                        var mediaId = args.id || args.mediaId || args.tmdbId;
+                        var result = await getDetails(mediaId);
+                        __capture_result(JSON.stringify(result || null));
+                    } else {
+                        __capture_result("null");
+                    }
+                } catch (e) {
+                    console.error("getDetails error:", e && e.message ? e.message : e);
+                    __capture_result("null");
                 }
             })();
         """.trimIndent()
@@ -58,6 +75,23 @@ internal object JsBindings {
                     }
                 } catch (e) {
                     console.error("onSettings error:", e);
+                    __capture_result("[]");
+                }
+            })();
+        """.trimIndent()
+
+    val staticHomeCallCode: String = """
+            (async function() {
+                try {
+                    var getHome = (typeof module !== 'undefined' && module.exports && (module.exports.getHome || module.exports.getMainPage)) || globalThis.getHome || globalThis.getMainPage;
+                    if (typeof getHome === 'function') {
+                        var homeResult = await getHome();
+                        __capture_result(JSON.stringify(homeResult || []));
+                    } else {
+                        __capture_result("[]");
+                    }
+                } catch (e) {
+                    console.error("getHome error:", e && e.message ? e.message : e);
                     __capture_result("[]");
                 }
             })();

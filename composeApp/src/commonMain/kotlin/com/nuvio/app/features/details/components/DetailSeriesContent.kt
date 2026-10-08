@@ -869,15 +869,31 @@ private fun EpisodeHorizontalCard(
                     bottom = contentBottomPadding,
                 ),
             verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            EpisodeCodeBadge(
-                text = video.episodeBadge(),
-                textSize = metrics.badgeTextSize,
-                radius = metrics.badgeRadius,
-                horizontalPadding = metrics.badgeHorizontalPadding,
-                verticalPadding = metrics.badgeVerticalPadding,
-                backgroundAlpha = 0.42f,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                EpisodeCodeBadge(
+                    text = video.episodeBadge(),
+                    textSize = metrics.badgeTextSize,
+                    radius = metrics.badgeRadius,
+                    horizontalPadding = metrics.badgeHorizontalPadding,
+                    verticalPadding = metrics.badgeVerticalPadding,
+                    backgroundAlpha = 0.42f,
+                )
+                if (video.isFiller) {
+                    EpisodeCodeBadge(
+                        text = "FILLER",
+                        textSize = metrics.badgeTextSize,
+                        radius = metrics.badgeRadius,
+                        horizontalPadding = metrics.badgeHorizontalPadding,
+                        verticalPadding = metrics.badgeVerticalPadding,
+                        backgroundColor = Color(0xFFE65100),
+                        contentColor = Color.White,
+                        backgroundAlpha = 0.9f,
+                    )
+                }
+            }
 
             Text(
                 text = video.title,
@@ -1097,11 +1113,13 @@ private fun EpisodeCodeBadge(
     verticalPadding: Dp,
     backgroundAlpha: Float,
     modifier: Modifier = Modifier,
+    backgroundColor: Color = Color.Black,
+    contentColor: Color = Color.White.copy(alpha = 0.9f),
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(radius))
-            .background(Color.Black.copy(alpha = backgroundAlpha))
+            .background(backgroundColor.copy(alpha = backgroundAlpha))
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
     ) {
         Text(
@@ -1111,7 +1129,7 @@ private fun EpisodeCodeBadge(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.sp,
             ),
-            color = Color.White.copy(alpha = 0.9f),
+            color = contentColor,
             maxLines = 1,
         )
     }
@@ -1229,17 +1247,34 @@ private fun EpisodeListCard(
                     )
                 }
 
-                EpisodeCodeBadge(
-                    text = video.episodeBadge(),
-                    textSize = sizing.badgeTextSize,
-                    radius = sizing.badgeRadius,
-                    horizontalPadding = sizing.badgeHorizontalPadding,
-                    verticalPadding = sizing.badgeVerticalPadding,
-                    backgroundAlpha = 0.85f,
+                Row(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 8.dp, top = 8.dp),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    EpisodeCodeBadge(
+                        text = video.episodeBadge(),
+                        textSize = sizing.badgeTextSize,
+                        radius = sizing.badgeRadius,
+                        horizontalPadding = sizing.badgeHorizontalPadding,
+                        verticalPadding = sizing.badgeVerticalPadding,
+                        backgroundAlpha = 0.85f,
+                    )
+                    if (video.isFiller) {
+                        EpisodeCodeBadge(
+                            text = "FILLER",
+                            textSize = sizing.badgeTextSize,
+                            radius = sizing.badgeRadius,
+                            horizontalPadding = sizing.badgeHorizontalPadding,
+                            verticalPadding = sizing.badgeVerticalPadding,
+                            backgroundColor = Color(0xFFE65100),
+                            contentColor = Color.White,
+                            backgroundAlpha = 0.9f,
+                        )
+                    }
+                }
 
                 NuvioAnimatedWatchedBadge(
                     isVisible = isWatched,

@@ -7,7 +7,6 @@ import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.mdblist.MdbListSettings
 import com.nuvio.app.features.mdblist.MdbListSettingsRepository
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.tracking.TrackingSettingsRepository
 import com.nuvio.app.features.trakt.MoreLikeThisSourcePreference
 import org.junit.runner.RunWith
@@ -34,7 +33,7 @@ class MetaDetailsPosterNavigationTest {
         type = "movie",
         name = "Parent title",
         moreLikeThis = listOf(recommendation),
-        moreLikeThisSource = MoreLikeThisSource.TMDB,
+        moreLikeThisSource = MoreLikeThisSource.ANILIST,
     )
     private val child = MetaDetails(
         id = recommendation.id,
@@ -50,8 +49,7 @@ class MetaDetailsPosterNavigationTest {
         CustomPosterUrlStorage.savePattern("https://posters.example/{imdb_id}.jpg")
         CustomPosterUrlStorage.saveEnabledScreens(null)
         CustomPosterUrlRepository.onProfileChanged()
-        TmdbSettingsRepository.setEnabled(true)
-        TrackingSettingsRepository.setMoreLikeThisSource(MoreLikeThisSourcePreference.TMDB)
+        TrackingSettingsRepository.setMoreLikeThisSource(MoreLikeThisSourcePreference.ANILIST)
         MdbListSettingsRepository.setEnabled(false)
         HomeCatalogSettingsRepository.setHideUnreleasedContent(false)
     }
@@ -61,7 +59,6 @@ class MetaDetailsPosterNavigationTest {
         MetaDetailsRepository.clear()
         CustomPosterUrlStorage.savePattern(null)
         CustomPosterUrlRepository.clearLocalState()
-        TmdbSettingsRepository.onProfileChanged()
         TrackingSettingsRepository.clearLocalState()
         MdbListSettingsRepository.onProfileChanged()
         HomeCatalogSettingsRepository.onProfileChanged()

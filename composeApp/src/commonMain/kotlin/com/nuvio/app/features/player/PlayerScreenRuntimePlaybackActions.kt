@@ -1,6 +1,5 @@
 package com.nuvio.app.features.player
 
-import com.nuvio.app.features.tmdb.TmdbService
 import com.nuvio.app.features.tracking.TrackingMediaReference
 import com.nuvio.app.features.tracking.TrackingScrobbleAction
 import com.nuvio.app.features.tracking.TrackingScrobbleCoordinator
@@ -47,9 +46,7 @@ internal fun PlayerScreenRuntime.updatePlaybackSnapshot(
 }
 
 internal val PlayerScreenRuntime.activePlaybackIdentity: String
-    get() = activeTorrentInfoHash
-        ?.let { hash -> "torrent:$hash:${activeTorrentFileIdx ?: -1}" }
-        ?: activeSourceUrl
+    get() = activeSourceUrl
 
 internal val PlayerScreenRuntime.activePlaybackKey: PlaybackKey
     get() = PlaybackKey(
@@ -110,10 +107,6 @@ internal fun PlayerScreenRuntime.currentLaunch(launch: PlayerLaunch): PlayerLaun
         providerName = activeProviderName,
         providerAddonId = activeProviderAddonId,
         videoId = activeVideoId,
-        torrentInfoHash = activeTorrentInfoHash,
-        torrentFileIdx = activeTorrentFileIdx,
-        torrentFilename = activeTorrentFilename,
-        torrentTrackers = activeTorrentTrackers,
         initialPositionMs = positionMs ?: activeInitialPositionMs,
         initialProgressFraction = activeInitialProgressFraction.takeIf { positionMs == null },
     )
@@ -327,12 +320,7 @@ internal suspend fun PlayerScreenRuntime.resolveParentalGuideImdbId(): String? {
         ?.takeIf { it.id == parentMetaId }
         ?.imdbId
         ?.takeIf { it.startsWith("tt") }
-    if (metaImdbId != null) return metaImdbId
-    val tmdbId = candidates.firstNotNullOfOrNull(::extractParentalGuideTmdbId) ?: return null
-    return TmdbService.tmdbToImdb(
-        tmdbId = tmdbId,
-        mediaType = contentType ?: parentMetaType,
-    )
+    return metaImdbId
 }
 
 internal fun PlayerScreenRuntime.flushWatchProgress(

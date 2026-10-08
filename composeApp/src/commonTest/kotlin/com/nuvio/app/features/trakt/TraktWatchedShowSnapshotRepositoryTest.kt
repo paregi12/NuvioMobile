@@ -1,6 +1,6 @@
 package com.nuvio.app.features.trakt
 
-import com.nuvio.app.features.addons.RawHttpResponse
+import com.nuvio.app.core.network.RawHttpResponse
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking

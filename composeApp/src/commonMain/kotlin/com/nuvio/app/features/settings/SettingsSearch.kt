@@ -108,10 +108,8 @@ internal fun settingsSearchEntries(
     val detailPage = stringResource(Res.string.compose_settings_page_meta_screen)
     val continueWatchingPage = stringResource(Res.string.compose_settings_page_continue_watching)
     val posterStylePage = stringResource(Res.string.compose_settings_page_poster_customization)
-    val addonsPage = stringResource(Res.string.compose_settings_page_addons)
     val pluginsPage = stringResource(Res.string.compose_settings_page_plugins)
     val collectionsPage = stringResource(Res.string.collections_header)
-    val tmdbPage = stringResource(Res.string.compose_settings_page_tmdb_enrichment)
     val mdbListPage = stringResource(Res.string.compose_settings_page_mdblist_ratings)
 
     val entries = mutableListOf<SettingsSearchEntry>()
@@ -446,19 +444,6 @@ internal fun settingsSearchEntries(
         icon = Icons.Rounded.Tune,
     )
 
-    addPage(
-        page = SettingsPage.Addons,
-        key = "addons",
-        title = addonsPage,
-        description = stringResource(
-            if (personalMediaAddonCopyEnabled) {
-                Res.string.settings_content_discovery_addons_description_appstore
-            } else {
-                Res.string.settings_content_discovery_addons_description
-            },
-        ),
-        icon = Icons.Rounded.Extension,
-    )
     if (pluginsEnabled) {
         addPage(
             page = SettingsPage.Plugins,
@@ -843,12 +828,32 @@ internal fun settingsSearchEntries(
     }
 
     addPage(
-        page = SettingsPage.TmdbEnrichment,
-        key = "tmdb",
-        title = tmdbPage,
-        description = stringResource(Res.string.settings_integrations_tmdb_description),
-        icon = Icons.Rounded.Link,
+        page = SettingsPage.AnilistEnrichment,
+        key = "anilist",
+        title = "AniList",
+        description = "Enrich anime with AniList cast, trailers, synopses, and studios",
+        icon = Icons.Rounded.Hub,
     )
+    listOf(
+        PlaybackSearchRow("anilist-enable", "Enable AniList Enrichment", "Enrich anime with AniList metadata or use pure site sources", "AniList Enrichment"),
+        PlaybackSearchRow("anilist-cast", "Cast & Characters", "Load character list and Japanese voice actors from AniList", "Metadata Modules"),
+        PlaybackSearchRow("anilist-trailers", "Trailers", "Show official YouTube trailers from AniList", "Metadata Modules"),
+        PlaybackSearchRow("anilist-desc", "Synopsis & Descriptions", "Use clean AniList synopsis instead of source site descriptions", "Metadata Modules"),
+        PlaybackSearchRow("anilist-studios", "Animation Studios", "Display producing anime studios and browse studio works", "Metadata Modules"),
+        PlaybackSearchRow("anilist-recs", "Recommendations & Relations", "Show AniList community recommendations and anime relation trees", "Metadata Modules"),
+        PlaybackSearchRow("anilist-art", "Artwork & Posters", "Use high-resolution AniList cover art and banners", "Metadata Modules"),
+    ).forEach { row ->
+        addRow(
+            page = SettingsPage.AnilistEnrichment,
+            key = row.key,
+            title = row.title,
+            description = row.description,
+            pageLabel = "AniList",
+            section = row.sectionOverride ?: "AniList Enrichment",
+            icon = Icons.Rounded.Hub,
+        )
+    }
+
     addPage(
         page = SettingsPage.MdbListRatings,
         key = "mdblist",
@@ -856,33 +861,6 @@ internal fun settingsSearchEntries(
         description = stringResource(Res.string.settings_integrations_mdblist_description),
         icon = Icons.Rounded.Link,
     )
-    val tmdbModulesSection = stringResource(Res.string.settings_tmdb_section_modules)
-    listOf(
-        PlaybackSearchRow("tmdb-enable", stringResource(Res.string.settings_tmdb_enable_enrichment), stringResource(Res.string.settings_tmdb_enable_enrichment_description), stringResource(Res.string.settings_tmdb_section_title)),
-        PlaybackSearchRow("tmdb-api-key", stringResource(Res.string.settings_tmdb_personal_api_key), stringResource(Res.string.settings_tmdb_api_key_override_description), stringResource(Res.string.settings_tmdb_section_title)),
-        PlaybackSearchRow("tmdb-language", stringResource(Res.string.settings_tmdb_preferred_language), stringResource(Res.string.settings_tmdb_preferred_language_description), stringResource(Res.string.settings_tmdb_section_localization)),
-        PlaybackSearchRow("tmdb-trailers", stringResource(Res.string.settings_tmdb_module_trailers), stringResource(Res.string.settings_tmdb_module_trailers_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-artwork", stringResource(Res.string.settings_tmdb_module_artwork), stringResource(Res.string.settings_tmdb_module_artwork_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-basic-info", stringResource(Res.string.settings_tmdb_module_basic_info), stringResource(Res.string.settings_tmdb_module_basic_info_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-details", stringResource(Res.string.settings_tmdb_module_details), stringResource(Res.string.settings_tmdb_module_details_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-credits", stringResource(Res.string.settings_tmdb_module_credits), stringResource(Res.string.settings_tmdb_module_credits_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-companies", stringResource(Res.string.settings_tmdb_module_production_companies), stringResource(Res.string.settings_tmdb_module_production_companies_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-networks", stringResource(Res.string.settings_tmdb_module_networks), stringResource(Res.string.settings_tmdb_module_networks_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-episodes", stringResource(Res.string.settings_tmdb_module_episodes), stringResource(Res.string.settings_tmdb_module_episodes_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-season-posters", stringResource(Res.string.settings_tmdb_module_season_posters), stringResource(Res.string.settings_tmdb_module_season_posters_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-more-like-this", stringResource(Res.string.settings_tmdb_module_more_like_this), stringResource(Res.string.settings_tmdb_module_more_like_this_description), tmdbModulesSection),
-        PlaybackSearchRow("tmdb-collections", stringResource(Res.string.settings_tmdb_module_collections), stringResource(Res.string.settings_tmdb_module_collections_description), tmdbModulesSection),
-    ).forEach { row ->
-        addRow(
-            page = SettingsPage.TmdbEnrichment,
-            key = row.key,
-            title = row.title,
-            description = row.description,
-            pageLabel = tmdbPage,
-            section = row.sectionOverride ?: tmdbModulesSection,
-            icon = Icons.Rounded.Link,
-        )
-    }
 
     listOf(
         PlaybackSearchRow("mdb-enable", stringResource(Res.string.settings_mdb_enable_ratings), stringResource(Res.string.settings_mdb_enable_ratings_description), stringResource(Res.string.settings_mdb_section_title)),
@@ -924,55 +902,6 @@ internal fun settingsSearchEntries(
         section = stringResource(Res.string.settings_notifications_section_test),
         icon = Icons.Rounded.Notifications,
     )
-
-    addRow(
-        page = SettingsPage.TraktAuthentication,
-        key = "trakt-authentication",
-        title = stringResource(Res.string.trakt_library_source_trakt),
-        description = stringResource(Res.string.settings_trakt_intro_description),
-        pageLabel = trackingPage,
-        section = stringResource(Res.string.settings_tracking_services),
-        category = accountCategory,
-        icon = Icons.Rounded.Link,
-    )
-    addRow(
-        page = SettingsPage.TraktAuthentication,
-        key = "simkl-authentication",
-        title = stringResource(Res.string.tracking_source_simkl),
-        description = stringResource(Res.string.settings_simkl_sign_in_description),
-        pageLabel = trackingPage,
-        section = stringResource(Res.string.settings_tracking_services),
-        category = accountCategory,
-        icon = Icons.Rounded.Link,
-    )
-    addRow(
-        page = SettingsPage.TraktAuthentication,
-        key = "mdblist-authentication",
-        title = stringResource(Res.string.tracking_source_mdblist),
-        description = stringResource(Res.string.settings_mdblist_sign_in_description),
-        pageLabel = trackingPage,
-        section = stringResource(Res.string.settings_tracking_services),
-        category = accountCategory,
-        icon = Icons.Rounded.Link,
-    )
-    listOf(
-        PlaybackSearchRow("trakt-library-source", stringResource(Res.string.trakt_library_source_title), stringResource(Res.string.trakt_library_source_subtitle)),
-        PlaybackSearchRow("trakt-watch-progress", stringResource(Res.string.trakt_watch_progress_title), stringResource(Res.string.trakt_watch_progress_subtitle)),
-        PlaybackSearchRow("trakt-continue-watching-window", stringResource(Res.string.trakt_continue_watching_window), stringResource(Res.string.trakt_continue_watching_subtitle)),
-        PlaybackSearchRow("trakt-comments", stringResource(Res.string.settings_trakt_comments), stringResource(Res.string.settings_trakt_comments_description)),
-        PlaybackSearchRow("trakt-more-like-this-source", stringResource(Res.string.trakt_more_like_this_source_title), stringResource(Res.string.trakt_more_like_this_source_subtitle)),
-    ).forEach { row ->
-        addRow(
-            page = SettingsPage.TraktAuthentication,
-            key = row.key,
-            title = row.title,
-            description = row.description,
-            pageLabel = trackingPage,
-            section = stringResource(Res.string.settings_tracking_features),
-            category = accountCategory,
-            icon = Icons.Rounded.Link,
-        )
-    }
 
     return entries
 }

@@ -12,10 +12,9 @@ internal class TorboxCloudLibraryProviderApi : CloudLibraryProviderApi {
 
     override suspend fun listItems(apiKey: String): Result<List<CloudLibraryItem>> =
         runCatching {
-            val torrents = TorboxApiClient.listCloudTorrents(apiKey).itemsOrThrow(CloudLibraryItemType.Torrent)
             val usenet = TorboxApiClient.listCloudUsenet(apiKey).itemsOrThrow(CloudLibraryItemType.Usenet)
             val web = TorboxApiClient.listCloudWebDownloads(apiKey).itemsOrThrow(CloudLibraryItemType.WebDownload)
-            torrents + usenet + web
+            usenet + web
         }
 
     override suspend fun resolvePlayback(
@@ -27,11 +26,7 @@ internal class TorboxCloudLibraryProviderApi : CloudLibraryProviderApi {
 
         return try {
             val response = when (item.type) {
-                CloudLibraryItemType.Torrent -> TorboxApiClient.requestCloudTorrentDownloadLink(
-                    apiKey = apiKey,
-                    torrentId = item.id,
-                    fileId = file.id,
-                )
+                CloudLibraryItemType.Torrent -> return CloudLibraryPlaybackResult.NotFound
                 CloudLibraryItemType.Usenet -> TorboxApiClient.requestCloudUsenetDownloadLink(
                     apiKey = apiKey,
                     usenetId = item.id,

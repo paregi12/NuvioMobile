@@ -4,10 +4,7 @@ import co.touchlab.kermit.Logger
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
-import com.nuvio.app.features.addons.AddonManifest
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.AddonsUiState
-import com.nuvio.app.features.addons.enabledAddons
+
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.player.PlayerPlaybackSnapshot
@@ -61,15 +58,7 @@ private data class RemoteMetadataResolutionResult(
     val meta: MetaDetails?,
 )
 
-private data class MetadataProviderReadiness(
-    val providers: List<AddonManifest>,
-) {
-    val fingerprint: String
-        get() = providers.map(AddonManifest::transportUrl).sorted().joinToString(separator = "|")
 
-    val isReady: Boolean
-        get() = providers.isNotEmpty()
-}
 
 internal class MetadataResolutionRetryCoordinator {
     private val lock = SynchronizedObject()
@@ -273,11 +262,7 @@ object WatchProgressRepository {
             }
         }
 
-        syncScope.launch {
-            AddonRepository.uiState.collectLatest { state ->
-                retryMetadataResolutionWhenAddonMetaProvidersReady(state)
-            }
-        }
+
 
     }
 
@@ -948,17 +933,6 @@ object WatchProgressRepository {
         return merged
     }
 
-    private fun retryMetadataResolutionWhenAddonMetaProvidersReady(state: AddonsUiState) {
-        if (!hasLoaded || activeProgressProvider()?.providesCompleteMetadata == true) return
-
-        val readiness = state.metadataProviderReadiness()
-        if (!readiness.isReady) return
-
-        val fingerprint = readiness.fingerprint
-        if (!metadataResolutionRetryCoordinator.requestForProviders(fingerprint)) return
-        resolveRemoteMetadata()
-    }
-
     private fun cancelMetadataResolution(resetProviderHistory: Boolean) {
         if (resetProviderHistory) {
             metadataResolutionRetryCoordinator.reset()
@@ -983,22 +957,11 @@ object WatchProgressRepository {
 
         if (needsResolution.isEmpty()) return
 
-        val providersAtStart = AddonRepository.uiState.value.metadataProviderReadiness()
-        val resolutionGeneration = metadataResolutionRetryCoordinator.beginResolution(
-            providerFingerprint = providersAtStart.fingerprint.takeIf { providersAtStart.isReady },
-        )
+        val resolutionGeneration = metadataResolutionRetryCoordinator.beginResolution(null)
         metadataResolutionJob?.cancel()
         metadataResolutionJob = syncScope.launch(start = CoroutineStart.LAZY) {
             try {
                 if (!isActiveMetadataTarget(targetProfileId, targetGeneration, targetSource)) return@launch
-                AddonRepository.initialize()
-                val providerReadiness = AddonRepository.uiState.value.metadataProviderReadiness()
-                if (providerReadiness.isReady) {
-                    metadataResolutionRetryCoordinator.providersObservedBeforeFetch(
-                        resolutionGeneration = resolutionGeneration,
-                        providerFingerprint = providerReadiness.fingerprint,
-                    )
-                }
                 val semaphore = Semaphore(WATCH_PROGRESS_METADATA_RESOLUTION_CONCURRENCY)
                 val resolutionResults = Channel<RemoteMetadataResolutionResult>(Channel.UNLIMITED)
                 needsResolution.forEach { (key, entries) ->
@@ -1052,10 +1015,9 @@ object WatchProgressRepository {
                     persist()
                 }
             } finally {
-                val currentReadiness = AddonRepository.uiState.value.metadataProviderReadiness()
                 val shouldRetry = metadataResolutionRetryCoordinator.finishResolution(
                     resolutionGeneration = resolutionGeneration,
-                    currentProviderFingerprint = currentReadiness.fingerprint.takeIf { currentReadiness.isReady },
+                    currentProviderFingerprint = null,
                 )
                 if (shouldRetry && hasLoaded && activeProgressProvider()?.providesCompleteMetadata != true) {
                     resolveRemoteMetadata()

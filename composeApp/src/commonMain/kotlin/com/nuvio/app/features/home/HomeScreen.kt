@@ -34,9 +34,7 @@ import com.nuvio.app.core.ui.nuvioSafeBottomPadding
 import com.nuvio.app.core.ui.rememberHeroStretchState
 import com.nuvio.app.core.ui.rememberPosterCardStyleUiState
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.enabledAddons
-import com.nuvio.app.features.addons.firstEnabledManifestError
+import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.cloud.CloudLibraryContentType
 import com.nuvio.app.features.cloud.CloudLibraryRepository
 import com.nuvio.app.features.cloud.CloudLibraryUiState
@@ -126,7 +124,8 @@ fun HomeScreen(
     onFirstCatalogRendered: (() -> Unit)? = null,
 ) {
     LaunchedEffect(Unit) {
-        AddonRepository.initialize()
+        PluginRepository.initialize()
+        HomeRepository.refresh()
         CollectionRepository.initialize()
         ContinueWatchingPreferencesRepository.ensureLoaded()
         WatchedRepository.ensureLoaded()
@@ -137,7 +136,7 @@ fun HomeScreen(
         }
     }
 
-    val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
+    val pluginsUiState by PluginRepository.uiState.collectAsStateWithLifecycle()
     val homeUiState by HomeRepository.uiState.collectAsStateWithLifecycle()
     val homeSettingsUiState by remember {
         HomeCatalogSettingsRepository.snapshot()
@@ -186,7 +185,7 @@ fun HomeScreen(
             NetworkCondition.Online -> {
                 if (observedOfflineState) {
                     observedOfflineState = false
-                    HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
+                    HomeRepository.refresh(force = true)
                 }
             }
 
@@ -575,25 +574,14 @@ fun HomeScreen(
             }
         }
     }
-    val enabledAddons = remember(addonsUiState.addons) {
-        addonsUiState.addons.enabledAddons()
+    val enabledScrapers = remember(pluginsUiState.scrapers) {
+        pluginsUiState.scrapers.filter { it.enabled && it.manifestEnabled }
     }
-    val availableManifests = remember(enabledAddons) {
-        enabledAddons.mapNotNull { addon -> addon.manifest }
+    val metaProviderKey = remember(enabledScrapers) {
+        enabledScrapers.map { it.id }.sorted()
     }
-
-    val metaProviderKey = remember(availableManifests) {
-        availableManifests
-            .filter { manifest -> manifest.resources.any { resource -> resource.name == "meta" } }
-            .map { manifest -> manifest.transportUrl }
-            .sorted()
-    }
-    val metaProviderReadinessKey = remember(enabledAddons) {
-        enabledAddons
-            .sortedBy { addon -> addon.manifestUrl }
-            .joinToString(separator = "|") { addon ->
-                "${addon.manifestUrl}:${addon.manifest != null}:${addon.isRefreshing}:${addon.errorMessage.orEmpty()}"
-            }
+    val metaProviderReadinessKey = remember(enabledScrapers) {
+        enabledScrapers.joinToString(separator = "|") { "${it.id}:${it.enabled}" }
     }
     var nextUpResolutionRetryAttempt by remember(
         activeProfileId,
@@ -859,10 +847,14 @@ fun HomeScreen(
         }
     }
 
-    val hasActiveAddons = enabledAddons.any { it.manifest != null }
-    val addonManifestsLoading = enabledAddons.any { it.isRefreshing }
-    val addonManifestErrorMessage = enabledAddons.firstEnabledManifestError()
-    val isResolvingHeroSources = addonManifestsLoading || homeUiState.isLoading
+    val enabledScrapers = remember(pluginsUiState) {
+        if (!pluginsUiState.pluginsEnabled) emptyList()
+        else pluginsUiState.scrapers.filter { it.enabled && it.manifestEnabled }
+    }
+    val hasActivePlugins = enabledScrapers.isNotEmpty()
+    val pluginsLoading = pluginsUiState.repositories.any { it.isRefreshing }
+    val pluginErrorMessage = pluginsUiState.repositories.firstNotNullOfOrNull { it.errorMessage }
+    val isResolvingHeroSources = pluginsLoading || homeUiState.isLoading
     var firstCatalogReported by remember { mutableStateOf(false) }
 
     LaunchedEffect(homeUiState.sections.firstOrNull()?.key, onFirstCatalogRendered) {
@@ -930,7 +922,6 @@ fun HomeScreen(
         isResolvingHeroSources
     val isInitialHomeContentLoading = shouldShowInitialHomeLoading(
         hasRenderableHomeRows = hasRenderableHomeRows,
-        addonManifestsLoading = addonManifestsLoading,
         homeCatalogLoading = homeUiState.isLoading,
     )
 
@@ -1041,7 +1032,7 @@ fun HomeScreen(
                     }
                 }
 
-                !hasActiveAddons && !hasRenderableCollectionRows -> {
+                !hasActivePlugins && !hasRenderableCollectionRows -> {
                     homeContinueWatchingSections(
                         preferences = continueWatchingPreferences,
                         continueWatchingItems = continueWatchingItems,
@@ -1057,26 +1048,26 @@ fun HomeScreen(
                     )
                     item(key = "home_empty", contentType = "empty") {
                         when {
-                            networkStatusUiState.isOfflineLike && addonManifestErrorMessage != null -> {
+                            networkStatusUiState.isOfflineLike && pluginErrorMessage != null -> {
                                 NuvioNetworkOfflineCard(
                                     condition = networkStatusUiState.condition,
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     onRetry = {
                                         NetworkStatusRepository.requestRefresh(force = true)
-                                        AddonRepository.refreshAll()
+                                        PluginRepository.refreshAll()
                                     },
                                 )
                             }
 
-                            addonManifestErrorMessage != null -> {
+                            pluginErrorMessage != null -> {
                                 HomeEmptyStateCard(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     title = stringResource(Res.string.home_load_failed_title),
-                                    message = addonManifestErrorMessage,
+                                    message = pluginErrorMessage,
                                     actionLabel = stringResource(Res.string.action_retry),
                                     onActionClick = {
                                         NetworkStatusRepository.requestRefresh(force = true)
-                                        AddonRepository.refreshAll()
+                                        PluginRepository.refreshAll()
                                     },
                                 )
                             }
@@ -1084,8 +1075,8 @@ fun HomeScreen(
                             else -> {
                                 HomeEmptyStateCard(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    title = stringResource(Res.string.compose_search_empty_no_active_addons_title),
-                                    message = stringResource(Res.string.home_empty_no_active_addons_message),
+                                    title = "No Anime Plugins Installed",
+                                    message = "Install anime plugins from Settings to browse catalogs and stream anime.",
                                 )
                             }
                         }
@@ -1103,7 +1094,7 @@ fun HomeScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 onRetry = {
                                     NetworkStatusRepository.requestRefresh(force = true)
-                                    HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
+                                    HomeRepository.refresh(force = true)
                                 },
                             )
                         } else {
@@ -1122,7 +1113,7 @@ fun HomeScreen(
                                 onActionClick = if (loadFailed) {
                                     {
                                         NetworkStatusRepository.requestRefresh(force = true)
-                                        HomeRepository.refresh(addonsUiState.addons.enabledAddons(), force = true)
+                                        HomeRepository.refresh(force = true)
                                     }
                                 } else {
                                     null

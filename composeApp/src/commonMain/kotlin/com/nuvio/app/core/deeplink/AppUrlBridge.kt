@@ -15,7 +15,7 @@ internal sealed interface AppDeepLink {
         val id: String,
     ) : AppDeepLink
 
-    data class AddonInstall(
+    data class PluginInstall(
         val manifestUrl: String,
     ) : AppDeepLink
 
@@ -66,7 +66,7 @@ internal fun parseAppDeepLink(url: String): AppDeepLink? {
     val scheme = parsedUrl.protocol.name.lowercase()
     if (scheme == "stremio") {
         return if (looksLikeAddonHost(parsedUrl.host.lowercase())) {
-            customSchemeToHttpsUrl(url, scheme)?.let(AppDeepLink::AddonInstall)
+            customSchemeToHttpsUrl(url, scheme)?.let(AppDeepLink::PluginInstall)
         } else {
             null
         }
@@ -97,7 +97,7 @@ internal fun parseAppDeepLink(url: String): AppDeepLink? {
 
         else -> {
             if (looksLikeAddonHost(host)) {
-                customSchemeToHttpsUrl(url, scheme)?.let(AppDeepLink::AddonInstall)
+                customSchemeToHttpsUrl(url, scheme)?.let(AppDeepLink::PluginInstall)
             } else {
                 null
             }

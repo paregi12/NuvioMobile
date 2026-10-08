@@ -70,7 +70,7 @@ import com.nuvio.app.core.ui.skeleton
 import com.nuvio.app.features.details.components.DetailPosterRailSection
 import com.nuvio.app.features.details.components.ExpandableDescription
 import com.nuvio.app.features.home.MetaPreview
-import com.nuvio.app.features.tmdb.TmdbMetadataService
+import com.nuvio.app.features.anilist.AnilistMetadataService
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watchprogress.CurrentDateProvider
@@ -109,7 +109,7 @@ fun PersonDetailScreen(
 
     LaunchedEffect(personId) {
         uiState = PersonDetailUiState.Loading
-        val detail = TmdbMetadataService.fetchPersonDetail(
+        val detail = AnilistMetadataService.fetchPersonDetail(
             personId = personId,
             preferCrewCredits = preferCrew,
         )

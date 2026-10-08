@@ -7,10 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.features.search.SearchHistoryRepository
 import nuvio.composeapp.generated.resources.Res
-import nuvio.composeapp.generated.resources.compose_settings_page_addons
 import nuvio.composeapp.generated.resources.compose_settings_page_plugins
-import nuvio.composeapp.generated.resources.settings_content_discovery_addons_description
-import nuvio.composeapp.generated.resources.settings_content_discovery_addons_description_appstore
 import nuvio.composeapp.generated.resources.settings_content_discovery_plugins_description
 import nuvio.composeapp.generated.resources.settings_content_discovery_section_sources
 import nuvio.composeapp.generated.resources.settings_content_discovery_section_search
@@ -20,8 +17,7 @@ import org.jetbrains.compose.resources.stringResource
 
 internal fun LazyListScope.contentDiscoveryContent(
     isTablet: Boolean,
-    showPluginsEntry: Boolean,
-    onAddonsClick: () -> Unit,
+    showPluginsEntry: Boolean = true,
     onPluginsClick: () -> Unit,
 ) {
     item {
@@ -53,25 +49,11 @@ internal fun LazyListScope.contentDiscoveryContent(
         ) {
             SettingsGroup(isTablet = isTablet) {
                 SettingsNavigationRow(
-                    title = stringResource(Res.string.compose_settings_page_addons),
-                    description = stringResource(
-                        if (AppFeaturePolicy.personalMediaAddonCopyEnabled) {
-                            Res.string.settings_content_discovery_addons_description_appstore
-                        } else {
-                            Res.string.settings_content_discovery_addons_description
-                        },
-                    ),
+                    title = stringResource(Res.string.compose_settings_page_plugins),
+                    description = stringResource(Res.string.settings_content_discovery_plugins_description),
                     isTablet = isTablet,
-                    onClick = onAddonsClick,
+                    onClick = onPluginsClick,
                 )
-                if (showPluginsEntry) {
-                    SettingsNavigationRow(
-                        title = stringResource(Res.string.compose_settings_page_plugins),
-                        description = stringResource(Res.string.settings_content_discovery_plugins_description),
-                        isTablet = isTablet,
-                        onClick = onPluginsClick,
-                    )
-                }
             }
         }
     }

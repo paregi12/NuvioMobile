@@ -290,10 +290,6 @@ class PlayerGestureOverlayTest {
         parentMetaId = "tt1234567",
         parentMetaType = "movie",
         providerAddonId = null,
-        torrentInfoHash = null,
-        torrentFileIdx = null,
-        torrentFilename = null,
-        torrentTrackers = emptyList(),
         initialPositionMs = 0L,
         initialProgressFraction = null,
     )

@@ -574,63 +574,24 @@ object CollectionEditorRepository {
     }
 
     fun searchTmdbCompanies() {
-        val query = _uiState.value.tmdbInput.trim()
-        if (query.isBlank()) return
-        scope.launch {
-            val results = runCatching { TmdbCollectionSourceResolver.searchCompanies(query) }
-            _uiState.value = _uiState.value.copy(
-                tmdbCompanyResults = results.getOrDefault(emptyList()),
-                tmdbSearchError = results.exceptionOrNull()?.message,
-            )
-        }
+        _uiState.value = _uiState.value.copy(
+            tmdbCompanyResults = emptyList(),
+            tmdbSearchError = null,
+        )
     }
 
     fun searchTmdbCollections() {
-        val query = _uiState.value.tmdbInput.trim()
-        if (query.isBlank()) return
-        scope.launch {
-            val results = runCatching { TmdbCollectionSourceResolver.searchCollections(query) }
-            _uiState.value = _uiState.value.copy(
-                tmdbCollectionResults = results.getOrDefault(emptyList()),
-                tmdbSearchError = results.exceptionOrNull()?.message,
-            )
-        }
+        _uiState.value = _uiState.value.copy(
+            tmdbCollectionResults = emptyList(),
+            tmdbSearchError = null,
+        )
     }
 
     fun addTmdbSource(source: CollectionSource) {
-        val sourceType = source.tmdbType()
-        if (source.tmdbId != null && sourceType in coverMetadataSourceTypes) {
-            scope.launch {
-                val metadata = runCatching { TmdbCollectionSourceResolver.importMetadata(sourceType, source.tmdbId) }
-                val resolved = metadata.getOrNull()
-                addTmdbSources(
-                    sources = listOf(
-                        if (source.title.isNullOrBlank()) {
-                            source.copy(title = resolved?.title)
-                        } else {
-                            source
-                        },
-                    ),
-                    coverImageUrl = resolved?.coverImageUrl,
-                )
-            }
-            return
-        }
         addTmdbSources(listOf(source))
     }
 
     fun addTmdbSourcesFromPicker(sources: List<CollectionSource>) {
-        val metadataSource = sources.firstOrNull {
-            it.tmdbId != null && it.tmdbType() in coverMetadataSourceTypes
-        }
-        if (metadataSource != null) {
-            scope.launch {
-                val sourceType = metadataSource.tmdbType()
-                val metadata = runCatching { TmdbCollectionSourceResolver.importMetadata(sourceType, metadataSource.tmdbId!!) }
-                addTmdbSources(sources, metadata.getOrNull()?.coverImageUrl)
-            }
-            return
-        }
         addTmdbSources(sources)
     }
 
@@ -647,7 +608,7 @@ object CollectionEditorRepository {
             TmdbBuilderMode.DIRECTOR -> TmdbCollectionSourceType.DIRECTOR
             TmdbBuilderMode.DISCOVER -> TmdbCollectionSourceType.DISCOVER
         }
-        val id = TmdbCollectionSourceResolver.parseTmdbId(state.tmdbInput)
+        val id = state.tmdbInput.trim().toIntOrNull()
         if (sourceType != TmdbCollectionSourceType.DISCOVER && id == null) {
             scope.launch {
                 _uiState.value = _uiState.value.copy(
@@ -660,17 +621,7 @@ object CollectionEditorRepository {
         scope.launch {
             val moviesSuffix = getString(Res.string.collections_editor_media_movies_suffix)
             val seriesSuffix = getString(Res.string.collections_editor_media_series_suffix)
-            val baseTitle = state.tmdbTitleInput.ifBlank {
-                when (sourceType) {
-                    TmdbCollectionSourceType.LIST -> getString(Res.string.collections_editor_tmdb_list_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.COLLECTION -> getString(Res.string.collections_editor_tmdb_collection_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.COMPANY -> getString(Res.string.collections_editor_tmdb_production_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.NETWORK -> getString(Res.string.collections_editor_tmdb_network_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.PERSON -> getString(Res.string.collections_editor_tmdb_person_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.DIRECTOR -> getString(Res.string.collections_editor_tmdb_director_title_format, id ?: "").trim()
-                    TmdbCollectionSourceType.DISCOVER -> getString(Res.string.collections_editor_tmdb_discover)
-                }
-            }
+            val baseTitle = state.tmdbTitleInput.ifBlank { "TMDB" }
             val sources = mediaTypes.map { mediaType ->
                 CollectionSource(
                     provider = "tmdb",
@@ -682,25 +633,7 @@ object CollectionEditorRepository {
                     filters = state.tmdbFilters,
                 )
             }
-            if (sourceType == TmdbCollectionSourceType.LIST || sourceType == TmdbCollectionSourceType.COLLECTION) {
-                val metadata = runCatching { TmdbCollectionSourceResolver.importMetadata(sourceType, id!!) }
-                val resolved = metadata.getOrNull()
-                if (metadata.isFailure) {
-                    _uiState.value = _uiState.value.copy(
-                        tmdbSearchError = metadata.exceptionOrNull()?.message
-                            ?: getString(Res.string.collections_editor_tmdb_load_error),
-                    )
-                    return@launch
-                }
-                addTmdbSources(
-                    sources.map { source ->
-                        source.copy(title = state.tmdbTitleInput.ifBlank { resolved?.title ?: baseTitle })
-                    },
-                    coverImageUrl = resolved?.coverImageUrl,
-                )
-            } else {
-                addTmdbSourcesFromPicker(sources)
-            }
+            addTmdbSources(sources)
         }
     }
 

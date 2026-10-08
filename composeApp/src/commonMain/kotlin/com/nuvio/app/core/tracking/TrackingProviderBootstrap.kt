@@ -1,34 +1,19 @@
 package com.nuvio.app.core.tracking
 
-import com.nuvio.app.features.simkl.SimklAuthRepository
-import com.nuvio.app.features.simkl.SimklMutationRepository
-import com.nuvio.app.features.simkl.SimklLibraryRepository
-import com.nuvio.app.features.simkl.SimklProgressRepository
-import com.nuvio.app.features.simkl.SimklTrackingLibraryProvider
-import com.nuvio.app.features.simkl.SimklTrackingProgressProvider
-import com.nuvio.app.features.simkl.SimklWatchedSyncAdapter
-import com.nuvio.app.features.simkl.SimklSyncRepository
-import com.nuvio.app.features.tracking.TrackingProviderRegistry
 import com.nuvio.app.features.mdblist.MdbListTracker
+import com.nuvio.app.features.simkl.SimklAuthRepository
+import com.nuvio.app.features.simkl.SimklSyncRepository
 import com.nuvio.app.features.trakt.TraktAuthRepository
-import com.nuvio.app.features.trakt.TraktScrobbleRepository
-import com.nuvio.app.features.trakt.TraktTrackingLibraryProvider
-import com.nuvio.app.features.trakt.TraktTrackingProgressProvider
-import com.nuvio.app.features.watching.sync.TraktWatchedSyncAdapter
 
+/**
+ * Remote media trackers are disabled while anime-specific tracking is rebuilt.
+ * Keep this lifecycle entry point so callers stay provider-neutral.
+ */
 fun ensureTrackingProvidersRegistered() {
-    MdbListTracker.register()
-    TraktAuthRepository.descriptor
-    TraktScrobbleRepository.ensureRegistered()
-    SimklAuthRepository.descriptor
-    SimklSyncRepository.state
-    SimklLibraryRepository.uiState
-    SimklProgressRepository.uiState
-    SimklMutationRepository.ensureRegistered()
-    TrackingProviderRegistry.registerLibraryProvider(TraktTrackingLibraryProvider)
-    TrackingProviderRegistry.registerLibraryProvider(SimklTrackingLibraryProvider)
-    TrackingProviderRegistry.registerWatchedProvider(TraktWatchedSyncAdapter)
-    TrackingProviderRegistry.registerWatchedProvider(SimklWatchedSyncAdapter)
-    TrackingProviderRegistry.registerProgressProvider(TraktTrackingProgressProvider)
-    TrackingProviderRegistry.registerProgressProvider(SimklTrackingProgressProvider)
+    // Keep account/profile cleanup aware of saved credentials without exposing
+    // any remote tracker to the active tracking registry.
+    TrackingProviderRegistry.registerProfileStore(TraktAuthRepository)
+    TrackingProviderRegistry.registerProfileStore(SimklAuthRepository)
+    TrackingProviderRegistry.registerProfileStore(SimklSyncRepository)
+    TrackingProviderRegistry.registerProfileStore(MdbListTracker)
 }

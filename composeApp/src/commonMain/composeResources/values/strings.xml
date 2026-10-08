@@ -519,7 +519,7 @@
     <string name="compose_settings_page_streams">Streams</string>
     <string name="settings_appearance_section_streams">STREAMS</string>
     <string name="compose_settings_page_supporters_contributors">Supporters &amp; Contributors</string>
-    <string name="compose_settings_page_tmdb_enrichment">TMDB Enrichment</string>
+    <string name="compose_settings_page_anilist_enrichment">AniList Enrichment</string>
     <string name="compose_settings_page_trakt">Trakt</string>
     <string name="compose_settings_page_tracking">Tracking</string>
     <string name="compose_settings_root_about_section">ABOUT</string>
@@ -1299,6 +1299,7 @@
     <string name="settings_tracking_features">SOURCE PREFERENCES</string>
     <string name="settings_tracking_viewing_discovery">Trakt features</string>
     <string name="settings_tracking_services">Accounts</string>
+    <string name="settings_tracking_anime_services_unavailable">Anime tracking integrations are being prepared. Your Nuvio library and watch progress remain available.</string>
     <string name="settings_tracking_approval_redirect">After approval, you will be redirected back automatically.</string>
     <string name="settings_tracking_connect_first">Connect %1$s first</string>
     <string name="settings_tracking_disconnect_title">Disconnect %1$s?</string>

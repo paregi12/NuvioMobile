@@ -55,39 +55,21 @@ import com.nuvio.app.core.ui.NuvioScreen
 import com.nuvio.app.core.ui.NuvioScreenHeader
 import com.nuvio.app.core.ui.PlatformBackHandler
 import com.nuvio.app.core.ui.isLiquidGlassNativeTabBarSupported
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.details.MetaScreenSettingsRepository
-import com.nuvio.app.features.details.MetaScreenSettingsUiState
 import com.nuvio.app.core.ui.PosterCardStyleRepository
-import com.nuvio.app.core.ui.PosterCardStyleUiState
+import com.nuvio.app.features.anilist.AnilistSettings
+import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
-import com.nuvio.app.features.addons.enabledAddons
-import com.nuvio.app.features.addons.firstEnabledManifestError
-import com.nuvio.app.features.addons.hasPendingEnabledManifests
-import com.nuvio.app.features.addons.isWaitingForFirstEnabledManifest
-import com.nuvio.app.features.debrid.DebridSettings
-import com.nuvio.app.features.debrid.DebridSettingsRepository
-import com.nuvio.app.features.home.HomeCatalogSettingsItem
+import com.nuvio.app.features.details.MetaScreenSettingsRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
-import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
+import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.mdblist.MdbListSettings
 import com.nuvio.app.features.mdblist.MdbListSettingsRepository
-import com.nuvio.app.features.mdblist.MdbListTracker
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsUiState
 import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.player.AndroidLibmpvVideoOutput
 import com.nuvio.app.features.player.AndroidPlaybackEngine
 import com.nuvio.app.features.profiles.ProfileRepository
-import com.nuvio.app.features.simkl.SimklAuthRepository
-import com.nuvio.app.features.simkl.SimklAuthUiState
-import com.nuvio.app.features.trakt.TraktAuthUiState
-import com.nuvio.app.features.trakt.TraktAuthRepository
-import com.nuvio.app.features.trakt.TraktCommentsSettings
-import com.nuvio.app.features.tracking.TrackingSettingsRepository
-import com.nuvio.app.features.tracking.TrackingSettingsUiState
-import com.nuvio.app.features.tmdb.TmdbSettings
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesUiState
 import com.nuvio.app.navigation.LocalUseNativeNavigation
@@ -135,7 +117,6 @@ fun SettingsScreen(
     onHomescreenClick: () -> Unit = {},
     onMetaScreenClick: () -> Unit = {},
     onContinueWatchingClick: () -> Unit = {},
-    onAddonsClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
     onSupportersContributorsClick: () -> Unit = {},
@@ -176,10 +157,7 @@ fun SettingsScreen(
         val onAppIconSelected: (AppIconOption) -> Unit = { icon ->
             appIconScope.launch { AppIconRepository.select(icon) }
         }
-        val tmdbSettings by remember {
-            TmdbSettingsRepository.ensureLoaded()
-            TmdbSettingsRepository.uiState
-        }.collectAsStateWithLifecycle()
+        val anilistSettings by AnilistSettingsRepository.uiState.collectAsStateWithLifecycle()
         val mdbListSettings by remember {
             MdbListSettingsRepository.ensureLoaded()
             MdbListSettingsRepository.uiState
@@ -188,35 +166,12 @@ fun SettingsScreen(
             DebridSettingsRepository.ensureLoaded()
             DebridSettingsRepository.uiState
         }.collectAsStateWithLifecycle()
-        val traktAuthUiState by remember {
-            TraktAuthRepository.ensureLoaded()
-            TraktAuthRepository.uiState
+        val pluginsUiState by remember {
+            PluginRepository.initialize()
+            PluginRepository.uiState
         }.collectAsStateWithLifecycle()
-        val simklAuthUiState by remember {
-            SimklAuthRepository.ensureLoaded()
-            SimklAuthRepository.uiState
-        }.collectAsStateWithLifecycle()
-        val traktCommentsEnabled by remember {
-            TraktCommentsSettings.ensureLoaded()
-            TraktCommentsSettings.enabled
-        }.collectAsStateWithLifecycle()
-        val mdbListConnected by remember {
-            MdbListTracker.ensureLoaded()
-            MdbListTracker.isAuthenticated
-        }.collectAsStateWithLifecycle()
-        val trackingSettingsUiState by remember {
-            TrackingSettingsRepository.ensureLoaded()
-            TrackingSettingsRepository.uiState
-        }.collectAsStateWithLifecycle()
-        val addonsUiState by remember {
-            AddonRepository.initialize()
-            AddonRepository.uiState
-        }.collectAsStateWithLifecycle()
-        val homescreenCatalogRefreshKey = remember(addonsUiState.addons) {
-            buildAddonCatalogRefreshSignature(addonsUiState.addons)
-        }
-        val addonManifestsLoading = addonsUiState.addons.hasPendingEnabledManifests()
-        val addonManifestErrorMessage = addonsUiState.addons.firstEnabledManifestError()
+        val pluginsLoading = pluginsUiState.repositories.any { it.isRefreshing }
+        val pluginErrorMessage = pluginsUiState.repositories.firstNotNullOfOrNull { it.errorMessage }
         val homescreenSettingsUiState by remember {
             HomeCatalogSettingsRepository.snapshot()
             HomeCatalogSettingsRepository.uiState
@@ -241,13 +196,6 @@ fun SettingsScreen(
         val profileSettingsState by remember {
             ProfileRepository.state
         }.collectAsStateWithLifecycle()
-
-        LaunchedEffect(homescreenCatalogRefreshKey) {
-            val enabledAddons = addonsUiState.addons.enabledAddons()
-            if (!enabledAddons.isWaitingForFirstEnabledManifest()) {
-                HomeCatalogSettingsRepository.syncCatalogs(enabledAddons)
-            }
-        }
 
         LaunchedEffect(Unit) {
             CollectionRepository.initialize()
@@ -314,11 +262,6 @@ fun SettingsScreen(
             { openPage(SettingsPage.ContinueWatching) }
         } else {
             onContinueWatchingClick
-        }
-        val openAddons = if (onNavigatePage != null) {
-            { openPage(SettingsPage.Addons) }
-        } else {
-            onAddonsClick
         }
         val openPlugins = if (onNavigatePage != null) {
             { openPage(SettingsPage.Plugins) }
@@ -420,20 +363,15 @@ fun SettingsScreen(
                         navBarStyle = navBarStyle,
                         onNavBarStyleSelected = ThemeSettingsRepository::setNavBarStyle,
                         episodeReleaseNotificationsUiState = episodeReleaseNotificationsUiState,
-                        tmdbSettings = tmdbSettings,
+                        anilistSettings = anilistSettings,
                         mdbListSettings = mdbListSettings,
                         debridSettings = debridSettings,
-                        traktAuthUiState = traktAuthUiState,
-                        simklAuthUiState = simklAuthUiState,
-                        traktCommentsEnabled = traktCommentsEnabled,
-                        mdbListConnected = mdbListConnected,
-                        trackingSettingsUiState = trackingSettingsUiState,
                         homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                         homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                         homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
                         homescreenItems = homescreenSettingsUiState.items,
-                        homescreenCatalogLoading = addonManifestsLoading,
-                        homescreenCatalogErrorMessage = addonManifestErrorMessage,
+                        homescreenCatalogLoading = pluginsLoading,
+                        homescreenCatalogErrorMessage = pluginErrorMessage,
                         metaScreenSettingsUiState = metaScreenSettingsUiState,
                         continueWatchingPreferencesUiState = continueWatchingPreferencesUiState,
                         posterCardStyleUiState = posterCardStyleUiState,
@@ -486,20 +424,15 @@ fun SettingsScreen(
                         navBarStyle = navBarStyle,
                         onNavBarStyleSelected = ThemeSettingsRepository::setNavBarStyle,
                         episodeReleaseNotificationsUiState = episodeReleaseNotificationsUiState,
-                        tmdbSettings = tmdbSettings,
+                        anilistSettings = anilistSettings,
                         mdbListSettings = mdbListSettings,
                         debridSettings = debridSettings,
-                        traktAuthUiState = traktAuthUiState,
-                        simklAuthUiState = simklAuthUiState,
-                        traktCommentsEnabled = traktCommentsEnabled,
-                        mdbListConnected = mdbListConnected,
-                        trackingSettingsUiState = trackingSettingsUiState,
                         homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                         homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                         homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
                         homescreenItems = homescreenSettingsUiState.items,
-                        homescreenCatalogLoading = addonManifestsLoading,
-                        homescreenCatalogErrorMessage = addonManifestErrorMessage,
+                        homescreenCatalogLoading = pluginsLoading,
+                        homescreenCatalogErrorMessage = pluginErrorMessage,
                         metaScreenSettingsUiState = metaScreenSettingsUiState,
                         continueWatchingPreferencesUiState = continueWatchingPreferencesUiState,
                         posterCardStyleUiState = posterCardStyleUiState,
@@ -507,7 +440,6 @@ fun SettingsScreen(
                         onHomescreenClick = openHomescreen,
                         onMetaScreenClick = openMetaScreen,
                         onContinueWatchingClick = openContinueWatching,
-                        onAddonsClick = openAddons,
                         onPluginsClick = openPlugins,
                         onAccountClick = openAccount,
                         onSupportersContributorsClick = openSupportersContributors,
@@ -564,14 +496,9 @@ private fun MobileSettingsScreen(
     navBarStyle: NavBarStyle,
     onNavBarStyleSelected: (NavBarStyle) -> Unit,
     episodeReleaseNotificationsUiState: EpisodeReleaseNotificationsUiState,
-    tmdbSettings: TmdbSettings,
+    anilistSettings: AnilistSettings,
     mdbListSettings: MdbListSettings,
     debridSettings: DebridSettings,
-    traktAuthUiState: TraktAuthUiState,
-    simklAuthUiState: SimklAuthUiState,
-    traktCommentsEnabled: Boolean,
-    mdbListConnected: Boolean,
-    trackingSettingsUiState: TrackingSettingsUiState,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
@@ -585,7 +512,6 @@ private fun MobileSettingsScreen(
     onHomescreenClick: () -> Unit = {},
     onMetaScreenClick: () -> Unit = {},
     onContinueWatchingClick: () -> Unit = {},
-    onAddonsClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
     onSupportersContributorsClick: () -> Unit = {},
@@ -629,12 +555,7 @@ private fun MobileSettingsScreen(
                     }
                     SettingsPage.LicensesAttributions -> onLicensesAttributionsClick()
                     SettingsPage.ContinueWatching -> onContinueWatchingClick()
-                    SettingsPage.Addons -> onAddonsClick()
-                    SettingsPage.Plugins -> {
-                        if (AppFeaturePolicy.pluginsEnabled) {
-                            onPluginsClick()
-                        }
-                    }
+                    SettingsPage.Plugins -> onPluginsClick()
                     SettingsPage.Homescreen -> onHomescreenClick()
                     SettingsPage.MetaScreen -> onMetaScreenClick()
                     else -> onPageChange(target.page)
@@ -800,12 +721,10 @@ private fun MobileSettingsScreen(
                 )
                 SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                     isTablet = false,
-                    showPluginsEntry = AppFeaturePolicy.pluginsEnabled,
-                    onAddonsClick = onAddonsClick,
+                    showPluginsEntry = true,
                     onPluginsClick = onPluginsClick,
                 )
-                SettingsPage.Addons -> addonsSettingsContent()
-                SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
+                SettingsPage.Plugins -> pluginsSettingsContent()
                 SettingsPage.Homescreen -> homescreenSettingsContent(
                     isTablet = false,
                     heroEnabled = homescreenHeroEnabled,
@@ -821,13 +740,13 @@ private fun MobileSettingsScreen(
                 )
                 SettingsPage.Integrations -> integrationsContent(
                     isTablet = false,
-                    onTmdbClick = { onPageChange(SettingsPage.TmdbEnrichment) },
+                    onAnilistClick = { onPageChange(SettingsPage.AnilistEnrichment) },
                     onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
                     onDebridClick = { onPageChange(SettingsPage.Debrid) },
                 )
-                SettingsPage.TmdbEnrichment -> tmdbSettingsContent(
+                SettingsPage.AnilistEnrichment -> anilistSettingsContent(
                     isTablet = false,
-                    settings = tmdbSettings,
+                    settings = anilistSettings,
                 )
                 SettingsPage.MdbListRatings -> mdbListSettingsContent(
                     isTablet = false,
@@ -837,15 +756,7 @@ private fun MobileSettingsScreen(
                     isTablet = false,
                     settings = debridSettings,
                 )
-                SettingsPage.TraktAuthentication -> trackingSettingsContent(
-                    isTablet = false,
-                    traktUiState = traktAuthUiState,
-                    simklUiState = simklAuthUiState,
-                    settingsUiState = trackingSettingsUiState,
-                    commentsEnabled = traktCommentsEnabled,
-                    mdbListConnected = mdbListConnected,
-                    onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
-                )
+                SettingsPage.TraktAuthentication -> trackingSettingsContent(isTablet = false)
             }
         }
     }
@@ -935,14 +846,9 @@ private fun TabletSettingsScreen(
     navBarStyle: NavBarStyle,
     onNavBarStyleSelected: (NavBarStyle) -> Unit,
     episodeReleaseNotificationsUiState: EpisodeReleaseNotificationsUiState,
-    tmdbSettings: TmdbSettings,
+    anilistSettings: AnilistSettings,
     mdbListSettings: MdbListSettings,
     debridSettings: DebridSettings,
-    traktAuthUiState: TraktAuthUiState,
-    simklAuthUiState: SimklAuthUiState,
-    traktCommentsEnabled: Boolean,
-    mdbListConnected: Boolean,
-    trackingSettingsUiState: TrackingSettingsUiState,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
@@ -1227,12 +1133,10 @@ private fun TabletSettingsScreen(
                     )
                     SettingsPage.ContentDiscovery -> contentDiscoveryContent(
                         isTablet = true,
-                        showPluginsEntry = AppFeaturePolicy.pluginsEnabled,
-                        onAddonsClick = { openInlinePage(SettingsPage.Addons) },
+                        showPluginsEntry = true,
                         onPluginsClick = { openInlinePage(SettingsPage.Plugins) },
                     )
-                    SettingsPage.Addons -> addonsSettingsContent()
-                    SettingsPage.Plugins -> if (AppFeaturePolicy.pluginsEnabled) pluginsSettingsContent() else addonsSettingsContent()
+                    SettingsPage.Plugins -> pluginsSettingsContent()
                     SettingsPage.Homescreen -> homescreenSettingsContent(
                         isTablet = true,
                         heroEnabled = homescreenHeroEnabled,
@@ -1248,13 +1152,13 @@ private fun TabletSettingsScreen(
                     )
                     SettingsPage.Integrations -> integrationsContent(
                         isTablet = true,
-                        onTmdbClick = { onPageChange(SettingsPage.TmdbEnrichment) },
+                        onAnilistClick = { onPageChange(SettingsPage.AnilistEnrichment) },
                         onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
                         onDebridClick = { onPageChange(SettingsPage.Debrid) },
                     )
-                    SettingsPage.TmdbEnrichment -> tmdbSettingsContent(
+                    SettingsPage.AnilistEnrichment -> anilistSettingsContent(
                         isTablet = true,
-                        settings = tmdbSettings,
+                        settings = anilistSettings,
                     )
                     SettingsPage.MdbListRatings -> mdbListSettingsContent(
                         isTablet = true,
@@ -1264,15 +1168,7 @@ private fun TabletSettingsScreen(
                         isTablet = true,
                         settings = debridSettings,
                     )
-                    SettingsPage.TraktAuthentication -> trackingSettingsContent(
-                        isTablet = true,
-                        traktUiState = traktAuthUiState,
-                        simklUiState = simklAuthUiState,
-                        settingsUiState = trackingSettingsUiState,
-                        commentsEnabled = traktCommentsEnabled,
-                        mdbListConnected = mdbListConnected,
-                        onCommentsEnabledChange = TraktCommentsSettings::setEnabled,
-                    )
+                    SettingsPage.TraktAuthentication -> trackingSettingsContent(isTablet = true)
                 }
             }
         }

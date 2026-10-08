@@ -81,9 +81,3 @@ internal data class PlayerAccumulatedSeekState(
     val baselinePositionMs: Long,
     val amountMs: Long,
 )
-
-internal data class PendingPlayerP2pSwitch(
-    val stream: StreamItem,
-    val episode: MetaVideo?,
-    val isAutoPlay: Boolean,
-)

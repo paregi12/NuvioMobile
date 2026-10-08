@@ -27,8 +27,6 @@ import com.nuvio.app.features.settings.ThemeSettingsStorage
 import com.nuvio.app.features.settings.ThemeSettingsRepository
 import com.nuvio.app.features.streams.StreamBadgeSettingsRepository
 import com.nuvio.app.features.streams.StreamBadgeSettingsStorage
-import com.nuvio.app.features.tmdb.TmdbSettingsStorage
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.trakt.TraktCommentsStorage
 import com.nuvio.app.features.trakt.TraktCommentsSettings
 import com.nuvio.app.features.trakt.TraktSettingsStorage
@@ -193,7 +191,6 @@ object ProfileSettingsSync {
             PlayerSettingsRepository.uiState.map { "player" },
             StreamBadgeSettingsRepository.uiState.map { "stream_badges" },
             DebridSettingsRepository.uiState.map { "debrid" },
-            TmdbSettingsRepository.uiState.map { "tmdb" },
             MdbListSettingsRepository.uiState.map { "mdblist" },
             MetaScreenSettingsRepository.uiState.map { "meta" },
             CollectionMobileSettingsRepository.uiState.map { "collection_mobile_settings" },
@@ -252,10 +249,7 @@ object ProfileSettingsSync {
                     PROFILE_DEBRID_SETTINGS_FEATURE,
                     DebridSettingsStorage.exportToSyncPayload(),
                 ),
-                tmdbSettings = withoutProfileCredentials(
-                    PROFILE_TMDB_SETTINGS_FEATURE,
-                    TmdbSettingsStorage.exportToSyncPayload(),
-                ),
+                tmdbSettings = JsonObject(emptyMap()),
                 mdbListSettings = withoutProfileCredentials(
                     PROFILE_MDBLIST_SETTINGS_FEATURE,
                     MdbListSettingsStorage.exportToSyncPayload(),
@@ -315,14 +309,6 @@ object ProfileSettingsSync {
         )
         DebridSettingsRepository.onProfileChanged()
 
-        TmdbSettingsStorage.replaceFromSyncPayload(
-            preservingLocalProfileCredentials(
-                PROFILE_TMDB_SETTINGS_FEATURE,
-                blob.features.tmdbSettings,
-                TmdbSettingsStorage.exportToSyncPayload(),
-            ),
-        )
-        TmdbSettingsRepository.onProfileChanged()
 
         MdbListSettingsStorage.replaceFromSyncPayload(
             preservingLocalProfileCredentials(
@@ -360,7 +346,6 @@ object ProfileSettingsSync {
         PlayerSettingsRepository.ensureLoaded()
         StreamBadgeSettingsRepository.ensureLoaded()
         DebridSettingsRepository.ensureLoaded()
-        TmdbSettingsRepository.ensureLoaded()
         MdbListSettingsRepository.ensureLoaded()
         MetaScreenSettingsRepository.ensureLoaded()
         CollectionMobileSettingsRepository.ensureLoaded()

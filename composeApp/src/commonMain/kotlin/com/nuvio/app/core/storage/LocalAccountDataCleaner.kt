@@ -4,7 +4,6 @@ import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.sync.SyncManager
 import com.nuvio.app.core.sync.ProfileSettingsSync
 import com.nuvio.app.core.tracking.ensureTrackingProvidersRegistered
-import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.catalog.CatalogRepository
 import com.nuvio.app.features.collection.CollectionMobileSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
@@ -18,7 +17,6 @@ import com.nuvio.app.features.library.LibraryDisplaySettingsRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
 import com.nuvio.app.features.player.PlayerLaunchStore
 import com.nuvio.app.features.player.PlayerSettingsRepository
-import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.player.SubtitleRepository
 import com.nuvio.app.features.profiles.ProfileRepository
@@ -55,7 +53,6 @@ internal object LocalAccountDataCleaner {
 
         ProfileRepository.clearInMemory()
         MemberAccessRepository.clearLocalState()
-        AddonRepository.clearLocalState()
         if (AppFeaturePolicy.pluginsEnabled) {
             PluginRepository.clearLocalState()
         }
@@ -76,7 +73,6 @@ internal object LocalAccountDataCleaner {
         TrackingSettingsRepository.clearLocalState()
         PlayerSettingsRepository.clearLocalState()
         StreamBadgeSettingsRepository.clearLocalState()
-        P2pSettingsRepository.clearLocalState()
         CatalogRepository.clear()
         StreamsRepository.clear()
         MetaDetailsRepository.clear()

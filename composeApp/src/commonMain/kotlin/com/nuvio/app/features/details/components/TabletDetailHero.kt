@@ -413,6 +413,21 @@ private fun TabletHeroMetaRow(meta: MetaDetails, showImdbRating: Boolean) {
                 maxLines = 1,
             )
         }
+        meta.totalEpisodes?.let { eps ->
+            DetailHeroMetaBadge(text = "$eps eps")
+        }
+        meta.subEpisodesCount?.let { sub ->
+            DetailHeroMetaBadge(
+                text = "SUB: $sub",
+                contentColor = Color(0xFF64B5F6),
+            )
+        }
+        meta.dubEpisodesCount?.let { dub ->
+            DetailHeroMetaBadge(
+                text = "DUB: $dub",
+                contentColor = Color(0xFFFFB74D),
+            )
+        }
         meta.ageRating?.takeIf { it.isNotBlank() }?.let { rating ->
             DetailHeroMetaBadge(text = rating)
         }

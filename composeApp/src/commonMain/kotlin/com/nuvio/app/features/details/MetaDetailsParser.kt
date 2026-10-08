@@ -3,6 +3,7 @@ package com.nuvio.app.features.details
 import com.nuvio.app.features.streams.StreamBehaviorHints
 import com.nuvio.app.features.streams.StreamItem
 import com.nuvio.app.features.streams.StreamProxyHeaders
+import com.nuvio.app.features.streams.isSelectableForPlayback
 import com.nuvio.app.features.streams.normalizeStreamType
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -338,7 +339,7 @@ internal object MetaDetailsParser {
             val addonName = streamData?.string("addon")
                 ?: obj.string("name")
                 ?: runBlocking { getString(Res.string.source_embedded) }
-            StreamItem(
+            val stream = StreamItem(
                 name = obj.string("name"),
                 description = obj.string("description") ?: obj.string("title"),
                 url = url,
@@ -356,6 +357,7 @@ internal object MetaDetailsParser {
                     proxyHeaders = proxyHeaders,
                 ),
             )
+            stream.takeIf { it.isSelectableForPlayback() }
         }
     }
 

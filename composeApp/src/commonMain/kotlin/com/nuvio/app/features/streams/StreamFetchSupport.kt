@@ -1,7 +1,5 @@
 package com.nuvio.app.features.streams
 
-import com.nuvio.app.features.addons.AddonManifest
-import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.plugins.PluginRepositoryItem
 import com.nuvio.app.features.plugins.PluginRuntimeResult
 import com.nuvio.app.features.plugins.PluginScraper
@@ -11,15 +9,6 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.streams_plugin_repository_fallback
 import org.jetbrains.compose.resources.getString
 
-internal data class InstalledStreamAddonTarget(
-    val addonName: String,
-    val addonId: String,
-    val manifest: AddonManifest,
-)
-
-internal fun ManagedAddon.streamAddonInstanceId(manifestId: String): String =
-    "addon:$manifestId:$manifestUrl"
-
 internal data class PluginProviderGroup(
     val addonId: String,
     val addonName: String,
@@ -27,7 +16,6 @@ internal data class PluginProviderGroup(
 )
 
 internal sealed interface StreamLoadCompletion {
-    data class Addon(val group: AddonStreamGroup) : StreamLoadCompletion
     data class PluginScraper(
         val addonId: String,
         val streams: List<StreamItem>,

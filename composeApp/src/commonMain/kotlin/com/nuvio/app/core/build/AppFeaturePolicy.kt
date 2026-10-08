@@ -12,7 +12,6 @@ expect object AppFeaturePolicy {
     val donationProgressEnabled: Boolean
     val accountDeletionEnabled: Boolean
     val personalMediaAddonCopyEnabled: Boolean
-    val p2pEnabled: Boolean
     val trailerPlaybackMode: TrailerPlaybackMode
     val heroTrailerPlaybackSupported: Boolean
     val inAppUpdaterEnabled: Boolean

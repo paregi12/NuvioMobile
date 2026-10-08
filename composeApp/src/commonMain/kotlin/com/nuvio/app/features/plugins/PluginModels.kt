@@ -216,3 +216,58 @@ internal fun normalizePluginType(value: String): String =
         "series", "show", "other" -> "tv"
         else -> value.lowercase()
     }
+
+@Serializable
+data class PluginHomeItem(
+    val id: String,
+    val title: String,
+    val poster: String? = null,
+    val banner: String? = null,
+    val url: String? = null,
+    val description: String? = null,
+    val rating: String? = null,
+    val year: String? = null,
+    val episodes: Int? = null,
+    val subEpisodes: Int? = null,
+    val dubEpisodes: Int? = null,
+    val ageRating: String? = null,
+)
+
+@Serializable
+data class PluginHomeSection(
+    val pluginId: String = "",
+    val pluginName: String = "",
+    val title: String,
+    val items: List<PluginHomeItem> = emptyList(),
+)
+
+@Serializable
+data class PluginEpisodeItem(
+    val id: String? = null,
+    val episode: Int,
+    val season: Int = 1,
+    val title: String? = null,
+    val thumbnail: String? = null,
+    val overview: String? = null,
+    val isFiller: Boolean = false,
+    val isSub: Boolean = true,
+    val isDub: Boolean = false,
+)
+
+@Serializable
+data class PluginDetailsResult(
+    val id: String? = null,
+    val title: String? = null,
+    val poster: String? = null,
+    val banner: String? = null,
+    val description: String? = null,
+    val totalEpisodes: Int? = null,
+    val subEpisodes: Int? = null,
+    val dubEpisodes: Int? = null,
+    val ageRating: String? = null,
+    val status: String? = null,
+    val genres: List<String> = emptyList(),
+    val year: String? = null,
+    val episodes: List<PluginEpisodeItem> = emptyList(),
+    val related: List<PluginHomeItem> = emptyList(),
+)

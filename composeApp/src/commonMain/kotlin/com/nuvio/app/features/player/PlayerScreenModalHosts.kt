@@ -4,18 +4,12 @@ import androidx.compose.runtime.Composable
 import com.nuvio.app.features.details.MetaDetailsUiState
 import com.nuvio.app.features.details.MetaVideo
 import com.nuvio.app.features.downloads.DownloadsRepository
-import com.nuvio.app.features.p2p.P2pConsentDialog
-import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.streams.StreamItem
 import com.nuvio.app.features.streams.StreamsUiState
 import com.nuvio.app.features.watchprogress.WatchProgressEntry
 
 @Composable
 internal fun PlayerScreenModalHosts(
-    pendingP2pSwitch: PendingPlayerP2pSwitch?,
-    onPendingP2pSwitchChanged: (PendingPlayerP2pSwitch?) -> Unit,
-    onP2pEpisodeStreamSelected: (StreamItem, MetaVideo, Boolean) -> Unit,
-    onP2pSourceStreamSelected: (StreamItem) -> Unit,
     onNextEpisodeAutoPlaySearchingChanged: (Boolean) -> Unit,
     onNextEpisodeAutoPlayCountdownChanged: (Int?) -> Unit,
     onNextEpisodeAutoPlaySourceNameChanged: (String?) -> Unit,
@@ -90,30 +84,6 @@ internal fun PlayerScreenModalHosts(
     onSubmitIntroDismissed: () -> Unit,
     onSubmitIntroSuccess: () -> Unit,
 ) {
-    if (pendingP2pSwitch != null) {
-        P2pConsentDialog(
-            onEnableP2p = {
-                val pending = pendingP2pSwitch
-                onPendingP2pSwitchChanged(null)
-                P2pSettingsRepository.setP2pEnabled(true)
-                val episode = pending.episode
-                if (episode != null) {
-                    onP2pEpisodeStreamSelected(pending.stream, episode, pending.isAutoPlay)
-                } else {
-                    onP2pSourceStreamSelected(pending.stream)
-                }
-            },
-            onDismiss = {
-                if (pendingP2pSwitch.isAutoPlay) {
-                    onNextEpisodeAutoPlaySearchingChanged(false)
-                    onNextEpisodeAutoPlayCountdownChanged(null)
-                    onNextEpisodeAutoPlaySourceNameChanged(null)
-                }
-                onPendingP2pSwitchChanged(null)
-            },
-        )
-    }
-
     AudioTrackModal(
         visible = showAudioModal,
         audioTracks = audioTracks,

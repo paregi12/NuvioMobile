@@ -1,7 +1,7 @@
 package com.nuvio.app.features.watching.sync
 
-import com.nuvio.app.features.addons.DefaultRawHttpResponseMaxBytes
-import com.nuvio.app.features.addons.RawHttpResponse
+import com.nuvio.app.core.network.DefaultRawHttpResponseMaxBytes
+import com.nuvio.app.core.network.RawHttpResponse
 import com.nuvio.app.features.trakt.TRAKT_WATCHED_MAX_RESPONSE_BODY_BYTES
 import com.nuvio.app.features.trakt.TraktWatchedHttpEngine
 import com.nuvio.app.features.trakt.TraktWatchedHttpException

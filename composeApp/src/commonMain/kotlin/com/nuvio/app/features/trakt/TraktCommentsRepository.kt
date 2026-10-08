@@ -1,8 +1,8 @@
 package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpGetTextWithHeaders
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.details.MetaDetails
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex

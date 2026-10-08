@@ -1,6 +1,5 @@
 package com.nuvio.app.features.streams
 
-import com.nuvio.app.core.build.AppFeaturePolicy
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -171,11 +170,9 @@ private fun String?.extractBtihInfoHash(): String? {
         .takeIf { it.isNotEmpty() }
 }
 
-fun StreamItem.isSelectableForPlayback(debridEnabled: Boolean): Boolean =
-    playableDirectUrl != null ||
-        shouldOpenExternally ||
-        (AppFeaturePolicy.p2pEnabled && needsLocalDebridResolve && p2pInfoHash != null) ||
-        (debridEnabled && isAddonDebridCandidate)
+@Suppress("UNUSED_PARAMETER")
+fun StreamItem.isSelectableForPlayback(debridEnabled: Boolean = false): Boolean =
+    playableDirectUrl != null || shouldOpenExternally
 
 data class StreamBehaviorHints(
     val bingeGroup: String? = null,

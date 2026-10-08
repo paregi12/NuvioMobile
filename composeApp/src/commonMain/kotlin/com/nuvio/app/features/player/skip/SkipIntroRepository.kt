@@ -1,7 +1,6 @@
 package com.nuvio.app.features.player.skip
 
 import com.nuvio.app.features.player.PlayerSettingsRepository
-import com.nuvio.app.features.tmdb.TmdbService
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
@@ -24,7 +23,7 @@ object SkipIntroRepository {
         ) return emptyList()
         val imdbId = resolveMovieSkipImdbId(
             contentId, videoId,
-            resolveTmdb = { TmdbService.tmdbToImdb(it, "movie") },
+            resolveTmdb = { null },
             resolveAnime = { source, id -> SimklIdResolver.resolveIds(source, id)?.imdb },
         ) ?: return emptyList()
         val cacheKey = "movie:$imdbId"

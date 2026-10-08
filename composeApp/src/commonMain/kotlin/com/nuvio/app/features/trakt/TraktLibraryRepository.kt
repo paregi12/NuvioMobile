@@ -1,8 +1,8 @@
 package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.RawHttpResponse
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.RawHttpResponse
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.library.LibraryItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException

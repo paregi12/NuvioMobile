@@ -29,7 +29,7 @@ import nuvio.composeapp.generated.resources.compose_settings_page_poster_customi
 import nuvio.composeapp.generated.resources.compose_settings_page_root
 import nuvio.composeapp.generated.resources.compose_settings_page_streams
 import nuvio.composeapp.generated.resources.compose_settings_page_supporters_contributors
-import nuvio.composeapp.generated.resources.compose_settings_page_tmdb_enrichment
+import nuvio.composeapp.generated.resources.compose_settings_page_anilist_enrichment
 import nuvio.composeapp.generated.resources.compose_settings_page_trakt
 import nuvio.composeapp.generated.resources.compose_settings_page_tracking
 import nuvio.composeapp.generated.resources.settings_account
@@ -110,11 +110,6 @@ internal enum class SettingsPage(
         category = SettingsCategory.General,
         parentPage = Root,
     ),
-    Addons(
-        titleRes = Res.string.compose_settings_page_addons,
-        category = SettingsCategory.General,
-        parentPage = ContentDiscovery,
-    ),
     Plugins(
         titleRes = Res.string.compose_settings_page_plugins,
         category = SettingsCategory.General,
@@ -135,8 +130,8 @@ internal enum class SettingsPage(
         category = SettingsCategory.General,
         parentPage = Root,
     ),
-    TmdbEnrichment(
-        titleRes = Res.string.compose_settings_page_tmdb_enrichment,
+    AnilistEnrichment(
+        titleRes = Res.string.compose_settings_page_anilist_enrichment,
         category = SettingsCategory.General,
         parentPage = Integrations,
     ),

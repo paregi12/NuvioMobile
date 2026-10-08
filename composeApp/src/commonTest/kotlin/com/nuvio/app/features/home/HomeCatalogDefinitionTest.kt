@@ -1,8 +1,7 @@
 package com.nuvio.app.features.home
 
-import com.nuvio.app.features.addons.AddonManifest
-import com.nuvio.app.features.addons.AddonResource
-import com.nuvio.app.features.addons.ManagedAddon
+import com.nuvio.app.features.plugins.PluginHomeSection
+import com.nuvio.app.features.plugins.PluginScraper
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -10,20 +9,19 @@ import kotlin.test.assertTrue
 
 class HomeCatalogDefinitionTest {
     private val definition = HomeCatalogDefinition(
-        key = "addon:movie:popular",
-        defaultTitle = "Popular - Movie",
+        key = "plugin:anime:popular",
+        defaultTitle = "Popular - Anime",
         catalogName = "Popular",
-        addonName = "Addon",
-        manifestUrl = "https://example.com/manifest.json",
-        type = "movie",
+        addonName = "AnimePlugin",
+        type = "anime",
         catalogId = "popular",
-        supportsPagination = true,
+        supportsPagination = false,
         descriptorSignature = "signature",
     )
 
     @Test
     fun `shows the type suffix by default`() {
-        assertEquals("Popular - Movie", definition.titleFor(showCatalogType = true))
+        assertEquals("Popular - Anime", definition.titleFor(showCatalogType = true))
     }
 
     @Test
@@ -32,36 +30,42 @@ class HomeCatalogDefinitionTest {
     }
 
     @Test
-    fun `addon refresh signature tracks unresolved terminal and loaded manifest states`() {
-        val pendingAddon = ManagedAddon(
-            manifestUrl = "https://example.test/manifest.json",
-            isRefreshing = true,
+    fun `plugin refresh signature tracks enabled scrapers`() {
+        val scraper1 = PluginScraper(
+            id = "scraper1",
+            name = "Scraper 1",
+            version = "1.0.0",
+            enabled = true,
+            manifestEnabled = true,
         )
-        val failedAddon = pendingAddon.copy(
-            isRefreshing = false,
-            errorMessage = "Timed out",
+        val scraper2 = PluginScraper(
+            id = "scraper2",
+            name = "Scraper 2",
+            version = "2.0.0",
+            enabled = false,
+            manifestEnabled = true,
         )
-        val loadedAddon = pendingAddon.copy(
-            manifest = AddonManifest(
-                id = "addon",
-                name = "Addon",
-                description = "",
-                version = "1.0.0",
-                resources = listOf(AddonResource(name = "meta", types = listOf("movie"))),
-                types = listOf("movie"),
-                catalogs = emptyList(),
-                transportUrl = pendingAddon.manifestUrl,
+
+        val sig1 = buildPluginCatalogRefreshSignature(listOf(scraper1))
+        val sig2 = buildPluginCatalogRefreshSignature(listOf(scraper1, scraper2))
+
+        assertEquals(sig1, sig2)
+        assertTrue(sig1.isNotEmpty())
+    }
+
+    @Test
+    fun `builds plugin catalog definitions from sections`() {
+        val sections = listOf(
+            PluginHomeSection(
+                pluginId = "plugin1",
+                pluginName = "AnimeProvider",
+                title = "Trending",
+                items = emptyList(),
             ),
-            isRefreshing = false,
         )
-
-        val pendingSignature = buildAddonCatalogRefreshSignature(listOf(pendingAddon))
-        val failedSignature = buildAddonCatalogRefreshSignature(listOf(failedAddon))
-        val loadedSignature = buildAddonCatalogRefreshSignature(listOf(loadedAddon))
-
-        assertTrue(pendingSignature.isNotEmpty())
-        assertNotEquals(pendingSignature, failedSignature)
-        assertNotEquals(pendingSignature, loadedSignature)
-        assertNotEquals(failedSignature, loadedSignature)
+        val defs = buildPluginCatalogDefinitions(sections)
+        assertEquals(1, defs.size)
+        assertEquals("Trending", defs[0].catalogName)
+        assertEquals("AnimeProvider", defs[0].addonName)
     }
 }

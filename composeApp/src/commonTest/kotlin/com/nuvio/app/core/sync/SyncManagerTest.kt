@@ -20,7 +20,6 @@ class SyncManagerTest {
             profileId = 7,
             pluginsEnabled = true,
             operations = ProfileSyncOperations(
-                pullAddons = { events += "addons" },
                 pullPlugins = { events += "plugins" },
                 pullProfileSettings = {
                     events += "settings:start"
@@ -50,7 +49,6 @@ class SyncManagerTest {
         )
 
         val lastPrerequisite = events.indexOf("settings:end")
-        assertTrue(events.indexOf("addons") > lastPrerequisite)
         assertTrue(events.indexOf("plugins") > lastPrerequisite)
         assertTrue(events.indexOf("credentials") > lastPrerequisite)
         assertTrue(events.indexOf("library") > lastPrerequisite)
@@ -231,7 +229,6 @@ class SyncManagerTest {
 
     private fun recordingOperations(events: MutableList<String>): ProfileSyncOperations =
         ProfileSyncOperations(
-            pullAddons = { events += "addons" },
             pullPlugins = { events += "plugins" },
             pullProfileSettings = { events += "settings" },
             syncProviderCredentials = { events += "credentials" },

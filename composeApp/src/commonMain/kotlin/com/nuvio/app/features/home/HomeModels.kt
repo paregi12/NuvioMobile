@@ -1,6 +1,5 @@
 package com.nuvio.app.features.home
 
-import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.catalog.CatalogTarget
 
 data class MetaPreview(
@@ -21,6 +20,9 @@ data class MetaPreview(
     val rawPosterUrl: String? = null,
     val landscapePoster: String? = null,
     val rawLandscapePosterUrl: String? = null,
+    val totalEpisodes: Int? = null,
+    val subEpisodes: Int? = null,
+    val dubEpisodes: Int? = null,
 )
 
 fun MetaPreview.stableKey(): String = "$type:$id"
@@ -34,9 +36,9 @@ enum class PosterShape {
 data class HomeCatalogSection(
     val key: String,
     val title: String,
-    val subtitle: String,
-    val addonName: String,
-    val target: CatalogTarget,
+    val subtitle: String = "",
+    val addonName: String = "",
+    val target: CatalogTarget? = null,
     val items: List<MetaPreview>,
     val availableItemCount: Int = items.size,
     val hasMore: Boolean = false,
@@ -49,14 +51,14 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val heroItems: List<MetaPreview> = emptyList(),
     val sections: List<HomeCatalogSection> = emptyList(),
+    val hasNoPlugins: Boolean = false,
     val errorMessage: String? = null,
 )
 
 internal fun shouldShowInitialHomeLoading(
     hasRenderableHomeRows: Boolean,
-    addonManifestsLoading: Boolean,
     homeCatalogLoading: Boolean,
-): Boolean = !hasRenderableHomeRows && (addonManifestsLoading || homeCatalogLoading)
+): Boolean = !hasRenderableHomeRows && homeCatalogLoading
 
 internal fun shouldShowHomeHeroSlot(
     heroEnabled: Boolean,
@@ -64,11 +66,3 @@ internal fun shouldShowHomeHeroSlot(
     isResolvingHeroSources: Boolean,
     hasRenderableHomeRows: Boolean,
 ): Boolean = heroEnabled && (hasHeroItems || isResolvingHeroSources || hasRenderableHomeRows)
-
-internal data class CatalogRequest(
-    val addon: ManagedAddon,
-    val catalogId: String,
-    val catalogName: String,
-    val type: String,
-    val supportsPagination: Boolean,
-)

@@ -14,9 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
-import com.nuvio.app.features.p2p.P2pStreamingState
-import com.nuvio.app.features.p2p.formatP2pMegabytes
-import com.nuvio.app.features.p2p.formatP2pSpeed
 import com.nuvio.app.features.player.skip.internalSkipAction
 import com.nuvio.app.features.streams.streamAddonInstanceId
 import com.nuvio.app.isIos
@@ -30,86 +27,6 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
     val displayedPositionMs = scrubbingPositionMs ?: playbackSnapshot.positionMs
     val isEpisode = activeSeasonNumber != null && activeEpisodeNumber != null
     val currentGestureFeedback = liveGestureFeedback ?: gestureFeedback
-    val isP2pPlaybackActive = activeTorrentInfoHash != null
-    val p2pConnecting = p2pStreamingState as? P2pStreamingState.Connecting
-    val p2pStats = p2pStreamingState as? P2pStreamingState.Streaming
-    val p2pPeerInfo = p2pStats?.let { stats ->
-        org.jetbrains.compose.resources.stringResource(
-            nuvio.composeapp.generated.resources.Res.string.player_torrent_peer_info,
-            stats.seeds,
-            stats.peers,
-        )
-    }
-    val p2pDownloadSpeed = p2pStats?.let { formatP2pSpeed(it.downloadSpeed) }
-    val p2pLoadingBytes = p2pStats?.let { maxOf(it.downloadedBytes, it.deliveredBytes) } ?: 0L
-    val connectingPeerInfo = p2pConnecting?.let { state ->
-        org.jetbrains.compose.resources.stringResource(
-            nuvio.composeapp.generated.resources.Res.string.player_torrent_peer_info,
-            state.seeds,
-            state.peers,
-        )
-    }
-    val p2pInitialLoadingMessage = when {
-        !isP2pPlaybackActive || initialLoadCompleted -> null
-        p2pConnecting != null -> {
-            if (p2pSettingsUiState.hideTorrentStats) {
-                p2pConnectingPhaseLabel(p2pConnecting.phase)
-            } else {
-                org.jetbrains.compose.resources.stringResource(
-                    nuvio.composeapp.generated.resources.Res.string.player_torrent_connecting_status,
-                    p2pConnectingPhaseLabel(p2pConnecting.phase),
-                    connectingPeerInfo.orEmpty(),
-                    formatP2pSpeed(p2pConnecting.downloadSpeed),
-                )
-            }
-        }
-        p2pStats != null -> {
-            if (p2pSettingsUiState.hideTorrentStats) {
-                null
-            } else {
-                org.jetbrains.compose.resources.stringResource(
-                    nuvio.composeapp.generated.resources.Res.string.player_torrent_loading_status,
-                    formatP2pMegabytes(p2pLoadingBytes),
-                    p2pPeerInfo.orEmpty(),
-                    p2pDownloadSpeed.orEmpty(),
-                )
-            }
-        }
-        else -> org.jetbrains.compose.resources.stringResource(
-            nuvio.composeapp.generated.resources.Res.string.player_torrent_starting_engine,
-        )
-    }
-    val bufferedAheadMs = (playbackSnapshot.bufferedPositionMs - playbackSnapshot.positionMs)
-        .coerceAtLeast(0L)
-    val p2pInitialLoadingProgress = when {
-        !isP2pPlaybackActive || initialLoadCompleted || p2pStats == null -> null
-        else -> p2pInitialLoadingProgress(
-            bufferedAheadMs = bufferedAheadMs,
-            downloadedBytes = p2pStats.downloadedBytes,
-            deliveredBytes = p2pStats.deliveredBytes,
-        )
-    }
-    val showP2pRebufferStats = isP2pPlaybackActive &&
-        initialLoadCompleted &&
-        playbackSnapshot.isLoading &&
-        p2pStats != null &&
-        !p2pSettingsUiState.hideTorrentStats
-    val p2pRebufferMessage = when {
-        !showP2pRebufferStats -> null
-        else -> {
-            val bufferedSeconds = ((playbackSnapshot.bufferedPositionMs - playbackSnapshot.positionMs) / 1000L)
-                .coerceAtLeast(0L)
-            "${bufferedSeconds}s buffered · ${p2pPeerInfo.orEmpty()} · ${p2pDownloadSpeed.orEmpty()}"
-        }
-    }
-    val p2pRebufferProgress = when {
-        !showP2pRebufferStats -> null
-        else -> {
-            val bufferedSeconds = ((playbackSnapshot.bufferedPositionMs - playbackSnapshot.positionMs) / 1000f)
-                .coerceAtLeast(0f)
-            (bufferedSeconds / 10f).coerceIn(0f, 1f)
-        }
-    }
     val gestureCallbacks = rememberSurfaceGestureCallbacks()
     val playbackGesturesEnabled = initialLoadCompleted && errorMessage == null
 
@@ -146,7 +63,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                 commitHorizontalSeekState = gestureCallbacks.commitHorizontalSeek,
             ),
     ) {
-        val playerSurfaceSourceUrl = if (isP2pPlaybackActive) p2pResolvedSourceUrl else activeSourceUrl
+        val playerSurfaceSourceUrl = activeSourceUrl
         val playbackKey = activePlaybackKey
         val initialPositionRequestKey = currentInitialPositionRequestKey()
         if (playerSurfaceSourceUrl != null) {
@@ -229,33 +146,13 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
             runtime = runtime,
             displayedPositionMs = displayedPositionMs,
             currentGestureFeedback = currentGestureFeedback,
-            p2pInitialLoadingMessage = p2pInitialLoadingMessage,
-            p2pInitialLoadingProgress = p2pInitialLoadingProgress,
-            showP2pRebufferStats = showP2pRebufferStats,
-            p2pRebufferMessage = p2pRebufferMessage,
-            p2pRebufferProgress = p2pRebufferProgress,
         )
         RenderPlayerModals(displayedPositionMs = displayedPositionMs)
     }
 }
 
-@Composable
-private fun p2pConnectingPhaseLabel(phase: String): String = when (phase) {
-    "add_magnet" -> org.jetbrains.compose.resources.stringResource(
-        nuvio.composeapp.generated.resources.Res.string.player_torrent_fetching_metadata,
-    )
-    "prepare_stream", "attach_route" -> org.jetbrains.compose.resources.stringResource(
-        nuvio.composeapp.generated.resources.Res.string.player_torrent_preparing_stream,
-    )
-    else -> org.jetbrains.compose.resources.stringResource(
-        nuvio.composeapp.generated.resources.Res.string.player_torrent_starting_engine,
-    )
-}
-
 private val PlayerScreenRuntime.activeAddonLogo: String?
-    get() = addonsUiState.addons.firstNotNullOfOrNull { addon ->
-        addon.manifest?.takeIf { addon.streamAddonInstanceId(it.id) == activeProviderAddonId }?.logoUrl
-    }
+    get() = null
 
 private fun PlayerScreenRuntime.currentInitialPositionRequestKey(): String? {
     val positionMs = activeInitialPositionMs.takeIf { it > 0L } ?: return null
@@ -394,11 +291,6 @@ private fun BoxScope.RenderPlaybackOverlays(
     runtime: PlayerScreenRuntime,
     displayedPositionMs: Long,
     currentGestureFeedback: GestureFeedbackState?,
-    p2pInitialLoadingMessage: String?,
-    p2pInitialLoadingProgress: Float?,
-    showP2pRebufferStats: Boolean,
-    p2pRebufferMessage: String?,
-    p2pRebufferProgress: Float?,
 ) {
     runtime.run {
         PlayerPlaybackOverlays(
@@ -420,16 +312,12 @@ private fun BoxScope.RenderPlaybackOverlays(
             args.onBack()
         },
         openingLoadingMessage = if (playerSettingsUiState.showPlayerLoadingStatus) {
-            p2pInitialLoadingMessage ?: playerLoadingStatusMessage(
+            playerLoadingStatusMessage(
                 showStatus = true,
                 controllerReady = playerController != null,
                 buffering = playbackSnapshot.isLoading,
             )
         } else null,
-        p2pInitialLoadingProgress = p2pInitialLoadingProgress,
-        showP2pRebufferStats = showP2pRebufferStats,
-        p2pRebufferMessage = p2pRebufferMessage,
-        p2pRebufferProgress = p2pRebufferProgress,
         currentGestureFeedback = currentGestureFeedback,
         renderedGestureFeedback = renderedGestureFeedback,
         initialLoadCompleted = initialLoadCompleted,
@@ -477,12 +365,6 @@ private fun BoxScope.RenderPlaybackOverlays(
 @Composable
 private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
     PlayerScreenModalHosts(
-        pendingP2pSwitch = pendingP2pSwitch,
-        onPendingP2pSwitchChanged = { pendingP2pSwitch = it },
-        onP2pEpisodeStreamSelected = { stream, episode, isAutoPlay ->
-            switchToP2pEpisodeStream(stream, episode, isAutoPlay)
-        },
-        onP2pSourceStreamSelected = { stream -> switchToP2pSourceStream(stream) },
         onNextEpisodeAutoPlaySearchingChanged = { nextEpisodeAutoPlaySearching = it },
         onNextEpisodeAutoPlayCountdownChanged = { nextEpisodeAutoPlayCountdown = it },
         onNextEpisodeAutoPlaySourceNameChanged = { nextEpisodeAutoPlaySourceName = it },

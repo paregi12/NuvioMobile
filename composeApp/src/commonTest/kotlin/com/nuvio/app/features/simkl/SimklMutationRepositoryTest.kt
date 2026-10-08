@@ -1,6 +1,6 @@
 package com.nuvio.app.features.simkl
 
-import com.nuvio.app.features.addons.RawHttpResponse
+import com.nuvio.app.core.network.RawHttpResponse
 import com.nuvio.app.features.tracking.TrackingEpisode
 import com.nuvio.app.features.tracking.TrackingExternalIds
 import com.nuvio.app.features.tracking.TrackingHistoryItem

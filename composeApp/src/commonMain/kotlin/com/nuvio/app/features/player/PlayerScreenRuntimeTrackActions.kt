@@ -7,11 +7,7 @@ internal val PlayerScreenRuntime.activeAddonSubtitleType: String
     get() = contentType ?: parentMetaType
 
 internal val PlayerScreenRuntime.addonSubtitleFetchKey: String?
-    get() = buildAddonSubtitleFetchKey(
-        addons = addonsUiState.addons,
-        type = activeAddonSubtitleType,
-        videoId = activeVideoId,
-    )
+    get() = null
 
 internal val PlayerScreenRuntime.visibleAddonSubtitles: List<AddonSubtitle>
     get() {

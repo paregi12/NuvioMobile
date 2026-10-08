@@ -1,12 +1,6 @@
 package com.nuvio.app.features.player
 
-import com.nuvio.app.core.ui.NuvioToastController
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.enabledAddons
 import com.nuvio.app.features.debrid.DebridSettingsRepository
-import com.nuvio.app.features.debrid.DirectDebridPlayableResult
-import com.nuvio.app.features.debrid.DirectDebridPlaybackResolver
-import com.nuvio.app.features.debrid.toastMessage
 import com.nuvio.app.features.details.MetaVideo
 import com.nuvio.app.features.downloads.DownloadItem
 import com.nuvio.app.features.downloads.DownloadsRepository
@@ -161,10 +155,7 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
             return@launch
         }
 
-        val installedAddonNames = AddonRepository.uiState.value.addons
-            .enabledAddons()
-            .map { it.displayTitle }
-            .toSet()
+        val installedAddonNames = emptySet<String>()
         val debridSettings = DebridSettingsRepository.snapshot()
 
         val timeoutSeconds = settings.streamAutoPlayTimeoutSeconds
@@ -305,22 +296,7 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
             }
         }
 
-        val selected = selectedStream?.let { stream ->
-            when (val result = DirectDebridPlaybackResolver.resolveToPlayableStream(stream, nextVideo.season, nextVideo.episode)) {
-                is DirectDebridPlayableResult.Success -> result.stream
-                else -> {
-                    result.toastMessage()?.let { NuvioToastController.show(it) }
-                    PlayerStreamsRepository.loadEpisodeStreams(
-                        type = type,
-                        videoId = nextVideo.id,
-                        season = nextVideo.season,
-                        episode = nextVideo.episode,
-                        forceRefresh = true,
-                    )
-                    null
-                }
-            }
-        }
+        val selected = selectedStream
         onSearchingChanged(false)
         if (selected != null) {
             onSourceNameChanged((selected.name?.takeIf { it.isNotBlank() } ?: selected.addonName).trim())

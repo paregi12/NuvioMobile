@@ -39,11 +39,20 @@ data class MetaDetails(
     val trailers: List<MetaTrailer> = emptyList(),
     val links: List<MetaLink> = emptyList(),
     val seasonPosters: Map<Int, String> = emptyMap(),
+    val totalEpisodes: Int? = null,
+    val subEpisodesCount: Int? = null,
+    val dubEpisodesCount: Int? = null,
+    val relations: List<MetaRelation> = emptyList(),
     val videos: List<MetaVideo> = emptyList(),
 )
 
+data class MetaRelation(
+    val relationType: String,
+    val item: MetaPreview,
+)
+
 enum class MoreLikeThisSource {
-    TMDB,
+    ANILIST,
     TRAKT,
     SIMKL,
 }
@@ -99,6 +108,9 @@ data class MetaVideo(
     val overview: String? = null,
     val runtime: Int? = null,
     val rating: Double? = null,
+    val isFiller: Boolean = false,
+    val isSub: Boolean = true,
+    val isDub: Boolean = false,
     val streams: List<StreamItem> = emptyList(),
 )
 

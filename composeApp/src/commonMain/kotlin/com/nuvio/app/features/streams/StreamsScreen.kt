@@ -58,7 +58,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.ui.NuvioBackButton
 import com.nuvio.app.core.ui.NuvioBottomSheetActionRow
 import com.nuvio.app.core.ui.NuvioBottomSheetDivider
@@ -74,9 +73,6 @@ import coil3.compose.AsyncImage
 import com.nuvio.app.core.ui.nuvioSafeBottomPadding
 import com.nuvio.app.core.ui.shimmer
 import com.nuvio.app.features.debrid.DebridSettingsRepository
-import com.nuvio.app.features.debrid.DirectDebridPlayableResult
-import com.nuvio.app.features.debrid.DirectDebridPlaybackResolver
-import com.nuvio.app.features.debrid.toastMessage
 import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
 import com.nuvio.app.features.watchprogress.WatchProgressEntry
@@ -155,7 +151,6 @@ fun StreamsScreen(
     val streamLinkCopiedText = stringResource(Res.string.streams_link_copied)
     val noDirectStreamLinkText = stringResource(Res.string.streams_no_direct_link)
     var streamActionsTarget by remember(videoId) { mutableStateOf<StreamItem?>(null) }
-    val downloadScope = rememberCoroutineScope()
     var preferredFilterApplied by remember(videoId) { mutableStateOf(false) }
     val episodeProgress = watchProgressUiState.progressForVideo(
         videoId = videoId,
@@ -304,88 +299,27 @@ fun StreamsScreen(
                 if (!directUrl.isNullOrBlank()) {
                     clipboardManager.setText(AnnotatedString(directUrl))
                     NuvioToastController.show(streamLinkCopiedText)
-                } else if (DirectDebridPlaybackResolver.shouldResolveToPlayableStream(stream)) {
-                    downloadScope.launch {
-                        val resolved = DirectDebridPlaybackResolver.resolveToPlayableStream(
-                            stream = stream,
-                            season = seasonNumber,
-                            episode = episodeNumber,
-                        )
-                        when (resolved) {
-                            is DirectDebridPlayableResult.Success -> {
-                                val resolvedUrl = resolved.stream.playableDirectUrl
-                                if (!resolvedUrl.isNullOrBlank()) {
-                                    clipboardManager.setText(AnnotatedString(resolvedUrl))
-                                    NuvioToastController.show(streamLinkCopiedText)
-                                } else {
-                                    NuvioToastController.show(noDirectStreamLinkText)
-                                }
-                            }
-                            else -> {
-                                val message = resolved.toastMessage()
-                                if (message != null) {
-                                    NuvioToastController.show(message)
-                                }
-                            }
-                        }
-                    }
                 } else {
                     NuvioToastController.show(noDirectStreamLinkText)
                 }
             },
             onDownload = { stream ->
-                if (DirectDebridPlaybackResolver.shouldResolveToPlayableStream(stream)) {
-                    downloadScope.launch {
-                        val resolved = DirectDebridPlaybackResolver.resolveToPlayableStream(
-                            stream = stream,
-                            season = seasonNumber,
-                            episode = episodeNumber,
-                        )
-                        when (resolved) {
-                            is DirectDebridPlayableResult.Success -> {
-                                val result = DownloadsRepository.enqueueFromStream(
-                                    contentType = type,
-                                    videoId = videoId,
-                                    parentMetaId = parentMetaId,
-                                    parentMetaType = parentMetaType,
-                                    title = title,
-                                    logo = logo,
-                                    poster = poster,
-                                    background = background,
-                                    seasonNumber = seasonNumber,
-                                    episodeNumber = episodeNumber,
-                                    episodeTitle = episodeTitle,
-                                    episodeThumbnail = episodeThumbnail,
-                                    stream = resolved.stream,
-                                )
-                                NuvioToastController.show(result.toastMessage())
-                            }
-                            else -> {
-                                val message = resolved.toastMessage()
-                                if (message != null) {
-                                    NuvioToastController.show(message)
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    val result = DownloadsRepository.enqueueFromStream(
-                        contentType = type,
-                        videoId = videoId,
-                        parentMetaId = parentMetaId,
-                        parentMetaType = parentMetaType,
-                        title = title,
-                        logo = logo,
-                        poster = poster,
-                        background = background,
-                        seasonNumber = seasonNumber,
-                        episodeNumber = episodeNumber,
-                        episodeTitle = episodeTitle,
-                        episodeThumbnail = episodeThumbnail,
-                        stream = stream,
-                    )
-                    NuvioToastController.show(result.toastMessage())
-                }
+                val result = DownloadsRepository.enqueueFromStream(
+                    contentType = type,
+                    videoId = videoId,
+                    parentMetaId = parentMetaId,
+                    parentMetaType = parentMetaType,
+                    title = title,
+                    logo = logo,
+                    poster = poster,
+                    background = background,
+                    seasonNumber = seasonNumber,
+                    episodeNumber = episodeNumber,
+                    episodeTitle = episodeTitle,
+                    episodeThumbnail = episodeThumbnail,
+                    stream = stream,
+                )
+                NuvioToastController.show(result.toastMessage())
             },
             onOpen = { stream, openExternally ->
                 onStreamActionOpen(
@@ -731,9 +665,10 @@ internal fun StreamList(
 ) {
     val filteredGroups = uiState.filteredGroups
     val hasGroups = filteredGroups.isNotEmpty()
-    val hasAnyStreams = filteredGroups.any { it.streams.isNotEmpty() }
+    val hasAnyStreams = filteredGroups.any { group ->
+        group.streams.any { it.isSelectableForPlayback() }
+    }
     val anyLoading = filteredGroups.any { it.isLoading }
-    val torrentNotSupportedText = stringResource(Res.string.streams_torrent_not_supported)
     val fetchingText = stringResource(Res.string.streams_fetching)
     val findingStreamsText = stringResource(Res.string.streams_finding_streams)
     val checkingMoreAddonsText = stringResource(Res.string.streams_checking_more_addons)
@@ -776,7 +711,6 @@ internal fun StreamList(
                         showFileSizeBadges = streamBadgeSettings.showFileSizeBadges,
                         showAddonLogo = streamBadgeSettings.showAddonLogo,
                         badgePlacement = streamBadgeSettings.badgePlacement,
-                        torrentNotSupportedText = torrentNotSupportedText,
                         fetchingText = fetchingText,
                         onStreamSelected = onStreamSelected,
                         onStreamLongPress = onStreamLongPress,
@@ -807,14 +741,14 @@ private fun LazyListScope.streamSection(
     showFileSizeBadges: Boolean,
     showAddonLogo: Boolean,
     badgePlacement: StreamBadgePlacement,
-    torrentNotSupportedText: String,
     fetchingText: String,
     onStreamSelected: (stream: StreamItem, resumePositionMs: Long?, resumeProgressFraction: Float?) -> Unit,
     onStreamLongPress: (StreamItem) -> Unit,
     resumePositionMs: Long?,
     resumeProgressFraction: Float?,
 ) {
-    if (group.streams.isEmpty() && !group.isLoading) return
+    val streams = group.streams.filter { it.isSelectableForPlayback() }
+    if (streams.isEmpty() && !group.isLoading) return
 
     if (showHeader) {
         item(key = "header_$sectionKey") {
@@ -826,7 +760,7 @@ private fun LazyListScope.streamSection(
         }
     }
 
-    val streamsBySource = group.streams.groupBy { stream ->
+    val streamsBySource = streams.groupBy { stream ->
         stream.sourceName?.takeIf { it.isNotBlank() } ?: stream.addonName
     }
     val sortedSources = streamsBySource.keys.sortedBy { it.lowercase() }
@@ -851,27 +785,16 @@ private fun LazyListScope.streamSection(
                 )
             },
         ) { _, stream ->
-            val isSelectable = stream.isSelectableForPlayback(debridEnabled)
-            val isUnsupportedTorrentStream =
-                stream.needsLocalDebridResolve &&
-                    !AppFeaturePolicy.p2pEnabled &&
-                    !(debridEnabled && stream.isAddonDebridCandidate)
             StreamCard(
                 stream = stream,
-                enabled = isSelectable || isUnsupportedTorrentStream,
+                enabled = true,
                 appendInstantServiceToDefaultName = appendInstantServiceToDefaultName,
                 showFileSizeBadges = showFileSizeBadges,
                 showAddonLogo = showAddonLogo,
                 badgePlacement = badgePlacement,
-                onClick = {
-                    if (isSelectable) {
-                        onStreamSelected(stream, resumePositionMs, resumeProgressFraction)
-                    } else if (isUnsupportedTorrentStream) {
-                        NuvioToastController.show(torrentNotSupportedText)
-                    }
-                },
+                onClick = { onStreamSelected(stream, resumePositionMs, resumeProgressFraction) },
                 onLongClick = {
-                    if (stream.playableDirectUrl != null || stream.shouldOpenExternally || stream.isAddonDebridCandidate) {
+                    if (stream.playableDirectUrl != null || stream.shouldOpenExternally) {
                         onStreamLongPress(stream)
                     }
                 },

@@ -5,35 +5,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.nuvio.app.core.build.AppFeaturePolicy
-import com.nuvio.app.features.addons.AddonManifest
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.ManagedAddon
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.downloads.DownloadsRepository
 import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.plugins.PluginsUiState
 
-internal fun AddonManifest.supportsStream(type: String, videoId: String): Boolean =
-    resources.any { resource ->
-        resource.name == "stream" &&
-            resource.types.contains(type) &&
-            (resource.idPrefixes.isEmpty() || resource.idPrefixes.any { videoId.startsWith(it) })
-    }
-
 internal fun hasCompatiblePlaybackSource(
-    addons: List<ManagedAddon>,
     plugins: PluginsUiState,
     type: String,
     videoId: String,
-): Boolean = addons.any { it.enabled && it.manifest?.supportsStream(type, videoId) == true } ||
-    (plugins.pluginsEnabled && plugins.scrapers.any { it.enabled && it.supportsType(type) })
+): Boolean = plugins.pluginsEnabled && plugins.scrapers.any { it.enabled && it.supportsType(type) }
 
 internal class PlaybackAvailability(
-    private val addons: List<ManagedAddon>,
     private val plugins: PluginsUiState,
 ) {
     fun canStream(type: String, videoId: String): Boolean =
-        hasCompatiblePlaybackSource(addons, plugins, type, videoId) ||
+        hasCompatiblePlaybackSource(plugins, type, videoId) ||
             MetaDetailsRepository.findEmbeddedStreams(videoId).isNotEmpty()
 
     fun canPlay(
@@ -51,7 +38,6 @@ internal class PlaybackAvailability(
 
     companion object {
         fun current(): PlaybackAvailability = PlaybackAvailability(
-            addons = AddonRepository.uiState.value.addons,
             plugins = if (AppFeaturePolicy.pluginsEnabled) {
                 PluginRepository.uiState.value
             } else {
@@ -63,10 +49,6 @@ internal class PlaybackAvailability(
 
 @Composable
 internal fun rememberPlaybackAvailability(): PlaybackAvailability {
-    val addons by remember {
-        AddonRepository.initialize()
-        AddonRepository.uiState
-    }.collectAsStateWithLifecycle()
     val plugins = if (AppFeaturePolicy.pluginsEnabled) {
         val state by remember {
             PluginRepository.initialize()
@@ -80,7 +62,7 @@ internal fun rememberPlaybackAvailability(): PlaybackAvailability {
         DownloadsRepository.ensureLoaded()
         DownloadsRepository.uiState
     }.collectAsStateWithLifecycle()
-    return remember(addons, plugins, downloads) {
-        PlaybackAvailability(addons.addons, plugins)
+    return remember(plugins, downloads) {
+        PlaybackAvailability(plugins)
     }
 }

@@ -15,8 +15,7 @@ import com.nuvio.app.core.diagnostics.SentryInitializer
 import com.nuvio.app.core.deeplink.handleAppUrl
 import com.nuvio.app.core.storage.PlatformLocalAccountDataCleaner
 import com.nuvio.app.core.sync.SyncClientIdentityStorage
-import com.nuvio.app.features.addons.AddonHttpClientProvider
-import com.nuvio.app.features.addons.AddonStorage
+import com.nuvio.app.core.network.PlatformHttpClientProvider
 import com.nuvio.app.features.collection.CollectionMobileSettingsStorage
 import com.nuvio.app.features.collection.CollectionStorage
 import com.nuvio.app.features.debrid.DebridSettingsStorage
@@ -37,8 +36,6 @@ import com.nuvio.app.features.player.ExternalPlayerPlatform
 import com.nuvio.app.features.player.SubtitleFileCache
 import com.nuvio.app.features.player.PlayerPictureInPictureManager
 import com.nuvio.app.features.player.PipRemoteActionReceiver
-import com.nuvio.app.features.p2p.P2pSettingsStorage
-import com.nuvio.app.features.p2p.P2pStreamingEngine
 import com.nuvio.app.features.plugins.PluginStorage
 import com.nuvio.app.features.profiles.AvatarStorage
 import com.nuvio.app.features.profiles.ProfilePinCacheStorage
@@ -57,7 +54,6 @@ import com.nuvio.app.features.mdblist.PlatformMdbListAuthPersistence
 import com.nuvio.app.features.mdblist.PlatformMdbListSyncStorage
 import com.nuvio.app.features.simkl.SimklAuthStorage
 import com.nuvio.app.features.simkl.SimklSyncStorage
-import com.nuvio.app.features.tmdb.TmdbSettingsStorage
 import com.nuvio.app.features.updater.AndroidAppUpdaterPlatform
 import com.nuvio.app.core.ui.CardDepthStyleStorage
 import com.nuvio.app.core.ui.PosterCardStyleStorage
@@ -89,8 +85,7 @@ open class MainActivity : AppCompatActivity() {
         window.setBackgroundDrawableResource(R.color.nuvio_background)
         pipRemoteActionReceiver = PipRemoteActionReceiver.register(this)
         SyncClientIdentityStorage.initialize(applicationContext)
-        AddonHttpClientProvider.initialize(applicationContext)
-        AddonStorage.initialize(applicationContext)
+        PlatformHttpClientProvider.initialize(applicationContext)
         AuthStorage.initialize(applicationContext)
         ServerConfigurationStorage.initialize(applicationContext)
         LibraryStorage.initialize(applicationContext)
@@ -100,8 +95,6 @@ open class MainActivity : AppCompatActivity() {
         HomeCatalogSettingsStorage.initialize(applicationContext)
         PlayerSettingsStorage.initialize(applicationContext)
         PlayerTrackPreferenceStorage.initialize(applicationContext)
-        P2pSettingsStorage.initialize(applicationContext)
-        P2pStreamingEngine.initialize(applicationContext)
         ExternalPlayerPlatform.initialize(applicationContext)
         SubtitleFileCache.initialize(applicationContext)
         ProfileStorage.initialize(applicationContext)
@@ -115,7 +108,6 @@ open class MainActivity : AppCompatActivity() {
         CustomPosterUrlStorage.initialize(applicationContext)
         CardDepthStyleStorage.initialize(applicationContext)
         DebridSettingsStorage.initialize(applicationContext)
-        TmdbSettingsStorage.initialize(applicationContext)
         MdbListSettingsStorage.initialize(applicationContext)
         TraktAuthStorage.initialize(applicationContext)
         TraktCommentsStorage.initialize(applicationContext)

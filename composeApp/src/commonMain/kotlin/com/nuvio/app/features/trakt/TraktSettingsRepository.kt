@@ -42,16 +42,16 @@ val TraktContinueWatchingDaysOptions: List<Int> = listOf(
 @Serializable
 enum class MoreLikeThisSourcePreference {
     TRAKT,
-    TMDB,
+    ANILIST,
     SIMKL;
 
     companion object {
         fun fromStorage(value: String?): MoreLikeThisSourcePreference =
-            entries.firstOrNull { it.name == value } ?: DEFAULT_MORE_LIKE_THIS_SOURCE
+            entries.firstOrNull { it.name == value || (value == "TMDB" && it == ANILIST) } ?: DEFAULT_MORE_LIKE_THIS_SOURCE
     }
 }
 
-val DEFAULT_MORE_LIKE_THIS_SOURCE: MoreLikeThisSourcePreference = MoreLikeThisSourcePreference.TRAKT
+val DEFAULT_MORE_LIKE_THIS_SOURCE: MoreLikeThisSourcePreference = MoreLikeThisSourcePreference.ANILIST
 
 data class TraktSettingsUiState(
     val watchProgressSource: WatchProgressSource = DEFAULT_WATCH_PROGRESS_SOURCE,

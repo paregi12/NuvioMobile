@@ -1,8 +1,8 @@
 package com.nuvio.app.features.simkl
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.RawHttpResponse
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.RawHttpResponse
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex

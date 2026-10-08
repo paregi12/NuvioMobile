@@ -171,11 +171,11 @@ fun com.nuvio.app.features.details.MetaDetails.withCustomPosterUrls(
 }
 
 /**
- * Applies custom poster URL overlay to all rails inside a [TmdbEntityBrowseData].
+ * Applies custom poster URL overlay to all rails inside a [EntityBrowseData].
  */
-fun com.nuvio.app.features.tmdb.TmdbEntityBrowseData.withCustomPosterUrls(
+fun com.nuvio.app.features.details.EntityBrowseData.withCustomPosterUrls(
     pattern: String
-): com.nuvio.app.features.tmdb.TmdbEntityBrowseData {
+): com.nuvio.app.features.details.EntityBrowseData {
     if (pattern.isBlank()) return this
     return copy(
         rails = rails.map { rail ->

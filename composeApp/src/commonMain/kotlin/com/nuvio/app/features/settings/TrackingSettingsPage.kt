@@ -28,7 +28,6 @@ import com.nuvio.app.features.library.LibrarySourceMode
 import com.nuvio.app.features.mdblist.MdbListTracker
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.simkl.SimklAnimeIdPreference
-import com.nuvio.app.features.simkl.SimklAuthUiState
 import com.nuvio.app.features.simkl.SimklConnectionMode
 import com.nuvio.app.features.tracking.TrackingProviderId
 import com.nuvio.app.features.tracking.TrackingSettingsRepository
@@ -38,7 +37,6 @@ import com.nuvio.app.features.tracking.effectiveLibrarySourceMode
 import com.nuvio.app.features.tracking.effectiveWatchProgressSource
 import com.nuvio.app.features.trakt.MoreLikeThisSourcePreference
 import com.nuvio.app.features.trakt.TRAKT_CONTINUE_WATCHING_DAYS_CAP_ALL
-import com.nuvio.app.features.trakt.TraktAuthUiState
 import com.nuvio.app.features.trakt.TraktConnectionMode
 import com.nuvio.app.features.trakt.TraktContinueWatchingDaysOptions
 import com.nuvio.app.features.trakt.normalizeTraktContinueWatchingDaysCap
@@ -112,80 +110,21 @@ import nuvio.composeapp.generated.resources.trakt_watch_progress_subtitle
 import nuvio.composeapp.generated.resources.trakt_watch_progress_title
 import org.jetbrains.compose.resources.stringResource
 
-internal fun LazyListScope.trackingSettingsContent(
-    isTablet: Boolean,
-    traktUiState: TraktAuthUiState,
-    simklUiState: SimklAuthUiState,
-    settingsUiState: TrackingSettingsUiState,
-    commentsEnabled: Boolean,
-    onCommentsEnabledChange: (Boolean) -> Unit,
-    mdbListConnected: Boolean,
-) {
+internal fun LazyListScope.trackingSettingsContent(isTablet: Boolean) {
     item {
         SettingsSection(
-            title = stringResource(Res.string.settings_tracking_services),
+            title = stringResource(Res.string.compose_settings_page_tracking),
             isTablet = isTablet,
         ) {
-            TrackingProviderCards(
-                isTablet = isTablet,
-                traktUiState = traktUiState,
-                simklUiState = simklUiState,
-            )
-        }
-    }
-
-    item {
-        SettingsSection(
-            title = stringResource(Res.string.settings_tracking_data_sources),
-            isTablet = isTablet,
-        ) {
-            TrackingDataSources(
-                isTablet = isTablet,
-                settingsUiState = settingsUiState,
-                traktConnected = traktUiState.mode == TraktConnectionMode.CONNECTED,
-                simklConnected = simklUiState.mode == SimklConnectionMode.CONNECTED,
-            )
-        }
-    }
-
-    if (traktUiState.mode == TraktConnectionMode.CONNECTED) {
-        item {
-            SettingsSection(
-                title = stringResource(Res.string.settings_tracking_viewing_discovery),
-                isTablet = isTablet,
-            ) {
-                TrackingViewingAndDiscovery(
-                    isTablet = isTablet,
-                    settingsUiState = settingsUiState,
-                    traktConnected = true,
-                    commentsEnabled = commentsEnabled,
-                    onCommentsEnabledChange = onCommentsEnabledChange,
+            SettingsGroup(isTablet = isTablet) {
+                Text(
+                    text = stringResource(Res.string.settings_tracking_anime_services_unavailable),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = if (isTablet) 20.dp else 16.dp, vertical = 16.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-        }
-    }
-
-    if (simklUiState.mode == SimklConnectionMode.CONNECTED) {
-        item {
-            SettingsSection(
-                title = stringResource(Res.string.settings_tracking_anime_section),
-                isTablet = isTablet,
-            ) {
-                AnimeIdPreferenceSection(
-                    isTablet = isTablet,
-                    settingsUiState = settingsUiState,
-                )
-            }
-        }
-    }
-
-    if (mdbListConnected) {
-        item {
-            SettingsSection(
-                title = stringResource(Res.string.settings_tracking_mdblist_section),
-                isTablet = isTablet,
-            ) {
-                MdbListLibraryListsSection(isTablet = isTablet)
             }
         }
     }
@@ -571,9 +510,9 @@ private fun recommendationsSourceOptions(
     }
     return listOf(
         TrackingPickerOption(
-            value = MoreLikeThisSourcePreference.TMDB,
-            title = stringResource(Res.string.trakt_more_like_this_source_tmdb),
-            description = stringResource(Res.string.settings_tracking_tmdb_recommendations_description),
+            value = MoreLikeThisSourcePreference.ANILIST,
+            title = "AniList",
+            description = "Community recommendations from AniList",
         ),
         TrackingPickerOption(
             value = MoreLikeThisSourcePreference.TRAKT,
@@ -621,7 +560,7 @@ private fun watchProgressSourceLabel(source: WatchProgressSource): String = when
 @Composable
 private fun moreLikeThisSourceLabel(source: MoreLikeThisSourcePreference): String = when (source) {
     MoreLikeThisSourcePreference.TRAKT -> stringResource(Res.string.trakt_more_like_this_source_trakt)
-    MoreLikeThisSourcePreference.TMDB -> stringResource(Res.string.trakt_more_like_this_source_tmdb)
+    MoreLikeThisSourcePreference.ANILIST -> "AniList"
     MoreLikeThisSourcePreference.SIMKL -> stringResource(Res.string.trakt_more_like_this_source_simkl)
 }
 
@@ -640,12 +579,12 @@ internal fun effectiveTrackingRecommendationsSource(
     traktConnected: Boolean,
 ): MoreLikeThisSourcePreference {
     if (source == MoreLikeThisSourcePreference.TRAKT && !traktConnected) {
-        return MoreLikeThisSourcePreference.TMDB
+        return MoreLikeThisSourcePreference.ANILIST
     }
     if (source == MoreLikeThisSourcePreference.SIMKL) {
         com.nuvio.app.features.simkl.SimklAuthRepository.ensureLoaded()
         if (!com.nuvio.app.features.simkl.SimklAuthRepository.isAuthenticated.value) {
-            return MoreLikeThisSourcePreference.TMDB
+            return MoreLikeThisSourcePreference.ANILIST
         }
     }
     return source

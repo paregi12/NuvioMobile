@@ -1,9 +1,6 @@
 package com.nuvio.app.features.collection
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.ManagedAddon
-import com.nuvio.app.features.addons.enabledAddons
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -179,28 +176,7 @@ object CollectionRepository {
     @OptIn(ExperimentalUuidApi::class)
     fun generateId(): String = Uuid.random().toString()
 
-    fun getAvailableCatalogs(): List<AvailableCatalog> {
-        val addons = AddonRepository.uiState.value.addons.enabledAddons()
-        return addons.mapNotNull { addon ->
-            val manifest = addon.manifest ?: return@mapNotNull null
-            addon to manifest
-        }.flatMap { (addon, manifest) ->
-            manifest.catalogs
-                .filter { catalog -> catalog.extra.none { it.isRequired && it.name != "genre" } }
-                .map { catalog ->
-                    val genreExtra = catalog.extra.firstOrNull { it.name == "genre" }
-                    AvailableCatalog(
-                        addonId = manifest.id,
-                        addonName = addon.displayTitle,
-                        type = catalog.type,
-                        catalogId = catalog.id,
-                        catalogName = catalog.name,
-                        genreOptions = genreExtra?.options.orEmpty(),
-                        genreRequired = genreExtra?.isRequired == true,
-                    )
-                }
-        }
-    }
+    fun getAvailableCatalogs(): List<AvailableCatalog> = emptyList()
 
     internal fun applyFromRemote(collections: List<Collection>, rawJson: JsonElement) {
         rawCollectionsJson = rawJson

@@ -1,49 +1,6 @@
 package com.nuvio.app.features.player
 
-import com.nuvio.app.features.addons.AddonResource
-import com.nuvio.app.features.addons.ManagedAddon
-import com.nuvio.app.features.addons.enabledAddons
 
-internal fun buildAddonSubtitleFetchKey(
-    addons: List<ManagedAddon>,
-    type: String?,
-    videoId: String?,
-): String? {
-    val normalizedType = type?.takeIf { it.isNotBlank() } ?: return null
-    val normalizedVideoId = videoId?.takeIf { it.isNotBlank() } ?: return null
-    val compatibleSubtitleAddons = addons.enabledAddons().mapNotNull { addon ->
-        val manifest = addon.manifest ?: return@mapNotNull null
-        val supportsSubtitles = manifest.resources.any { resource ->
-            resource.isCompatibleSubtitleResource(
-                type = normalizedType,
-                videoId = normalizedVideoId,
-            )
-        }
-        if (!supportsSubtitles) return@mapNotNull null
-        "${manifest.id}:${manifest.transportUrl}"
-    }
-
-    if (compatibleSubtitleAddons.isEmpty()) return null
-    return buildString {
-        append(normalizedType)
-        append('|')
-        append(normalizedVideoId)
-        append('|')
-        append(compatibleSubtitleAddons.sorted().joinToString("|"))
-    }
-}
-
-internal fun AddonResource.isCompatibleSubtitleResource(type: String, videoId: String): Boolean {
-    val isSubtitleResource = name.equals("subtitles", ignoreCase = true) ||
-        name.equals("subtitle", ignoreCase = true)
-    if (!isSubtitleResource) return false
-
-    val requestType = if (type.equals("tv", ignoreCase = true)) "series" else type
-    val typeMatches = types.isEmpty() || types.any { it.equals(requestType, ignoreCase = true) }
-    if (!typeMatches) return false
-
-    return idPrefixes.isEmpty() || idPrefixes.any { prefix -> videoId.startsWith(prefix) }
-}
 
 internal enum class SubtitleAutoSelectionMode {
     FORCED_ONLY,

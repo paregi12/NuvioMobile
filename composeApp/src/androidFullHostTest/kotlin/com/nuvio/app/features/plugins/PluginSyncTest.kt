@@ -5,8 +5,6 @@ import com.nuvio.app.core.network.ServerConfiguration
 import com.nuvio.app.core.network.ServerConfigurationRepository
 import com.nuvio.app.core.network.ServerConfigurationStorage
 import com.nuvio.app.core.network.SupabaseProvider
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.AddonStorage
 import com.russhwolf.settings.SettingsInitializer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -39,10 +37,8 @@ class PluginSyncTest {
         val context = RuntimeEnvironment.getApplication()
         SettingsInitializer().create(context)
         PluginStorage.initialize(context)
-        AddonStorage.initialize(context)
         ServerConfigurationStorage.initialize(context)
         PluginRepository.clearLocalState()
-        AddonRepository.clearLocalState()
         server.start()
         assertTrue(
             ServerConfigurationRepository.saveCustom(
@@ -60,7 +56,6 @@ class PluginSyncTest {
     @After
     fun tearDown(): Unit = runBlocking {
         PluginRepository.clearLocalState()
-        AddonRepository.clearLocalState()
         SupabaseProvider.reset()
         ServerConfigurationRepository.useOfficial()
         server.shutdown()
@@ -149,27 +144,6 @@ class PluginSyncTest {
         assertTrue(PluginRepository.uiState.value.repositories.isEmpty())
     }
 
-    @Test
-    fun emptyRemoteRemovesCachedAddonsWithoutUploadingAndStaysEmptyAfterReload(): Unit = runBlocking {
-        AddonStorage.saveInstalledAddonUrls(1, listOf(manifestUrl))
-        AddonStorage.saveAddonEnabledStates(1, mapOf(manifestUrl to false))
-        AddonRepository.initialize()
-        assertEquals(1, AddonRepository.uiState.value.addons.size)
-        respond("[]")
-
-        AddonRepository.pullFromServer(1)
-
-        assertTrue(AddonRepository.uiState.value.addons.isEmpty())
-        assertTrue(AddonStorage.loadInstalledAddonUrls(1).isEmpty())
-        assertTrue(AddonStorage.loadAddonEnabledStates(1).isEmpty())
-        AddonRepository.clearLocalState()
-        AddonRepository.initialize()
-        respond("[]")
-        AddonRepository.pullFromServer(1)
-
-        assertTrue(AddonRepository.uiState.value.addons.isEmpty())
-        assertPullsOnly("addons", count = 2)
-    }
 
     private fun seedPlugins(urls: List<String> = listOf(manifestUrl)) {
         val state = PluginsUiState(

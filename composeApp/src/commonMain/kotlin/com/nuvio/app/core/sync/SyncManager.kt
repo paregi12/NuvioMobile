@@ -5,7 +5,6 @@ import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
 import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.time.EpisodeReleaseDatePlatform
-import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.collection.CollectionSyncService
 import com.nuvio.app.features.home.HomeCatalogSettingsSyncService
 import com.nuvio.app.features.library.LibrarySourceMode
@@ -37,7 +36,6 @@ private const val FULL_PULL_MIN_INTERVAL_MS = 10_000L
 private const val PERIODIC_NUVIO_SYNC_PULL_INTERVAL_MS = 15 * 60_000L
 
 internal enum class ProfileSyncStep {
-    Addons,
     Plugins,
     ProfileSettings,
     ProviderCredentials,
@@ -48,7 +46,6 @@ internal enum class ProfileSyncStep {
 }
 
 internal data class ProfileSyncOperations(
-    val pullAddons: suspend (Int) -> Unit,
     val pullPlugins: suspend (Int) -> Unit,
     val pullProfileSettings: suspend (Int) -> Unit,
     val syncProviderCredentials: suspend (Int) -> Unit,
@@ -119,7 +116,6 @@ internal suspend fun runOrderedProfileSync(
 
     runStep(ProfileSyncStep.ProfileSettings, operations.pullProfileSettings)
     runStep(ProfileSyncStep.ProviderCredentials, operations.syncProviderCredentials)
-    runStep(ProfileSyncStep.Addons, operations.pullAddons)
     if (pluginsEnabled) {
         runStep(ProfileSyncStep.Plugins, operations.pullPlugins)
     }
@@ -277,7 +273,6 @@ object SyncManager {
     private var fullPullFreshness = ProfilePullFreshness()
 
     private val profileSyncOperations = ProfileSyncOperations(
-        pullAddons = { profileId -> AddonRepository.pullFromServer(profileId) },
         pullPlugins = { profileId -> PluginRepository.pullFromServer(profileId) },
         pullProfileSettings = { profileId -> ProfileSettingsSync.pull(profileId) },
         syncProviderCredentials = { profileId -> ProviderCredentialSync.syncFromRemote(profileId) },

@@ -55,7 +55,7 @@ internal fun PlayerStreamList(
         StreamBadgeSettingsRepository.ensureLoaded()
         StreamBadgeSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
-    val streams = streamsUiState.allStreams
+    val streams = streamsUiState.allStreams.filter { it.isSelectableForPlayback() }
     val visibleGroups = streamsUiState.filteredGroups
 
     when {
@@ -101,7 +101,7 @@ internal fun PlayerStreamList(
                 ) { _, stream ->
                     StreamCard(
                         stream = stream,
-                        enabled = stream.isSelectableForPlayback(debridSettings.canResolvePlayableLinks),
+                        enabled = stream.isSelectableForPlayback(),
                         appendInstantServiceToDefaultName = debridSettings.canResolvePlayableLinks &&
                             !debridSettings.hasCustomStreamFormatting,
                         showFileSizeBadges = streamBadgeSettings.showFileSizeBadges,

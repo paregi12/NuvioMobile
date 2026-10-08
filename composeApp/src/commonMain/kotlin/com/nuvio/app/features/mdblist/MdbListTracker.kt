@@ -45,6 +45,10 @@ object MdbListTracker : TrackingAuthProvider {
     val libraryProvider = MdbListTrackingLibraryProvider(library, sync, ::ensureLoaded)
 
     init {
+        TrackingProviderRegistry.registerProfileStore(this)
+    }
+
+    init {
         coroutineScope.launch {
             store.state.collectLatest { state ->
                 authenticated.value = state.scope.profileId == activeProfile.value && state.isAuthenticated

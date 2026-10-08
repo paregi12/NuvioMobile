@@ -220,9 +220,6 @@ internal fun LazyListScope.debridSettingsContent(
     settings: DebridSettings,
 ) {
     item {
-        var showResolverProviderDialog by rememberSaveable { mutableStateOf(false) }
-        val resolverProviders = settings.resolverServices.map { it.provider }
-        val activeResolverProvider = settings.activeResolverCredential?.provider
         SettingsSection(
             title = stringResource(Res.string.settings_debrid_section_title),
             isTablet = isTablet,
@@ -241,45 +238,7 @@ internal fun LazyListScope.debridSettingsContent(
                     isTablet = isTablet,
                     onCheckedChange = DebridSettingsRepository::setCloudLibraryEnabled,
                 )
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = stringResource(Res.string.settings_debrid_enable),
-                    description = stringResource(Res.string.settings_debrid_enable_description),
-                    checked = settings.canResolvePlayableLinks,
-                    enabled = settings.hasResolverProvider,
-                    isTablet = isTablet,
-                    onCheckedChange = DebridSettingsRepository::setLinkResolvingEnabled,
-                )
-                if (settings.canResolvePlayableLinks && resolverProviders.size > 1 && activeResolverProvider != null) {
-                    SettingsGroupDivider(isTablet = isTablet)
-                    DebridPreferenceRow(
-                        isTablet = isTablet,
-                        title = stringResource(Res.string.settings_debrid_resolve_with),
-                        description = stringResource(Res.string.settings_debrid_resolve_with_description),
-                        value = activeResolverProvider.displayName,
-                        enabled = true,
-                        onClick = { showResolverProviderDialog = true },
-                    )
-                }
-                if (!settings.hasResolverProvider) {
-                    SettingsGroupDivider(isTablet = isTablet)
-                    DebridInfoRow(
-                        isTablet = isTablet,
-                        text = stringResource(Res.string.settings_debrid_add_key_first),
-                    )
-                }
             }
-        }
-
-        if (showResolverProviderDialog && resolverProviders.size > 1 && activeResolverProvider != null) {
-            DebridSingleChoiceDialog(
-                title = stringResource(Res.string.settings_debrid_resolve_with),
-                selectedValue = activeResolverProvider,
-                options = resolverProviders,
-                label = { provider -> provider.displayName },
-                onSelected = { provider -> DebridSettingsRepository.setPreferredResolverProviderId(provider.id) },
-                onDismiss = { showResolverProviderDialog = false },
-            )
         }
     }
 

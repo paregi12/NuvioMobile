@@ -1,6 +1,6 @@
 package com.nuvio.app.features.downloads
 
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
+import com.nuvio.app.core.network.httpGetTextWithHeaders
 import com.nuvio.app.features.player.PlayerSubtitleCueParser
 import com.nuvio.app.features.player.loadAddonSubtitles
 import com.nuvio.app.features.streams.StreamSubtitle

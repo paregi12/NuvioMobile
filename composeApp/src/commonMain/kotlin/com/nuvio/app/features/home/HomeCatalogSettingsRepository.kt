@@ -1,7 +1,7 @@
 package com.nuvio.app.features.home
 
 import androidx.compose.ui.text.intl.Locale
-import com.nuvio.app.features.addons.ManagedAddon
+import com.nuvio.app.features.plugins.PluginHomeSection
 import com.nuvio.app.features.collection.Collection
 import com.nuvio.app.features.collection.CollectionRepository
 import kotlinx.atomicfu.atomic
@@ -137,12 +137,12 @@ object HomeCatalogSettingsRepository {
         _uiState.value = HomeCatalogSettingsUiState()
     }
 
-    fun syncCatalogs(addons: List<ManagedAddon>) {
+    fun syncCatalogs(sections: List<PluginHomeSection> = emptyList()) {
         ensureLoaded()
         val collections = CollectionRepository.collections.value
-        val syncInput = Triple(addons, collections, Locale.current.toLanguageTag())
+        val syncInput = Triple(sections, collections, Locale.current.toLanguageTag())
         if (lastCatalogSync == syncInput) return
-        definitions = buildHomeCatalogDefinitions(addons)
+        definitions = buildPluginCatalogDefinitions(sections)
         collectionDefinitions = buildCollectionDefinitions(collections)
         lastCatalogSync = syncInput
         lastCollectionSync = lastCollectionSync?.takeIf {

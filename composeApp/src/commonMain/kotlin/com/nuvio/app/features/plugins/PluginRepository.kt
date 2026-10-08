@@ -40,4 +40,8 @@ expect object PluginRepository {
         season: Int?,
         episode: Int?,
     ): Result<List<PluginRuntimeResult>>
+
+    suspend fun loadHomeSections(): List<PluginHomeSection>
+
+    suspend fun getAnimeDetails(contentId: String): PluginDetailsResult?
 }

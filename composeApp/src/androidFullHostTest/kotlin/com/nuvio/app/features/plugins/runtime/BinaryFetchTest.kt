@@ -1,6 +1,6 @@
 package com.nuvio.app.features.plugins.runtime
 
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

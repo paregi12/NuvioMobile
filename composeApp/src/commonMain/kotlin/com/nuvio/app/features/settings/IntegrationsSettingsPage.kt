@@ -4,16 +4,14 @@ import androidx.compose.foundation.lazy.LazyListScope
 import nuvio.composeapp.generated.resources.compose_settings_page_debrid
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_settings_page_mdblist_ratings
-import nuvio.composeapp.generated.resources.compose_settings_page_tmdb_enrichment
 import nuvio.composeapp.generated.resources.settings_integrations_mdblist_description
 import nuvio.composeapp.generated.resources.settings_integrations_debrid_description
 import nuvio.composeapp.generated.resources.settings_integrations_section_title
-import nuvio.composeapp.generated.resources.settings_integrations_tmdb_description
 import org.jetbrains.compose.resources.stringResource
 
 internal fun LazyListScope.integrationsContent(
     isTablet: Boolean,
-    onTmdbClick: () -> Unit,
+    onAnilistClick: () -> Unit,
     onMdbListClick: () -> Unit,
     onDebridClick: () -> Unit,
 ) {
@@ -24,11 +22,10 @@ internal fun LazyListScope.integrationsContent(
         ) {
             SettingsGroup(isTablet = isTablet) {
                 SettingsNavigationRow(
-                    title = stringResource(Res.string.compose_settings_page_tmdb_enrichment),
-                    description = stringResource(Res.string.settings_integrations_tmdb_description),
-                    iconPainter = integrationLogoPainter(IntegrationLogo.Tmdb),
+                    title = "AniList",
+                    description = "Enrich anime with AniList cast, trailers, synopses, and studios",
                     isTablet = isTablet,
-                    onClick = onTmdbClick,
+                    onClick = onAnilistClick,
                 )
                 SettingsGroupDivider(isTablet = isTablet)
                 SettingsNavigationRow(

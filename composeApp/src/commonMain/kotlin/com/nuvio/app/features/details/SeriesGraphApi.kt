@@ -1,7 +1,7 @@
 package com.nuvio.app.features.details
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString

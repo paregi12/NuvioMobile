@@ -128,8 +128,6 @@ import com.nuvio.app.features.shuffle.shufflePrimaryAction
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.streams.rememberPlaybackAvailability
 import com.nuvio.app.features.streams.StreamAutoPlayPolicy
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
-import com.nuvio.app.features.tmdb.TmdbService
 import com.nuvio.app.features.trakt.TraktAuthRepository
 import com.nuvio.app.features.trakt.TraktCommentReview
 import com.nuvio.app.features.trakt.TraktCommentsRepository
@@ -211,10 +209,6 @@ fun MetaDetailsScreen(
     val trackingSettingsUiState by remember {
         TrackingSettingsRepository.ensureLoaded()
         TrackingSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
-    val tmdbSettingsUiState by remember {
-        TmdbSettingsRepository.ensureLoaded()
-        TmdbSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
     val libraryUiState by remember {
         LibraryRepository.ensureLoaded()
@@ -374,10 +368,7 @@ fun MetaDetailsScreen(
         }
 
         val imdbId = extractImdbId(metaForRatings.id) ?: extractImdbId(id) ?: metaForRatings.imdbId
-        val tmdbId = extractTmdbId(metaForRatings.id)
-            ?: extractTmdbId(id)
-            ?: TmdbService.ensureTmdbId(metaForRatings.id, metaForRatings.type, fallbackImdbId = metaForRatings.imdbId)?.toIntOrNull()
-            ?: TmdbService.ensureTmdbId(id, type, fallbackImdbId = metaForRatings.imdbId)?.toIntOrNull()
+        val tmdbId = extractTmdbId(metaForRatings.id) ?: extractTmdbId(id)
 
         if (imdbId == null && tmdbId == null) {
             episodeImdbRatings = emptyMap()
@@ -404,9 +395,6 @@ fun MetaDetailsScreen(
         uiState.isLoading,
         trackingSettingsUiState.moreLikeThisSource,
         traktAuthUiState.mode,
-        tmdbSettingsUiState.enabled,
-        tmdbSettingsUiState.useMoreLikeThis,
-        tmdbSettingsUiState.language,
         mdbListSettings,
     ) {
         if (displayedMeta != null && !uiState.isLoading) {
@@ -2395,9 +2383,21 @@ private fun ConfiguredMetaSections(
                 }
             }
             MetaScreenSectionKey.MORE_LIKE_THIS -> {
+                if (meta.relations.isNotEmpty()) {
+                    DetailPosterRailSection(
+                        title = "Related Anime",
+                        items = meta.relations.map { it.item },
+                        watchedKeys = watchedKeys,
+                        fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
+                        showHeader = showHeader,
+                        horizontalScrollPadding = horizontalScrollPadding,
+                        sourceLabel = null,
+                        onPosterClick = onOpenMeta,
+                    )
+                }
                 if (hasMoreLikeThisSection) {
                     val sourceLabel = when (meta.moreLikeThisSource) {
-                        MoreLikeThisSource.TMDB -> stringResource(Res.string.detail_more_like_this_powered_by_tmdb)
+                        MoreLikeThisSource.ANILIST -> "Powered by AniList"
                         MoreLikeThisSource.TRAKT -> stringResource(Res.string.detail_more_like_this_powered_by_trakt)
                         MoreLikeThisSource.SIMKL -> stringResource(Res.string.detail_more_like_this_powered_by_simkl)
                         null -> null

@@ -82,10 +82,8 @@ import com.nuvio.app.core.ui.isLiquidGlassNativeTabBarSupported
 import com.nuvio.app.core.ui.localizedContinueWatchingSubtitle
 import com.nuvio.app.core.ui.nuvio
 import com.nuvio.app.core.ui.platformExitApp
-import com.nuvio.app.features.addons.AddAddonResult
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.enabledAddons
-import com.nuvio.app.features.addons.isWaitingForFirstEnabledManifest
+import com.nuvio.app.features.plugins.AddPluginRepositoryResult
+import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.catalog.CatalogTarget
 import com.nuvio.app.features.cloud.CloudLibraryContentType
 import com.nuvio.app.features.cloud.CloudLibraryFile
@@ -106,7 +104,6 @@ import com.nuvio.app.features.downloads.DownloadsRepository
 import com.nuvio.app.features.home.HomeCatalogSection
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.HomeRepository
-import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
 import com.nuvio.app.features.home.components.shouldBlurContinueWatchingArtwork
 import com.nuvio.app.features.library.LibraryItem
 import com.nuvio.app.features.library.LibraryRepository
@@ -122,7 +119,6 @@ import com.nuvio.app.features.library.toLibraryItem
 import com.nuvio.app.features.library.toMetaPreview
 import com.nuvio.app.features.membership.MemberAccessRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
-import com.nuvio.app.features.p2p.P2pSettingsRepository
 import com.nuvio.app.features.player.ExternalPlayerIntentResult
 import com.nuvio.app.features.player.externalPlaybackSession
 import com.nuvio.app.features.player.infusePlaybackCallbacks
@@ -138,7 +134,6 @@ import com.nuvio.app.features.player.HidePlayerSystemBars
 import com.nuvio.app.features.player.rememberExternalPlayerLauncher
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.settings.AccountSettingsScreen
-import com.nuvio.app.features.settings.AddonsSettingsScreen
 import com.nuvio.app.features.settings.ContinueWatchingSettingsScreen
 import com.nuvio.app.features.settings.HomescreenSettingsScreen
 import com.nuvio.app.features.settings.LicensesAttributionsSettingsScreen
@@ -281,9 +276,9 @@ internal fun MainAppContent(
         var pickerError by remember { mutableStateOf<String?>(null) }
         var pendingTrackingRemoval by remember { mutableStateOf<PendingTrackingMembershipRemoval?>(null) }
         val trackingListsUpdateFailedMessage = stringResource(Res.string.tracking_lists_update_failed)
-        val addonsUiState by remember {
-            AddonRepository.initialize()
-            AddonRepository.uiState
+        val pluginsUiState by remember {
+            PluginRepository.initialize()
+            PluginRepository.uiState
         }.collectAsStateWithLifecycle()
         val libraryUiState by remember {
             LibraryRepository.ensureLoaded()
@@ -311,10 +306,6 @@ internal fun MainAppContent(
         LockPlayerToLandscape()
         HidePlayerSystemBars()
     }
-    val p2pSettingsUiState by remember {
-        P2pSettingsRepository.ensureLoaded()
-        P2pSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
     val watchedUiState by remember {
         WatchedRepository.ensureLoaded()
         WatchedRepository.uiState
@@ -348,7 +339,6 @@ internal fun MainAppContent(
     val continueWatchingSettingsTitle = stringResource(Res.string.compose_settings_page_continue_watching)
     val debridSettingsTitle = stringResource(Res.string.compose_settings_page_debrid)
     val downloadsTitle = stringResource(Res.string.compose_settings_root_downloads_title)
-    val addonsSettingsTitle = stringResource(Res.string.compose_settings_page_addons)
     val pluginsSettingsTitle = stringResource(Res.string.compose_settings_page_plugins)
     val accountSettingsTitle = stringResource(Res.string.compose_settings_page_account)
     val supportersSettingsTitle = stringResource(Res.string.compose_settings_page_supporters_contributors)
@@ -370,16 +360,13 @@ internal fun MainAppContent(
     var networkToastBaselineReady by rememberSaveable { mutableStateOf(false) }
     var lastNetworkToastCondition by rememberSaveable { mutableStateOf(NetworkCondition.Unknown.name) }
     var watchSourceReconnectPending by remember { mutableStateOf(false) }
-    val homeCatalogRefreshKey = remember(addonsUiState.addons) {
-        buildAddonCatalogRefreshSignature(addonsUiState.addons)
+    val homeCatalogRefreshKey = remember(pluginsUiState.scrapers, pluginsUiState.pluginsEnabled) {
+        "${pluginsUiState.pluginsEnabled}_${pluginsUiState.scrapers.count { it.enabled && it.manifestEnabled }}"
     }
 
     LaunchedEffect(appContentGeneration, homeCatalogRefreshKey) {
         if (!ownsAppRuntime) return@LaunchedEffect
-        val enabledAddons = addonsUiState.addons.enabledAddons()
-        if (enabledAddons.isWaitingForFirstEnabledManifest()) return@LaunchedEffect
-        HomeCatalogSettingsRepository.syncCatalogs(enabledAddons)
-        HomeRepository.refresh(enabledAddons)
+        HomeRepository.refresh()
     }
 
     fun activateTab(tab: AppScreenTab) {
@@ -718,21 +705,18 @@ internal fun MainAppContent(
                         AppDeepLinkRepository.markConsumed(deepLink)
                     }
 
-                    is AppDeepLink.AddonInstall -> {
+                    is AppDeepLink.PluginInstall -> {
                         activateTab(AppScreenTab.Settings)
-                        navController.navigate(AddonsSettingsRoute(addonsSettingsTitle)) {
+                        navController.navigate(PluginsSettingsRoute(pluginsSettingsTitle)) {
                             launchSingleTop = true
                         }
-                        NuvioToastController.show(getString(Res.string.addons_modal_checking_title))
-                        AddonRepository.initialize()
-                        when (val result = AddonRepository.addAddon(deepLink.manifestUrl)) {
-                            is AddAddonResult.Success -> {
-                                NuvioToastController.show(
-                                    getString(Res.string.addons_modal_success_message, result.manifest.name),
-                                )
+                        PluginRepository.initialize()
+                        when (val result = PluginRepository.addRepository(deepLink.manifestUrl)) {
+                            is AddPluginRepositoryResult.Success -> {
+                                NuvioToastController.show("Plugin installed: ${result.repository.name}")
                             }
 
-                            is AddAddonResult.Error -> {
+                            is AddPluginRepositoryResult.Error -> {
                                 NuvioToastController.show(result.message)
                             }
                         }
@@ -1362,7 +1346,6 @@ internal fun MainAppContent(
                                 onHomescreenSettingsClick = { navController.navigate(HomescreenSettingsRoute(homescreenSettingsTitle)) },
                                 onMetaScreenSettingsClick = { navController.navigate(MetaScreenSettingsRoute(metaScreenSettingsTitle)) },
                                 onContinueWatchingSettingsClick = { navController.navigate(ContinueWatchingSettingsRoute(continueWatchingSettingsTitle)) },
-                                onAddonsSettingsClick = { navController.navigate(AddonsSettingsRoute(addonsSettingsTitle)) },
                                 onPluginsSettingsClick = {
                                     if (AppFeaturePolicy.pluginsEnabled) {
                                         navController.navigate(PluginsSettingsRoute(pluginsSettingsTitle))
@@ -1464,7 +1447,6 @@ internal fun MainAppContent(
                             if (currentRoute == route) streamLandscapeLoadingVisible = visible
                         },
                         navController = navController,
-                        p2pEnabled = p2pSettingsUiState.p2pEnabled,
                         openExternalPlayback = ::openExternalPlayback,
                         openExternalStreamUrl = ::openExternalStreamUrl,
                     )
@@ -1550,16 +1532,9 @@ internal fun MainAppContent(
                         onOpenDownload = ::openDownloadedItem,
                     )
                 }
-                entry<AddonsSettingsRoute> { route ->
+                entry<PluginsSettingsRoute> { route ->
                     SettingsDestination(route, navController) { onBack ->
-                        AddonsSettingsScreen(onBack = onBack)
-                    }
-                }
-                if (AppFeaturePolicy.pluginsEnabled) {
-                    entry<PluginsSettingsRoute> { route ->
-                        SettingsDestination(route, navController) { onBack ->
-                            PluginsSettingsScreen(onBack = onBack)
-                        }
+                        PluginsSettingsScreen(onBack = onBack)
                     }
                 }
                 entry<AccountSettingsRoute> { route ->

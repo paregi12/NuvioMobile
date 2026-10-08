@@ -54,7 +54,7 @@ import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.ui.NuvioScreen
 import com.nuvio.app.core.ui.NuvioScreenHeader
 import com.nuvio.app.core.ui.NuvioSurfaceCard
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.membership.MembershipOverviewRepository
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable

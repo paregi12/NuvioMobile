@@ -3,7 +3,6 @@ package com.nuvio.app.features.catalog
 import com.nuvio.app.core.poster.CustomPosterUrlRepository
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.collection.CollectionRepository
-import com.nuvio.app.features.collection.TmdbCollectionSourceResolver
 import com.nuvio.app.features.collection.catalogRouteKey
 import com.nuvio.app.features.library.LibraryRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
@@ -134,15 +133,6 @@ object CatalogRepository {
         activeJob = scope.launch {
             runCatching {
                 when (val target = request.target) {
-                    is CatalogTarget.Addon -> fetchCatalogPage(
-                        manifestUrl = target.manifestUrl,
-                        type = target.contentType,
-                        catalogId = target.catalogId,
-                        genre = target.genre,
-                        skip = requestedSkip.takeIf { it > 0 },
-                        forceRefresh = forceRefresh,
-                    )
-
                     is CatalogTarget.CollectionSource -> fetchCollectionSourcePage(
                         target = target,
                         page = requestedSkip.takeIf { it > 0 } ?: 1,
@@ -218,7 +208,6 @@ private suspend fun fetchCollectionSourcePage(
         ?: error(getString(Res.string.catalog_load_failed))
 
     return when {
-        source.isTmdb -> TmdbCollectionSourceResolver.resolve(source = source, page = page)
         source.isTrakt -> TraktPublicListSourceResolver.resolve(source = source, page = page)
         else -> error(getString(Res.string.catalog_load_failed))
     }

@@ -58,11 +58,7 @@ import com.nuvio.app.features.home.components.HomeSkeletonRow
 import com.nuvio.app.core.ui.skeleton
 import com.nuvio.app.features.details.components.DetailPosterRailSection
 import com.nuvio.app.features.home.MetaPreview
-import com.nuvio.app.features.tmdb.TmdbEntityBrowseData
-import com.nuvio.app.features.tmdb.TmdbEntityKind
-import com.nuvio.app.features.tmdb.TmdbEntityMediaType
-import com.nuvio.app.features.tmdb.TmdbEntityRailType
-import com.nuvio.app.features.tmdb.TmdbMetadataService
+import com.nuvio.app.features.anilist.AnilistMetadataService
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.navigation.LocalUseNativeNavigation
@@ -70,15 +66,15 @@ import com.nuvio.app.navigation.LocalUseNativeNavigation
 private sealed interface EntityBrowseUiState {
     data object Loading : EntityBrowseUiState
     data class Error(val message: String) : EntityBrowseUiState
-    data class Success(val data: TmdbEntityBrowseData) : EntityBrowseUiState
+    data class Success(val data: EntityBrowseData) : EntityBrowseUiState
 }
 
 private val ENTITY_BROWSE_WIDE_LAYOUT_MIN_WIDTH = 900.dp
 private val ENTITY_BROWSE_WIDE_SIDEBAR_WIDTH = 392.dp
 
 @Composable
-fun TmdbEntityBrowseScreen(
-    entityKind: TmdbEntityKind,
+fun EntityBrowseScreen(
+    entityKind: EntityKind,
     entityId: Int,
     entityName: String,
     sourceType: String,
@@ -98,7 +94,7 @@ fun TmdbEntityBrowseScreen(
 
     LaunchedEffect(entityKind, entityId) {
         uiState = EntityBrowseUiState.Loading
-        val data = TmdbMetadataService.fetchEntityBrowse(
+        val data = AnilistMetadataService.fetchEntityBrowse(
             entityKind = entityKind,
             entityId = entityId,
             sourceType = sourceType,
@@ -156,7 +152,7 @@ fun TmdbEntityBrowseScreen(
 
 @Composable
 private fun EntityBrowseContent(
-    data: TmdbEntityBrowseData,
+    data: EntityBrowseData,
     sourceType: String,
     watchedKeys: Set<String>,
     fullyWatchedSeriesKeys: Set<String>,
@@ -164,9 +160,9 @@ private fun EntityBrowseContent(
 ) {
     val backgroundUrl = remember(data.rails, sourceType) {
         val preferredMediaType = if (sourceType.trim().equals("movie", ignoreCase = true)) {
-            TmdbEntityMediaType.MOVIE
+            EntityMediaType.MOVIE
         } else {
-            TmdbEntityMediaType.TV
+            EntityMediaType.TV
         }
         data.rails.firstOrNull { it.mediaType == preferredMediaType }
             ?.items?.firstOrNull()?.poster
@@ -252,7 +248,7 @@ private fun EntityBrowseContent(
 
 @Composable
 private fun WideEntityBrowseContent(
-    data: TmdbEntityBrowseData,
+    data: EntityBrowseData,
     watchedKeys: Set<String>,
     fullyWatchedSeriesKeys: Set<String>,
     onOpenMeta: (MetaPreview) -> Unit,
@@ -317,7 +313,7 @@ private fun WideEntityBrowseContent(
 
 @Composable
 private fun EntityIdentitySidebar(
-    header: com.nuvio.app.features.tmdb.TmdbEntityHeader,
+    header: EntityHeader,
     catalogueCount: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -330,8 +326,8 @@ private fun EntityIdentitySidebar(
     ) {
         Text(
             text = when (header.kind) {
-                TmdbEntityKind.COMPANY -> stringResource(Res.string.details_browse_kind_company)
-                TmdbEntityKind.NETWORK -> stringResource(Res.string.details_browse_kind_network)
+                EntityKind.COMPANY -> stringResource(Res.string.details_browse_kind_company)
+                EntityKind.NETWORK -> stringResource(Res.string.details_browse_kind_network)
             }.uppercase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.ExtraBold,
@@ -488,22 +484,22 @@ private fun EntitySidebarLabel(text: String) {
 }
 
 @Composable
-private fun entityRailTitle(rail: com.nuvio.app.features.tmdb.TmdbEntityRail): String {
+private fun entityRailTitle(rail: EntityRail): String {
     val mediaLabel = when (rail.mediaType) {
-        TmdbEntityMediaType.MOVIE -> stringResource(Res.string.media_movies)
-        TmdbEntityMediaType.TV -> stringResource(Res.string.media_series)
+        EntityMediaType.MOVIE -> stringResource(Res.string.media_movies)
+        EntityMediaType.TV -> stringResource(Res.string.media_series)
     }
     val railLabel = when (rail.railType) {
-        TmdbEntityRailType.POPULAR -> stringResource(Res.string.details_browse_rail_popular)
-        TmdbEntityRailType.TOP_RATED -> stringResource(Res.string.details_browse_rail_top_rated)
-        TmdbEntityRailType.RECENT -> stringResource(Res.string.details_browse_rail_recent)
+        EntityRailType.POPULAR -> stringResource(Res.string.details_browse_rail_popular)
+        EntityRailType.TOP_RATED -> stringResource(Res.string.details_browse_rail_top_rated)
+        EntityRailType.RECENT -> stringResource(Res.string.details_browse_rail_recent)
     }
     return stringResource(Res.string.details_browse_rail_title, mediaLabel, railLabel)
 }
 
 @Composable
 private fun EntityHeroSection(
-    header: com.nuvio.app.features.tmdb.TmdbEntityHeader,
+    header: EntityHeader,
     modifier: Modifier = Modifier,
 ) {
     val hasLogo = !header.logo.isNullOrBlank()
@@ -511,8 +507,8 @@ private fun EntityHeroSection(
     Column(modifier = modifier.padding(horizontal = 20.dp)) {
         Text(
             text = when (header.kind) {
-                TmdbEntityKind.COMPANY -> stringResource(Res.string.details_browse_kind_company)
-                TmdbEntityKind.NETWORK -> stringResource(Res.string.details_browse_kind_network)
+                EntityKind.COMPANY -> stringResource(Res.string.details_browse_kind_company)
+                EntityKind.NETWORK -> stringResource(Res.string.details_browse_kind_network)
             },
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Medium,

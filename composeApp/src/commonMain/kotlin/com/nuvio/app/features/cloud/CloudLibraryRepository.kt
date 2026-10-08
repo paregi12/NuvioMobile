@@ -42,7 +42,7 @@ internal class CloudLibraryStore(
                     onSuccess = { items ->
                         CloudLibraryProviderState(
                             provider = credential.provider,
-                            items = items,
+                            items = items.filterNot { it.type == CloudLibraryItemType.Torrent },
                         )
                     },
                     onFailure = { error ->
@@ -65,6 +65,7 @@ internal class CloudLibraryStore(
         item: CloudLibraryItem,
         file: CloudLibraryFile,
     ): CloudLibraryPlaybackResult {
+        if (item.type == CloudLibraryItemType.Torrent) return CloudLibraryPlaybackResult.NotFound
         if (!file.playable) return CloudLibraryPlaybackResult.NotPlayable
         val credential = credentialsProvider()
             .firstOrNull { credential -> credential.provider.id == item.providerId }

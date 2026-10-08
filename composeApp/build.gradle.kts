@@ -41,9 +41,6 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
     @get:Input
     abstract val sentryEnvironment: Property<String>
 
-    @get:Input
-    abstract val tmdbApiKey: Property<String>
-
     @TaskAction
     fun generate() {
         val props = Properties()
@@ -74,19 +71,6 @@ abstract class GenerateRuntimeConfigsTask : DefaultTask() {
                 |object SentryConfig {
                 |    const val DSN = "${sentryDsn.get()}"
                 |    const val ENVIRONMENT = "${sentryEnvironment.get()}"
-                |}
-                """.trimMargin()
-            )
-        }
-
-        outDir.resolve("com/nuvio/app/features/tmdb").apply {
-            mkdirs()
-            resolve("TmdbConfig.kt").writeText(
-                """
-                |package com.nuvio.app.features.tmdb
-                |
-                |object TmdbConfig {
-                |    const val API_KEY = "${tmdbApiKey.get()}"
                 |}
                 """.trimMargin()
             )
@@ -255,7 +239,6 @@ val iosDistributionSourceDir = if (iosDistribution == "full") {
     "src/iosAppStore/kotlin"
 }
 val iosFrameworkBundleId = "com.nuvio.media"
-val nuvioEngineAppleFramework = rootProject.file("../nuvio-engine/platform/apple/NuvioEngine.xcframework")
 val fullCommonSourceDir = project.file("src/fullCommonMain/kotlin")
 val generatedRuntimeConfigDir = layout.buildDirectory.dir("generated/runtime-config/kotlin")
 val requestedGradleTasks = gradle.startParameter.taskNames.map { taskName ->
@@ -322,7 +305,6 @@ val generateRuntimeConfigs = tasks.register<GenerateRuntimeConfigsTask>("generat
     supabaseAnonKey.set(runtimeConfigValue("NUVIO_SUPABASE_ANON_KEY"))
     supabaseFallbackUrl.set(runtimeConfigValue("NUVIO_SUPABASE_FALLBACK_URL"))
     sentryDsn.set(runtimeConfigValue("SENTRY_DSN"))
-    tmdbApiKey.set(runtimeConfigValue("TMDB_API_KEY"))
     sentryEnvironment.set(
         when {
             requestedGradleTasks.any { "benchmark" in it } -> "benchmark"
@@ -359,12 +341,6 @@ kotlin {
     )
 
     iosTargets.forEach { iosTarget ->
-        val nuvioEngineSlice = if (iosTarget.name == "iosArm64") {
-            "ios-arm64"
-        } else {
-            "ios-arm64_x86_64-simulator"
-        }
-        val nuvioEngineSliceDirectory = nuvioEngineAppleFramework.resolve(nuvioEngineSlice)
         iosTarget.compilations.getByName("main") {
             cinterops {
                 create("commoncrypto") {
@@ -374,16 +350,6 @@ kotlin {
                 create("appicon") {
                     defFile(project.file("src/nativeInterop/cinterop/appicon.def"))
                     compilerOpts("-I${project.projectDir}/src/nativeInterop/cinterop")
-                }
-                if (iosDistribution == "full") {
-                    check(nuvioEngineSliceDirectory.resolve("libCNuvioEngine.a").isFile) {
-                        "Build the local Nuvio Engine Apple XCFramework before compiling iOS Full."
-                    }
-                    create("nuvioengine") {
-                        defFile(project.file("src/nativeInterop/cinterop/nuvioengine.def"))
-                        compilerOpts("-I${nuvioEngineSliceDirectory.resolve("Headers").absolutePath}")
-                        extraOpts("-libraryPath", nuvioEngineSliceDirectory.absolutePath)
-                    }
                 }
                 configureEach {
                     extraOpts("-Xccall-mode", "direct")

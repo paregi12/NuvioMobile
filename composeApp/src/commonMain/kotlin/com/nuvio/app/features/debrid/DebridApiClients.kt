@@ -1,8 +1,8 @@
 package com.nuvio.app.features.debrid
 
-import com.nuvio.app.features.addons.RawHttpResponse
-import com.nuvio.app.features.addons.DefaultRawHttpResponseMaxBytes
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.RawHttpResponse
+import com.nuvio.app.core.network.DefaultRawHttpResponseMaxBytes
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromString
@@ -62,70 +62,6 @@ internal object TorboxApiClient {
             body = "",
         )
 
-    suspend fun checkCached(
-        apiKey: String,
-        hashes: List<String>,
-    ): DebridApiResponse<TorboxEnvelopeDto<Map<String, TorboxCachedItemDto>>> {
-        val normalizedHashes = hashes
-            .map { it.trim().lowercase() }
-            .filter { it.isNotBlank() }
-            .distinct()
-        if (normalizedHashes.isEmpty()) {
-            return DebridApiResponse(
-                status = 200,
-                body = TorboxEnvelopeDto(success = true, data = emptyMap()),
-                rawBody = "",
-            )
-        }
-        val body = DebridApiJson.json.encodeToString(
-            TorboxCheckCachedRequestDto(hashes = normalizedHashes),
-        )
-        return request(
-            method = "POST",
-            url = "$BASE_URL/v1/api/torrents/checkcached?format=object",
-            apiKey = apiKey,
-            body = body,
-            contentType = "application/json",
-        )
-    }
-
-    suspend fun createTorrent(apiKey: String, magnet: String): DebridApiResponse<TorboxEnvelopeDto<TorboxCreateTorrentDataDto>> {
-        val boundary = "NuvioDebrid${magnet.hashCode().toUInt()}"
-        val body = multipartFormBody(
-            boundary = boundary,
-            "magnet" to magnet,
-            "add_only_if_cached" to "true",
-            "allow_zip" to "false",
-        )
-        return request(
-            method = "POST",
-            url = "$BASE_URL/v1/api/torrents/createtorrent",
-            apiKey = apiKey,
-            body = body,
-            contentType = "multipart/form-data; boundary=$boundary",
-        )
-    }
-
-    suspend fun getTorrent(apiKey: String, id: Int): DebridApiResponse<TorboxEnvelopeDto<TorboxTorrentDataDto>> =
-        request(
-            method = "GET",
-            url = "$BASE_URL/v1/api/torrents/mylist?${
-                queryString(
-                    "id" to id.toString(),
-                    "bypass_cache" to "true",
-                )
-            }",
-            apiKey = apiKey,
-        )
-
-    suspend fun listCloudTorrents(apiKey: String): DebridApiResponse<TorboxEnvelopeDto<List<TorboxCloudItemDto>>> =
-        request(
-            method = "GET",
-            url = "$BASE_URL/v1/api/torrents/mylist",
-            apiKey = apiKey,
-            maxResponseBodyBytes = cloudListResponseMaxBytes,
-        )
-
     suspend fun listCloudUsenet(apiKey: String): DebridApiResponse<TorboxEnvelopeDto<List<TorboxCloudItemDto>>> =
         request(
             method = "GET",
@@ -140,46 +76,6 @@ internal object TorboxApiClient {
             url = "$BASE_URL/v1/api/webdl/mylist",
             apiKey = apiKey,
             maxResponseBodyBytes = cloudListResponseMaxBytes,
-        )
-
-    suspend fun requestDownloadLink(
-        apiKey: String,
-        torrentId: Int,
-        fileId: Int?,
-    ): DebridApiResponse<TorboxEnvelopeDto<String>> =
-        request(
-            method = "GET",
-            url = "$BASE_URL/v1/api/torrents/requestdl?${
-                queryString(
-                    "token" to apiKey,
-                    "torrent_id" to torrentId.toString(),
-                    "file_id" to fileId?.toString(),
-                    "zip_link" to "false",
-                    "redirect" to "false",
-                    "append_name" to "false",
-                )
-            }",
-            apiKey = apiKey,
-        )
-
-    suspend fun requestCloudTorrentDownloadLink(
-        apiKey: String,
-        torrentId: String,
-        fileId: String?,
-    ): DebridApiResponse<TorboxEnvelopeDto<String>> =
-        request(
-            method = "GET",
-            url = "$BASE_URL/v1/api/torrents/requestdl?${
-                queryString(
-                    "token" to apiKey,
-                    "torrent_id" to torrentId,
-                    "file_id" to fileId,
-                    "zip_link" to "false",
-                    "redirect" to "false",
-                    "append_name" to "false",
-                )
-            }",
-            apiKey = apiKey,
         )
 
     suspend fun requestCloudUsenetDownloadLink(
@@ -286,86 +182,6 @@ internal object RealDebridApiClient {
             body = "",
         ).status in 200..299
 
-    suspend fun addMagnet(apiKey: String, magnet: String): DebridApiResponse<RealDebridAddTorrentDto> =
-        formRequest(
-            method = "POST",
-            url = "$BASE_URL/torrents/addMagnet",
-            apiKey = apiKey,
-            fields = listOf("magnet" to magnet),
-        )
-
-    suspend fun getTorrentInfo(apiKey: String, id: String): DebridApiResponse<RealDebridTorrentInfoDto> =
-        request(
-            method = "GET",
-            url = "$BASE_URL/torrents/info/${encodePathSegment(id)}",
-            apiKey = apiKey,
-        )
-
-    suspend fun selectFiles(apiKey: String, id: String, files: String): DebridApiResponse<Unit> =
-        formRequest(
-            method = "POST",
-            url = "$BASE_URL/torrents/selectFiles/${encodePathSegment(id)}",
-            apiKey = apiKey,
-            fields = listOf("files" to files),
-        )
-
-    suspend fun unrestrictLink(apiKey: String, link: String): DebridApiResponse<RealDebridUnrestrictLinkDto> =
-        formRequest(
-            method = "POST",
-            url = "$BASE_URL/unrestrict/link",
-            apiKey = apiKey,
-            fields = listOf("link" to link),
-        )
-
-    suspend fun deleteTorrent(apiKey: String, id: String): DebridApiResponse<Unit> =
-        request(
-            method = "DELETE",
-            url = "$BASE_URL/torrents/delete/${encodePathSegment(id)}",
-            apiKey = apiKey,
-        )
-
-    private suspend inline fun <reified T> formRequest(
-        method: String,
-        url: String,
-        apiKey: String,
-        fields: List<Pair<String, String>>,
-    ): DebridApiResponse<T> {
-        val body = fields.joinToString("&") { (key, value) ->
-            "${encodeFormValue(key)}=${encodeFormValue(value)}"
-        }
-        return request(
-            method = method,
-            url = url,
-            apiKey = apiKey,
-            body = body,
-            contentType = "application/x-www-form-urlencoded",
-        )
-    }
-
-    private suspend inline fun <reified T> request(
-        method: String,
-        url: String,
-        apiKey: String,
-        body: String = "",
-        contentType: String? = null,
-    ): DebridApiResponse<T> {
-        val headers = authHeaders(apiKey) + listOfNotNull(
-            contentType?.let { "Content-Type" to it },
-            "Accept" to "application/json",
-        )
-        val response = httpRequestRaw(
-            method = method,
-            url = url,
-            headers = headers,
-            body = body,
-        )
-        return DebridApiResponse(
-            status = response.status,
-            body = response.decodeBody<T>(),
-            rawBody = response.body,
-        )
-    }
-
     private fun authHeaders(apiKey: String): Map<String, String> =
         mapOf("Authorization" to "Bearer $apiKey")
 }
@@ -427,37 +243,6 @@ internal object PremiumizeApiClient {
             url = "$BASE_URL/api/item/details?${queryString("id" to itemId)}",
             apiKey = apiKey,
         )
-
-    suspend fun directDownload(
-        apiKey: String,
-        source: String,
-    ): DebridApiResponse<PremiumizeDirectDownloadDto> =
-        formRequest(
-            method = "POST",
-            url = "$BASE_URL/api/transfer/directdl",
-            apiKey = apiKey,
-            fields = listOf("src" to source),
-        )
-
-    suspend fun checkCache(
-        apiKey: String,
-        items: List<String>,
-    ): DebridApiResponse<PremiumizeCacheCheckDto> {
-        val normalizedItems = items.map { it.trim() }.filter { it.isNotBlank() }
-        if (normalizedItems.isEmpty()) {
-            return DebridApiResponse(
-                status = 200,
-                body = PremiumizeCacheCheckDto(status = "success", response = emptyList()),
-                rawBody = "",
-            )
-        }
-        return formRequest(
-            method = "POST",
-            url = "$BASE_URL/api/cache/check",
-            apiKey = apiKey,
-            fields = normalizedItems.map { "items[]" to it },
-        )
-    }
 
     private suspend inline fun <reified T> formRequestWithoutAuth(
         method: String,
@@ -562,13 +347,3 @@ private inline fun <reified T> RawHttpResponse.decodeBody(): T? {
         null
     }
 }
-
-private fun multipartFormBody(boundary: String, vararg fields: Pair<String, String>): String =
-    buildString {
-        fields.forEach { (name, value) ->
-            append("--").append(boundary).append("\r\n")
-            append("Content-Disposition: form-data; name=\"").append(name).append("\"\r\n\r\n")
-            append(value).append("\r\n")
-        }
-        append("--").append(boundary).append("--\r\n")
-    }

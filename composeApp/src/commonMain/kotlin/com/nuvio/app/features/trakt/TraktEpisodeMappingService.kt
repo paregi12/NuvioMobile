@@ -1,7 +1,7 @@
 package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
+import com.nuvio.app.core.network.httpGetTextWithHeaders
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.details.MetaVideo
 import kotlinx.coroutines.CompletableDeferred

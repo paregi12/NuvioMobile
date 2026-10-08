@@ -1,11 +1,10 @@
 package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.PosterShape
-import com.nuvio.app.features.tmdb.TmdbService
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -110,8 +109,6 @@ object TraktRelatedRepository {
 
         val tmdbId = resolveTmdbCandidate(meta.id)
             ?: resolveTmdbCandidate(fallbackItemId)
-            ?: TmdbService.ensureTmdbId(meta.id, meta.type)?.toIntOrNull()
-            ?: fallbackItemId?.let { TmdbService.ensureTmdbId(it, fallbackItemType ?: meta.type) }?.toIntOrNull()
             ?: return null
 
         return resolveViaTraktSearch(type = type, tmdbId = tmdbId, headers = headers)

@@ -36,12 +36,7 @@ object DebridProviders {
         displayName = "Torbox",
         shortName = "TB",
         authMethod = DebridProviderAuthMethod.DeviceCode,
-        capabilities = setOf(
-            DebridProviderCapability.ClientResolve,
-            DebridProviderCapability.LocalTorrentCacheCheck,
-            DebridProviderCapability.LocalTorrentResolve,
-            DebridProviderCapability.CloudLibrary,
-        ),
+        capabilities = setOf(DebridProviderCapability.CloudLibrary),
     )
 
     val Premiumize = DebridProvider(
@@ -49,12 +44,7 @@ object DebridProviders {
         displayName = "Premiumize",
         shortName = "PM",
         authMethod = DebridProviderAuthMethod.DeviceCode,
-        capabilities = setOf(
-            DebridProviderCapability.ClientResolve,
-            DebridProviderCapability.LocalTorrentCacheCheck,
-            DebridProviderCapability.LocalTorrentResolve,
-            DebridProviderCapability.CloudLibrary,
-        ),
+        capabilities = setOf(DebridProviderCapability.CloudLibrary),
     )
 
     val RealDebrid = DebridProvider(
@@ -62,7 +52,7 @@ object DebridProviders {
         displayName = "Real-Debrid",
         shortName = "RD",
         visibleInUi = false,
-        capabilities = setOf(DebridProviderCapability.ClientResolve),
+        capabilities = emptySet(),
     )
 
     private val registered = listOf(Torbox, Premiumize, RealDebrid)

@@ -1,9 +1,9 @@
 package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
-import com.nuvio.app.features.addons.httpPostJsonWithHeaders
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpGetTextWithHeaders
+import com.nuvio.app.core.network.httpPostJsonWithHeaders
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.tracking.TrackingAuthProvider
 import com.nuvio.app.features.tracking.TrackingCapability
@@ -70,7 +70,7 @@ object TraktAuthRepository : TrackingAuthProvider {
     )
 
     init {
-        TrackingProviderRegistry.register(this)
+        TrackingProviderRegistry.registerProfileStore(this)
     }
 
     private var hasLoaded = false

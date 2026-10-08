@@ -3,7 +3,6 @@ package com.nuvio.app.core.sync
 import com.nuvio.app.features.debrid.DebridSettings
 import com.nuvio.app.features.mdblist.MdbListSettings
 import com.nuvio.app.features.player.PlayerSettingsUiState
-import com.nuvio.app.features.tmdb.TmdbSettings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.buildJsonObject
@@ -11,32 +10,32 @@ import kotlinx.serialization.json.put
 
 class ProviderCredentialModelsTest {
     @Test
-    fun `TMDB credential snapshot contains the personal override`() {
-        val snapshot = credentialSnapshot(TmdbSettings(apiKey = " personal-key "))
-        val credential = snapshot.values.single { it.provider == ProviderCredentialIds.TMDB }
+    fun `MDBLIST credential snapshot contains the personal override`() {
+        val snapshot = credentialSnapshot(MdbListSettings(apiKey = " personal-key "))
+        val credential = snapshot.values.single { it.provider == ProviderCredentialIds.MDBLIST }
 
         assertEquals(1, snapshot.profileId)
         assertEquals(buildJsonObject { put("api_key", "personal-key") }, credential.credentialJson())
     }
 
     @Test
-    fun `empty TMDB override syncs a clear tombstone instead of the bundled key`() {
-        val snapshot = credentialSnapshot(TmdbSettings())
-        val credential = snapshot.values.single { it.provider == ProviderCredentialIds.TMDB }
+    fun `empty MDBLIST override syncs a clear tombstone instead of the bundled key`() {
+        val snapshot = credentialSnapshot(MdbListSettings())
+        val credential = snapshot.values.single { it.provider == ProviderCredentialIds.MDBLIST }
 
         assertEquals(buildJsonObject { put("api_key", "") }, credential.credentialJson())
     }
 
     @Test
-    fun `remote TMDB override can be replaced and cleared`() {
-        val local = credentialSnapshot(TmdbSettings(apiKey = "local-key"))
+    fun `remote MDBLIST override can be replaced and cleared`() {
+        val local = credentialSnapshot(MdbListSettings(apiKey = "local-key"))
         val remote = listOf(
-            SupabaseProviderCredential("tmdb", buildJsonObject { put("api_key", "remote-key") }),
+            SupabaseProviderCredential("mdblist", buildJsonObject { put("api_key", "remote-key") }),
         )
         val merged = local.mergeRemote(remote)
 
-        assertEquals("remote-key", merged.values.single { it.provider == ProviderCredentialIds.TMDB }.value)
-        assertEquals("", merged.mergeRemote(emptyList()).values.single { it.provider == ProviderCredentialIds.TMDB }.value)
+        assertEquals("remote-key", merged.values.single { it.provider == ProviderCredentialIds.MDBLIST }.value)
+        assertEquals("", merged.mergeRemote(emptyList()).values.single { it.provider == ProviderCredentialIds.MDBLIST }.value)
     }
 
     @Test
@@ -127,11 +126,10 @@ class ProviderCredentialModelsTest {
         assertEquals("", local.mergeRemote(remote).values.single().value)
     }
 
-    private fun credentialSnapshot(tmdb: TmdbSettings) = ProviderCredentialSync.buildSnapshot(
+    private fun credentialSnapshot(mdbList: MdbListSettings) = ProviderCredentialSync.buildSnapshot(
         profileId = 1,
         debrid = DebridSettings(),
-        tmdb = tmdb,
-        mdbList = MdbListSettings(),
+        mdbList = mdbList,
         player = PlayerSettingsUiState(),
     )
 }

@@ -8,11 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.nuvio.app.features.details.MetaDetailsScreen
-import com.nuvio.app.features.details.PersonDetailScreen
-import com.nuvio.app.features.details.TmdbEntityBrowseScreen
+import com.nuvio.app.features.details.EntityBrowseScreen
+import com.nuvio.app.features.details.EntityKind
 import com.nuvio.app.features.home.MetaPreview
-import com.nuvio.app.features.tmdb.TmdbEntityKind
-import com.nuvio.app.features.tmdb.TmdbService
 import com.nuvio.app.navigation.DetailRoute
 import com.nuvio.app.navigation.EntityBrowseRoute
 import com.nuvio.app.navigation.NuvioNavigator
@@ -43,29 +41,14 @@ internal typealias ContentPlayAction = (
 
 @Composable
 internal fun rememberOpenMeta(navController: NuvioNavigator): (MetaPreview) -> Unit {
-    val scope = rememberCoroutineScope()
     return { preview ->
-        scope.launch {
-            val resolvedId = if (preview.id.startsWith("tmdb:")) {
-                val tmdbId = preview.id.removePrefix("tmdb:").toIntOrNull()
-                val resolved = tmdbId?.let {
-                    TmdbService.tmdbToImdb(
-                        tmdbId = it,
-                        mediaType = preview.type,
-                    )
-                } ?: preview.id
-                resolved
-            } else {
-                preview.id
-            }
-            navController.navigate(
-                DetailRoute(
-                    type = preview.type,
-                    id = resolvedId,
-                    title = preview.name,
-                ),
-            )
-        }
+        navController.navigate(
+            DetailRoute(
+                type = preview.type,
+                id = preview.id,
+                title = preview.name,
+            ),
+        )
     }
 }
 
@@ -160,8 +143,8 @@ internal fun EntityDestination(
     navController: NuvioNavigator,
 ) {
     val onBack = rememberGuardedPopBackStack(navController, route)
-    TmdbEntityBrowseScreen(
-        entityKind = TmdbEntityKind.fromRouteValue(route.entityKind),
+    EntityBrowseScreen(
+        entityKind = EntityKind.fromRouteValue(route.entityKind),
         entityId = route.entityId,
         entityName = route.entityName,
         sourceType = route.sourceType,

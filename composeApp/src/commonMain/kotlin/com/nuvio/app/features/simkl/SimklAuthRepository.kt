@@ -59,7 +59,7 @@ object SimklAuthRepository : TrackingAuthProvider {
     private var accessToken: String? = null
 
     init {
-        TrackingProviderRegistry.register(this)
+        TrackingProviderRegistry.registerProfileStore(this)
     }
 
     override fun ensureLoaded() {

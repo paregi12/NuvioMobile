@@ -45,10 +45,11 @@ class HomeCatalogSectionTest {
             title = "Popular",
             subtitle = "Addon",
             addonName = "Addon",
-            target = CatalogTarget.Addon(
-                manifestUrl = "https://example.com/manifest.json",
-                contentType = "movie",
-                catalogId = "popular",
+            target = CatalogTarget.CollectionSource(
+                collectionId = "col1",
+                folderId = "fold1",
+                sourceKey = "popular",
+                contentType = "anime",
                 supportsPagination = hasMore,
             ),
             items = listOf(

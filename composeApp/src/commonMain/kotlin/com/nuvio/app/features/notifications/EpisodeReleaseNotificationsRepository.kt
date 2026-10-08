@@ -2,7 +2,6 @@ package com.nuvio.app.features.notifications
 
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.deeplink.buildMetaDeepLinkUrl
-import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.library.LibraryItem
 import com.nuvio.app.features.library.LibraryRepository
@@ -386,11 +385,6 @@ object EpisodeReleaseNotificationsRepository {
                     errorMessage = null,
                 )
                 return
-            }
-
-            AddonRepository.initialize()
-            withTimeoutOrNull(10_000L) {
-                AddonRepository.awaitManifestsLoaded()
             }
 
             val semaphore = Semaphore(metadataFetchConcurrency)

@@ -90,11 +90,15 @@ fun DetailMetaInfo(
         val hasMetaRow = releaseLine != null ||
             runtimeText != null ||
             ageBadge != null ||
+            meta.totalEpisodes != null ||
+            meta.subEpisodesCount != null ||
+            meta.dubEpisodesCount != null ||
             validImdbRating != null
         if (hasMetaRow) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
             ) {
                 releaseLine?.let { line ->
                     Text(
@@ -110,6 +114,21 @@ fun DetailMetaInfo(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
+                    )
+                }
+                meta.totalEpisodes?.let { eps ->
+                    DetailHeroMetaBadge(text = "$eps eps")
+                }
+                meta.subEpisodesCount?.let { sub ->
+                    DetailHeroMetaBadge(
+                        text = "SUB: $sub",
+                        contentColor = Color(0xFF64B5F6),
+                    )
+                }
+                meta.dubEpisodesCount?.let { dub ->
+                    DetailHeroMetaBadge(
+                        text = "DUB: $dub",
+                        contentColor = Color(0xFFFFB74D),
                     )
                 }
                 ageBadge?.let { badge ->

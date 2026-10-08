@@ -11,7 +11,6 @@ import com.nuvio.app.features.tracking.TrackingMediaKind
 import com.nuvio.app.features.tracking.TrackingMediaReference
 import com.nuvio.app.features.tracking.TrackingMutationResult
 import com.nuvio.app.features.tracking.TrackingProviderId
-import com.nuvio.app.features.tracking.TrackingProviderRegistry
 import com.nuvio.app.features.tracking.TrackingRefreshIntent
 import com.nuvio.app.features.tracking.TrackingScrobbleAction
 import com.nuvio.app.features.tracking.TrackingScrobbleEvent
@@ -139,14 +138,6 @@ object SimklMutationRepository : TrackingListWriter, TrackingHistoryWriter, Trac
             },
         )
     }
-
-    init {
-        TrackingProviderRegistry.registerListWriter(this)
-        TrackingProviderRegistry.registerHistoryWriter(this)
-        TrackingProviderRegistry.registerScrobbler(this)
-    }
-
-    fun ensureRegistered() = Unit
 
     override suspend fun moveToList(
         profileId: Int,

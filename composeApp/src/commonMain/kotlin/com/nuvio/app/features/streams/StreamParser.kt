@@ -36,7 +36,7 @@ object StreamParser {
             val proxyHeaders = hintsObj
                 ?.objectValue("proxyHeaders")
                 ?.toProxyHeaders()
-            StreamItem(
+            val stream = StreamItem(
                 name = obj.string("name"),
                 title = obj.string("title"),
                 description = obj.string("description") ?: obj.string("title"),
@@ -59,6 +59,7 @@ object StreamParser {
                     proxyHeaders = proxyHeaders,
                 ),
             )
+            stream.takeIf { it.isSelectableForPlayback() }
         }
     }
 

@@ -1,7 +1,7 @@
 package com.nuvio.app.features.mdblist
 
-import com.nuvio.app.features.addons.httpGetText
-import com.nuvio.app.features.addons.httpPostJson
+import com.nuvio.app.core.network.httpGetText
+import com.nuvio.app.core.network.httpPostJson
 import io.ktor.http.encodeURLParameter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive

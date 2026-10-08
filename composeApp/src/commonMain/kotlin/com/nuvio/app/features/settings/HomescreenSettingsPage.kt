@@ -36,8 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.NuvioActionLabel
 import com.nuvio.app.core.ui.NuvioLoadingIndicator
-import com.nuvio.app.core.ui.NuvioToastController
-import com.nuvio.app.features.addons.AddonRepository
+import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
@@ -155,7 +154,7 @@ internal fun LazyListScope.homescreenSettingsContent(
                 title = stringResource(Res.string.settings_homescreen_load_failed_title),
                 message = catalogErrorMessage,
                 actionLabel = stringResource(Res.string.action_retry),
-                onActionClick = AddonRepository::refreshAll,
+                onActionClick = PluginRepository::refreshAll,
             )
         } else if (items.isEmpty()) {
             HomeEmptyStateCard(

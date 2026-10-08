@@ -1,7 +1,7 @@
 package com.nuvio.app.features.trakt
 
-import com.nuvio.app.features.addons.RawHttpResponse
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.RawHttpResponse
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CompletableDeferred

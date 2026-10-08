@@ -50,12 +50,8 @@ import com.nuvio.app.core.ui.NuvioScreenHeader
 import com.nuvio.app.core.ui.nuvioConsumePointerEvents
 import com.nuvio.app.core.ui.withDuplicateSafeLazyKeys
 import com.nuvio.app.core.ui.ScreenActivityEffect
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.firstEnabledManifestError
-import com.nuvio.app.features.addons.hasPendingEnabledManifests
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.MetaPreview
-import com.nuvio.app.features.home.buildAddonCatalogRefreshSignature
 import com.nuvio.app.features.home.components.HomeCatalogRowSection
 import com.nuvio.app.features.home.components.HomeEmptyStateCard
 import com.nuvio.app.features.home.components.homeSectionHorizontalPaddingForWidth
@@ -112,12 +108,10 @@ fun SearchScreen(
     }
 
     LaunchedEffect(Unit) {
-        AddonRepository.initialize()
         WatchedRepository.ensureLoaded()
         SearchHistoryRepository.ensureLoaded()
     }
 
-    val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
     val uiState by SearchRepository.uiState.collectAsStateWithLifecycle()
     val discoverUiState by SearchRepository.discoverUiState.collectAsStateWithLifecycle()
     val homeCatalogSettingsUiState by remember {
@@ -144,17 +138,12 @@ fun SearchScreen(
         }
     }
 
-    val addonRefreshKey = remember(addonsUiState.addons) {
-        buildAddonCatalogRefreshSignature(addonsUiState.addons)
-    }
-    val addonManifestsLoading = addonsUiState.addons.hasPendingEnabledManifests()
-
-    ScreenActivityEffect(addonRefreshKey, homeCatalogSettingsUiState.hideUnreleasedContent) { screenActive ->
+    ScreenActivityEffect(homeCatalogSettingsUiState.hideUnreleasedContent) { screenActive ->
         if (!screenActive) return@ScreenActivityEffect
-        SearchRepository.refreshDiscover(addonsUiState.addons)
+        SearchRepository.refreshDiscover()
     }
 
-    ScreenActivityEffect(query, addonRefreshKey, homeCatalogSettingsUiState.hideUnreleasedContent) { screenActive ->
+    ScreenActivityEffect(query, homeCatalogSettingsUiState.hideUnreleasedContent) { screenActive ->
         if (!screenActive) return@ScreenActivityEffect
         val normalizedQuery = query.trim()
         if (normalizedQuery.isBlank()) {
@@ -163,10 +152,7 @@ fun SearchScreen(
         } else {
             delay(350)
             lastRequestedQuery = normalizedQuery
-            SearchRepository.search(
-                query = normalizedQuery,
-                addons = addonsUiState.addons,
-            )
+            SearchRepository.search(query = normalizedQuery)
         }
     }
 
@@ -194,7 +180,7 @@ fun SearchScreen(
         SearchHistoryRepository.recordSearch(normalizedQuery)
     }
 
-    ScreenActivityEffect(networkStatusUiState.condition, query, addonRefreshKey) { screenActive ->
+    ScreenActivityEffect(networkStatusUiState.condition, query) { screenActive ->
         if (!screenActive) return@ScreenActivityEffect
         when (networkStatusUiState.condition) {
             NetworkCondition.NoInternet,
@@ -209,14 +195,10 @@ fun SearchScreen(
 
                 val normalizedQuery = query.trim()
                 if (normalizedQuery.isBlank()) {
-                    SearchRepository.refreshDiscover(
-                        addons = addonsUiState.addons,
-                        forceRefresh = true,
-                    )
+                    SearchRepository.refreshDiscover(forceRefresh = true)
                 } else {
                     SearchRepository.search(
                         query = normalizedQuery,
-                        addons = addonsUiState.addons,
                         forceRefresh = true,
                     )
                 }
@@ -304,7 +286,7 @@ fun SearchScreen(
             }
                 discoverContent(
                     state = discoverUiState,
-                    isSourceLoading = addonManifestsLoading,
+                    isSourceLoading = false,
                     columns = discoverColumns,
                     networkCondition = networkStatusUiState.condition,
                     onTypeSelected = SearchRepository::selectDiscoverType,
@@ -312,14 +294,7 @@ fun SearchScreen(
                     onGenreSelected = SearchRepository::selectDiscoverGenre,
                     onRetry = {
                         NetworkStatusRepository.requestRefresh(force = true)
-                        if (addonsUiState.addons.firstEnabledManifestError() != null) {
-                            AddonRepository.refreshAll()
-                        } else {
-                            SearchRepository.refreshDiscover(
-                                addons = addonsUiState.addons,
-                                forceRefresh = true,
-                            )
-                        }
+                        SearchRepository.refreshDiscover(forceRefresh = true)
                     },
                     watchedKeys = watchedUiState.watchedKeys,
                     fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
@@ -338,7 +313,7 @@ fun SearchScreen(
                         }
                     }
 
-                    (uiState.isLoading || addonManifestsLoading) && uiState.sections.isEmpty() -> {
+                    uiState.isLoading && uiState.sections.isEmpty() -> {
                         items(2) {
                             HomeSkeletonRow(
                                 horizontalPadding = homeSectionPadding,
@@ -355,15 +330,10 @@ fun SearchScreen(
                                 onRetry = {
                                     if (normalizedQuery.isNotBlank()) {
                                         NetworkStatusRepository.requestRefresh(force = true)
-                                        if (addonsUiState.addons.firstEnabledManifestError() != null) {
-                                            AddonRepository.refreshAll()
-                                        } else {
-                                            SearchRepository.search(
-                                                query = normalizedQuery,
-                                                addons = addonsUiState.addons,
-                                                forceRefresh = true,
-                                            )
-                                        }
+                                        SearchRepository.search(
+                                            query = normalizedQuery,
+                                            forceRefresh = true,
+                                        )
                                     }
                                 },
                                 modifier = Modifier.padding(horizontal = homeSectionPadding),

@@ -2,9 +2,8 @@ package com.nuvio.app.features.plugins
 
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.network.SupabaseProvider
-import com.nuvio.app.features.addons.httpGetText
+import com.nuvio.app.core.network.httpGetText
 import com.nuvio.app.features.profiles.ProfileRepository
-import com.nuvio.app.features.tmdb.TmdbService
 import com.nuvio.app.features.plugins.runtime.PluginRuntime
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
@@ -363,23 +362,62 @@ actual object PluginRepository {
         respectSearchPause = true,
     )
 
+    actual suspend fun loadHomeSections(): List<PluginHomeSection> {
+        val state = _uiState.value
+        if (!state.pluginsEnabled) return emptyList()
+        val scrapers = state.scrapers.filter { it.enabled && it.manifestEnabled }
+        if (scrapers.isEmpty()) return emptyList()
+        return kotlinx.coroutines.coroutineScope {
+            scrapers.map { scraper ->
+                kotlinx.coroutines.async {
+                    runCatching {
+                        PluginRuntime.executePluginHome(
+                            code = scraper.code,
+                            scraperId = scraper.id,
+                            scraperName = scraper.name,
+                        )
+                    }.getOrElse { emptyList() }
+                }
+            }.let { kotlinx.coroutines.awaitAll(*it.toTypedArray()) }.flatten()
+        }
+    }
+
+    actual suspend fun getAnimeDetails(contentId: String): PluginDetailsResult? {
+        val state = _uiState.value
+        if (!state.pluginsEnabled) return null
+        val scrapers = state.scrapers.filter { it.enabled && it.manifestEnabled }
+        if (scrapers.isEmpty()) return null
+
+        for (scraper in scrapers) {
+            val result = runCatching {
+                PluginRuntime.executePluginDetails(
+                    code = scraper.code,
+                    scraperId = scraper.id,
+                    contentId = contentId,
+                )
+            }.getOrNull()
+            if (result != null) return result
+        }
+        return null
+    }
+
     private suspend fun executeScraperInternal(
         scraper: PluginScraper,
-        tmdbId: String,
+        mediaId: String,
         mediaType: String,
         season: Int?,
         episode: Int?,
         respectSearchPause: Boolean,
     ): Result<List<PluginRuntimeResult>> {
-        val resolvedTmdbId = resolvePluginTmdbId(
-            tmdbId = tmdbId,
+        val resolvedMediaId = resolvePluginMediaId(
+            mediaId = mediaId,
             mediaType = mediaType,
         )
 
         return runCatching {
             PluginRuntime.executePlugin(
                 code = scraper.code,
-                tmdbId = resolvedTmdbId,
+                mediaId = resolvedMediaId,
                 mediaType = normalizePluginType(mediaType),
                 season = season,
                 episode = episode,
@@ -389,17 +427,11 @@ actual object PluginRepository {
         }
     }
 
-    private suspend fun resolvePluginTmdbId(
-        tmdbId: String,
+    private suspend fun resolvePluginMediaId(
+        mediaId: String,
         mediaType: String,
     ): String {
-        val trimmed = tmdbId.trim()
-        if (trimmed.isBlank()) return tmdbId
-
-        return TmdbService.ensureTmdbId(
-            videoId = trimmed,
-            mediaType = mediaType,
-        ) ?: trimmed
+        return mediaId.trim()
     }
 
     private suspend fun fetchRepositoryData(

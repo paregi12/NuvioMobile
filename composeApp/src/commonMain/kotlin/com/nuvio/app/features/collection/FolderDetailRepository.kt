@@ -1,11 +1,9 @@
 package com.nuvio.app.features.collection
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.catalog.CATALOG_PAGE_SIZE
 import com.nuvio.app.features.catalog.CatalogPage
 import com.nuvio.app.features.catalog.CatalogTarget
-import com.nuvio.app.features.catalog.fetchCatalogPage
 import com.nuvio.app.features.catalog.mergeCatalogItems
 import com.nuvio.app.features.catalog.nextCatalogPaginationState
 import com.nuvio.app.features.catalog.supportsPagination
@@ -130,7 +128,6 @@ object FolderDetailRepository {
 
         val sources = folder.resolvedSources
         val showAll = collection.showAllTab && sources.size > 1
-        val addons = AddonRepository.uiState.value.addons
 
         val tabs = buildList {
             if (showAll) {
@@ -143,26 +140,7 @@ object FolderDetailRepository {
                 )
             }
             sources.forEachIndexed { sourceIndex, source ->
-                if (source.isTmdb) {
-                    val mediaType = TmdbCollectionMediaType.fromString(source.mediaType)
-                    val type = if (mediaType == TmdbCollectionMediaType.TV) "series" else "movie"
-                    add(
-                        FolderTab(
-                            label = source.title?.takeIf { it.isNotBlank() } ?: "TMDB",
-                            typeLabel = "TMDB",
-                            source = source,
-                            sourceKey = source.catalogRouteKey(),
-                            type = type,
-                            catalogId = tmdbCatalogId(source),
-                            supportsPagination = source.tmdbSourceType !in setOf(
-                                TmdbCollectionSourceType.COLLECTION.name,
-                                TmdbCollectionSourceType.PERSON.name,
-                                TmdbCollectionSourceType.DIRECTOR.name,
-                            ),
-                            isLoading = true,
-                        ),
-                    )
-                } else if (source.isTrakt) {
+                if (source.isTrakt) {
                     val mediaType = TmdbCollectionMediaType.fromString(source.mediaType)
                     val type = if (mediaType == TmdbCollectionMediaType.TV) "series" else "movie"
                     val typeLabel = runBlocking {
@@ -187,27 +165,7 @@ object FolderDetailRepository {
                         ),
                     )
                 } else {
-                    val catalogSource = source.addonCatalogSource() ?: return@forEachIndexed
-                    val resolvedCatalog = addons.findCollectionCatalog(catalogSource)
-                    val addon = resolvedCatalog?.addon
-                    val catalog = resolvedCatalog?.catalog
-                    val label = catalog?.name ?: catalogSource.catalogId
-                    val typeLabel = localizedMediaTypeLabel(catalogSource.type)
-                    val genreSuffix = if (catalogSource.genre != null) " · ${catalogSource.genre}" else ""
-                    add(
-                        FolderTab(
-                            label = "$label ($typeLabel)$genreSuffix",
-                            typeLabel = typeLabel,
-                            source = source,
-                            sourceKey = source.catalogRouteKey(),
-                            manifestUrl = addon?.manifestUrl,
-                            type = catalogSource.type,
-                            catalogId = catalogSource.catalogId,
-                            genre = catalogSource.genre,
-                            supportsPagination = catalog?.supportsPagination() == true,
-                            isLoading = true,
-                        ),
-                    )
+                    // Non-tmdb/trakt catalog source (unsupported)
                 }
             }
         }
@@ -227,7 +185,7 @@ object FolderDetailRepository {
             val tabIndex = if (showAll) sourceIndex + 1 else sourceIndex
             val catalogSource = source.addonCatalogSource()
             val resolvedCatalog = catalogSource?.let { addons.findCollectionCatalog(it) }
-            if (!source.isTmdb && !source.isTrakt && resolvedCatalog == null) {
+            if (!source.isTrakt && resolvedCatalog == null) {
                 updateTab(tabIndex) {
                     it.copy(
                         isLoading = false,
@@ -296,7 +254,6 @@ object FolderDetailRepository {
         val requestedSkip = if (reset) 0 else currentTab.nextSkip ?: return
         val currentSource = currentTab.source
         if (
-            currentSource?.isTmdb != true &&
             currentSource?.isTrakt != true &&
             currentTab.manifestUrl == null
         ) return
@@ -324,23 +281,12 @@ object FolderDetailRepository {
             runCatching {
                 val source = currentTab.source
                 when {
-                    source?.isTmdb == true -> TmdbCollectionSourceResolver.resolve(
-                        source = source,
-                        page = if (reset) 1 else requestedSkip,
-                    )
-
                     source?.isTrakt == true -> TraktPublicListSourceResolver.resolve(
                         source = source,
                         page = if (reset) 1 else requestedSkip,
                     )
 
-                    else -> fetchCatalogPage(
-                        manifestUrl = requireNotNull(currentTab.manifestUrl),
-                        type = currentTab.type,
-                        catalogId = currentTab.catalogId,
-                        genre = currentTab.genre,
-                        skip = requestedSkip.takeIf { it > 0 },
-                    )
+                    else -> CatalogPage(items = emptyList(), rawItemCount = 0, nextSkip = null)
                 }.withUnreleasedFilter()
             }.onSuccess { page ->
                 val posterPattern = com.nuvio.app.core.poster.CustomPosterUrlRepository.let { repo ->
@@ -434,26 +380,16 @@ object FolderDetailRepository {
         val collectionId = activeCollectionId ?: return emptyList()
 
         return current.tabs.filter { !it.isAllTab && it.items.isNotEmpty() }.mapNotNull { tab ->
-            val directSource = tab.source?.let { it.isTmdb || it.isTrakt } == true
-            val target = if (directSource) {
-                val sourceKey = tab.sourceKey ?: return@mapNotNull null
-                CatalogTarget.CollectionSource(
-                    collectionId = collectionId,
-                    folderId = folder.id,
-                    sourceKey = sourceKey,
-                    contentType = tab.type,
-                    supportsPagination = tab.supportsPagination,
-                )
-            } else {
-                val manifestUrl = tab.manifestUrl ?: return@mapNotNull null
-                CatalogTarget.Addon(
-                    manifestUrl = manifestUrl,
-                    contentType = tab.type,
-                    catalogId = tab.catalogId,
-                    genre = tab.genre,
-                    supportsPagination = tab.supportsPagination,
-                )
-            }
+            val directSource = tab.source?.isTrakt == true
+            if (!directSource) return@mapNotNull null
+            val sourceKey = tab.sourceKey ?: return@mapNotNull null
+            val target = CatalogTarget.CollectionSource(
+                collectionId = collectionId,
+                folderId = folder.id,
+                sourceKey = sourceKey,
+                contentType = tab.type,
+                supportsPagination = tab.supportsPagination,
+            )
             HomeCatalogSection(
                 key = "folder_${folder.id}_${tab.label}",
                 title = tab.label,
@@ -475,18 +411,6 @@ private fun CatalogPage.withUnreleasedFilter(): CatalogPage {
     val filteredItems = items.filterReleasedItems(CurrentDateProvider.todayIsoDate())
     return if (filteredItems.size == items.size) this else copy(items = filteredItems)
 }
-
-private fun tmdbCatalogId(source: CollectionSource): String =
-    buildString {
-        append("tmdb_")
-        append(source.tmdbSourceType?.lowercase().orEmpty())
-        source.tmdbId?.let {
-            append("_")
-            append(it)
-        }
-        append("_")
-        append(source.mediaType?.lowercase().orEmpty())
-    }
 
 private fun traktCatalogId(source: CollectionSource): String =
     listOf(

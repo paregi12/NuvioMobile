@@ -804,23 +804,6 @@ private fun FolderEditorPage(
                         ) {
                             TextButton(
                                 onClick = {
-                                    CollectionEditorRepository.showTmdbSourcePicker()
-                                    onNavigateToPage?.invoke(
-                                        CollectionEditorPage.TmdbSourcePicker,
-                                        tmdbSourcePickerTitle,
-                                    )
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(Res.string.source_tmdb))
-                            }
-                            TextButton(
-                                onClick = {
                                     CollectionEditorRepository.showTraktSourcePicker()
                                     onNavigateToPage?.invoke(
                                         CollectionEditorPage.TraktSourcePicker,
@@ -1566,7 +1549,7 @@ private fun TmdbSourcePickerScreen(
                 PickerSectionLabel(stringResource(Res.string.collections_editor_tmdb_presets))
             }
             if (state.tmdbBuilderMode == TmdbBuilderMode.PRESETS) {
-                itemsIndexed(TmdbCollectionSourceResolver.presets()) { _, preset ->
+                itemsIndexed(emptyList<TmdbPresetSource>()) { _, preset ->
                     PickerOptionRow(
                         title = preset.label,
                         subtitle = tmdbSourceSubtitle(preset.source),

@@ -1,97 +1,39 @@
-package com.nuvio.app.features.addons
+package com.nuvio.app.core.network
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.nuvio.app.core.diagnostics.SentryNetworkBreadcrumbInterceptor
-import com.nuvio.app.core.network.IPv4FirstDns
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.net.Proxy
+import java.util.concurrent.TimeUnit
+import kotlin.text.Charsets
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.network_empty_response_body
 import nuvio.composeapp.generated.resources.network_request_failed_http
-import org.jetbrains.compose.resources.getString
 import okhttp3.Cache
-import okhttp3.ResponseBody
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.net.Proxy
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.InputStream
-import kotlin.text.Charsets
-import java.util.concurrent.TimeUnit
+import okhttp3.ResponseBody
+import org.jetbrains.compose.resources.getString
 
-actual object AddonStorage {
-    private const val preferencesName = "nuvio_addons"
-    private const val addonUrlsKey = "installed_manifest_urls"
-    private const val addonEnabledStatesKey = "installed_manifest_enabled_states"
-
-    private var preferences: SharedPreferences? = null
-
-    fun initialize(context: Context) {
-        preferences = context.getSharedPreferences(preferencesName, Context.MODE_PRIVATE)
-    }
-
-    actual fun loadInstalledAddonUrls(profileId: Int): List<String> =
-        preferences
-            ?.getString("${addonUrlsKey}_$profileId", null)
-            .orEmpty()
-            .lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .toList()
-
-    actual fun saveInstalledAddonUrls(profileId: Int, urls: List<String>) {
-        preferences
-            ?.edit()
-            ?.putString("${addonUrlsKey}_$profileId", urls.joinToString(separator = "\n"))
-            ?.apply()
-    }
-
-    actual fun loadAddonEnabledStates(profileId: Int): Map<String, Boolean> =
-        preferences
-            ?.getString("${addonEnabledStatesKey}_$profileId", null)
-            .orEmpty()
-            .lineSequence()
-            .mapNotNull(::parseEnabledStateLine)
-            .toMap()
-
-    actual fun saveAddonEnabledStates(profileId: Int, states: Map<String, Boolean>) {
-        val payload = states.entries.joinToString(separator = "\n") { (url, enabled) ->
-            "$url\t$enabled"
-        }
-        preferences
-            ?.edit()
-            ?.putString("${addonEnabledStatesKey}_$profileId", payload)
-            ?.apply()
-    }
-}
-
-private fun parseEnabledStateLine(line: String): Pair<String, Boolean>? {
-    val url = line.substringBefore("\t").trim().takeIf { it.isNotEmpty() } ?: return null
-    val rawEnabled = line.substringAfter("\t", "true").trim().lowercase()
-    val enabled = when (rawEnabled) {
-        "false" -> false
-        else -> true
-    }
-    return url to enabled
-}
-
-internal object AddonHttpClientProvider {
+object PlatformHttpClientProvider {
     private const val cacheSizeBytes = 50L * 1024L * 1024L
-    private var client = buildAddonHttpClient()
+    private var client = buildHttpClient()
 
     fun initialize(context: Context) {
         if (client.cache != null) return
-        client = buildAddonHttpClient(
+        client = buildHttpClient(
             cache = Cache(
-                directory = File(context.cacheDir, "addon_http"),
+                directory = File(context.cacheDir, "platform_http"),
                 maxSize = cacheSizeBytes,
             ),
         )
@@ -100,7 +42,7 @@ internal object AddonHttpClientProvider {
     fun get(): OkHttpClient = client
 }
 
-private fun buildAddonHttpClient(cache: Cache? = null): OkHttpClient =
+private fun buildHttpClient(cache: Cache? = null): OkHttpClient =
     OkHttpClient.Builder()
         .dns(IPv4FirstDns())
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -116,8 +58,6 @@ private fun buildAddonHttpClient(cache: Cache? = null): OkHttpClient =
             }
         }
         .build()
-
-private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
 private data class LimitedReadResult(
     val bytes: ByteArray,
@@ -158,22 +98,6 @@ private fun readAtMostBytes(stream: InputStream, maxBytes: Int): LimitedReadResu
     return LimitedReadResult(out.toByteArray(), truncated)
 }
 
-private fun readResponseBodyLimited(body: ResponseBody?, maxBytes: Int): String {
-    if (body == null) return ""
-    val charset = body.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
-    val readResult = body.byteStream().use { stream ->
-        readAtMostBytes(stream, maxBytes.coerceAtLeast(0))
-    }
-
-    val decoded = try {
-        String(readResult.bytes, charset)
-    } catch (_: Exception) {
-        String(readResult.bytes, Charsets.UTF_8)
-    }
-
-    return if (readResult.truncated) "$decoded\n...[truncated]" else decoded
-}
-
 private fun readResponseBody(body: ResponseBody?): String {
     if (body == null) return ""
     val bytes = body.bytes()
@@ -201,14 +125,13 @@ private suspend fun executeTextRequest(
     val request = if (requestAllowsBody(normalizedMethod)) {
         val contentType = sanitizedHeaders.getHeaderIgnoreCase("Content-Type")
             ?: if (normalizedMethod == "POST") "application/x-www-form-urlencoded" else "application/json"
-        // Preserve exact media type and avoid implicit charset rewriting used in signed APIs like MovieBox.
         val requestBody = body.toByteArray(Charsets.UTF_8).toRequestBody(contentType.toMediaType())
         builder.method(normalizedMethod, requestBody)
     } else {
         builder.method(normalizedMethod, null)
     }.build()
 
-    AddonHttpClientProvider.get().newCall(request).execute().use { response ->
+    PlatformHttpClientProvider.get().newCall(request).execute().use { response ->
         val payload = readResponseBody(response.body)
         if (!response.isSuccessful) {
             error(runBlocking { getString(Res.string.network_request_failed_http, response.code) })
@@ -291,9 +214,9 @@ actual suspend fun httpRequestRaw(
         }.build()
 
         val client = if (followRedirects) {
-            AddonHttpClientProvider.get()
+            PlatformHttpClientProvider.get()
         } else {
-            AddonHttpClientProvider.get().newBuilder()
+            PlatformHttpClientProvider.get().newBuilder()
                 .followRedirects(false)
                 .followSslRedirects(false)
                 .build()

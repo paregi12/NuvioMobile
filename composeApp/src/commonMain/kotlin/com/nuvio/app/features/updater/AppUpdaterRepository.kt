@@ -1,6 +1,6 @@
 package com.nuvio.app.features.updater
 
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.SerialName

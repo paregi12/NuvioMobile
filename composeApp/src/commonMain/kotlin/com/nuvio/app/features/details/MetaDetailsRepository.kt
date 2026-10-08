@@ -1,19 +1,12 @@
 package com.nuvio.app.features.details
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.AddonManifest
-import com.nuvio.app.features.addons.AddonRepository
-import com.nuvio.app.features.addons.buildAddonResourceUrl
-import com.nuvio.app.features.addons.enabledAddons
-import com.nuvio.app.features.addons.fetchAddonResponseText
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.home.filterReleasedItems
+import com.nuvio.app.features.anilist.AnilistMetadataService
 import com.nuvio.app.features.mdblist.MdbListMetadataService
 import com.nuvio.app.features.mdblist.MdbListSettingsRepository
-import com.nuvio.app.features.tmdb.TmdbMetadataService
-import com.nuvio.app.features.tmdb.TmdbService
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 import com.nuvio.app.features.trakt.TraktAuthRepository
 import com.nuvio.app.features.trakt.TraktConnectionMode
 import com.nuvio.app.features.trakt.TraktRelatedRepository
@@ -115,53 +108,57 @@ object MetaDetailsRepository {
         _uiState.value = MetaDetailsUiState(isLoading = true)
 
         scope.launch {
-            val metaLookupId = resolveMetaLookupId(itemId = id, itemType = type)
-            val manifests = findReadyMetaManifests(type = type, id = metaLookupId)
+            val anilistSettings = com.nuvio.app.features.anilist.AnilistSettingsRepository.snapshot()
+            val pluginDetails = PluginRepository.getAnimeDetails(id)
 
-            if (manifests.isEmpty()) {
-                val tmdbMeta = tryFetchTmdbFallbackMeta(type = type, id = id)
-                if (tmdbMeta != null) {
-                    publishLoadedMeta(
-                        requestKey = requestKey,
-                        meta = tmdbMeta,
-                        fallbackItemId = id,
-                        fallbackItemType = type,
-                        mdbListSettings = mdbListSettings,
-                        metaScreenSettingsFingerprint = metaScreenSettingsFingerprint,
+            val loadedMeta = if (!anilistSettings.enabled) {
+                pluginDetails?.toMetaDetails(id, type)
+            } else {
+                var animeMeta = fetchMetaFromAnilist(id = id, type = type)
+                if (animeMeta != null) {
+                    animeMeta = animeMeta.copy(
+                        cast = if (anilistSettings.useCast) animeMeta.cast else emptyList(),
+                        trailers = if (anilistSettings.useTrailers) animeMeta.trailers else emptyList(),
+                        description = if (anilistSettings.useDescription) animeMeta.description else pluginDetails?.description,
+                        productionCompanies = if (anilistSettings.useStudios) animeMeta.productionCompanies else emptyList(),
+                        moreLikeThis = if (anilistSettings.useMoreLikeThis) animeMeta.moreLikeThis else emptyList(),
+                        poster = if (anilistSettings.useArtwork) animeMeta.poster else pluginDetails?.poster,
+                        background = if (anilistSettings.useArtwork) animeMeta.background else pluginDetails?.banner ?: pluginDetails?.poster,
                     )
-                    return@launch
                 }
 
-                log.w { "No addon provides meta for type=$type id=$id" }
-                _uiState.value = MetaDetailsUiState(
-                    errorMessage = getString(Res.string.details_no_addon_meta),
-                )
-                activeRequestKey = null
-                return@launch
+                if (pluginDetails != null) {
+                    if (animeMeta == null) {
+                        pluginDetails.toMetaDetails(id, type)
+                    } else {
+                        val fillerByEp = pluginDetails.episodes.associate { it.episode to it.isFiller }
+                        val subByEp = pluginDetails.episodes.associate { it.episode to it.isSub }
+                        val dubByEp = pluginDetails.episodes.associate { it.episode to it.isDub }
+                        val enrichedVideos = animeMeta.videos.map { video ->
+                            val epNum = video.episode ?: 0
+                            video.copy(
+                                isFiller = fillerByEp[epNum] ?: video.isFiller,
+                                isSub = subByEp[epNum] ?: video.isSub,
+                                isDub = dubByEp[epNum] ?: video.isDub,
+                            )
+                        }
+                        animeMeta.copy(
+                            totalEpisodes = pluginDetails.totalEpisodes ?: animeMeta.totalEpisodes,
+                            subEpisodesCount = pluginDetails.subEpisodes ?: animeMeta.subEpisodesCount,
+                            dubEpisodesCount = pluginDetails.dubEpisodes ?: animeMeta.dubEpisodesCount,
+                            ageRating = pluginDetails.ageRating ?: animeMeta.ageRating,
+                            videos = if (enrichedVideos.isNotEmpty()) enrichedVideos else animeMeta.videos,
+                        )
+                    }
+                } else {
+                    animeMeta
+                }
             }
 
-            for (manifest in manifests) {
-                val result = withContext(Dispatchers.Default) {
-                    tryFetchMeta(manifest, type, metaLookupId, includeMdbList = false)
-                }
-                if (result != null) {
-                    publishLoadedMeta(
-                        requestKey = requestKey,
-                        meta = result,
-                        fallbackItemId = metaLookupId,
-                        fallbackItemType = type,
-                        mdbListSettings = mdbListSettings,
-                        metaScreenSettingsFingerprint = metaScreenSettingsFingerprint,
-                    )
-                    return@launch
-                }
-            }
-
-            val tmdbMeta = tryFetchTmdbFallbackMeta(type = type, id = id)
-            if (tmdbMeta != null) {
+            if (loadedMeta != null) {
                 publishLoadedMeta(
                     requestKey = requestKey,
-                    meta = tmdbMeta,
+                    meta = loadedMeta,
                     fallbackItemId = id,
                     fallbackItemType = type,
                     mdbListSettings = mdbListSettings,
@@ -170,8 +167,9 @@ object MetaDetailsRepository {
                 return@launch
             }
 
+            log.w { "No metadata found for type=$type id=$id" }
             _uiState.value = MetaDetailsUiState(
-                errorMessage = getString(Res.string.details_load_failed_all_addons),
+                errorMessage = getString(Res.string.details_no_addon_meta),
             )
             activeRequestKey = null
         }
@@ -200,22 +198,7 @@ object MetaDetailsRepository {
         val requestKey = "$type:$id"
         cachedMetaByRequestKey[requestKey]?.let { return it.baseMeta }
 
-        val metaLookupId = resolveMetaLookupId(itemId = id, itemType = type)
-        val manifests = findReadyMetaManifests(type = type, id = metaLookupId)
-
-        for (manifest in manifests) {
-            val result = withTimeoutOrNull(FETCH_TIMEOUT_MS) {
-                tryFetchMeta(manifest, type, metaLookupId, includeMdbList = false)
-            }
-            if (result != null) {
-                if (cacheResult) {
-                    cachedMetaByRequestKey[requestKey] = CachedMetaEntry(baseMeta = result)
-                }
-                return result
-            }
-        }
-
-        return tryFetchTmdbFallbackMeta(type = type, id = id)?.also { result ->
+        return fetchMetaFromAnilist(id = id, type = type)?.also { result ->
             if (cacheResult) {
                 cachedMetaByRequestKey[requestKey] = CachedMetaEntry(baseMeta = result)
             }
@@ -227,114 +210,18 @@ object MetaDetailsRepository {
     private const val TMDB_ENRICH_TIMEOUT_MS = 5_000L
     private const val MDBLIST_ENRICH_TIMEOUT_MS = 5_000L
 
-    private suspend fun tryFetchMeta(
-        manifest: AddonManifest,
-        type: String,
-        id: String,
-        includeMdbList: Boolean,
-    ): MetaDetails? {
-        val url = buildAddonResourceUrl(
-            manifestUrl = manifest.transportUrl,
-            resource = "meta",
-            type = type,
-            id = id,
-        )
-
-        return try {
-            TmdbSettingsRepository.ensureLoaded()
-            log.d { "Fetching meta from: $url" }
-            val payload = fetchAddonResponseText(url)
-            log.d { "Raw payload length=${payload.length}, first 500 chars: ${payload.take(500)}" }
-            val result = MetaDetailsParser.parse(payload)
-            val tmdbEnriched = withTimeoutOrNull(TMDB_ENRICH_TIMEOUT_MS) {
-                TmdbMetadataService.enrichMeta(
-                    meta = result,
-                    fallbackItemId = id,
-                    settings = TmdbSettingsRepository.snapshot(),
-                )
-            } ?: result
-            val enriched = if (includeMdbList) {
-                MdbListSettingsRepository.ensureLoaded()
-                withTimeoutOrNull(MDBLIST_ENRICH_TIMEOUT_MS) {
-                    MdbListMetadataService.enrichMeta(
-                        meta = tmdbEnriched,
-                        fallbackItemId = id,
-                        settings = MdbListSettingsRepository.snapshot(),
-                    )
-                } ?: tmdbEnriched
-            } else {
-                tmdbEnriched
-            }
-            log.d { "Parsed meta: type=${enriched.type}, name=${enriched.name}, videos=${enriched.videos.size}" }
-            if (enriched.videos.isNotEmpty()) {
-                val first = enriched.videos.first()
-                log.d { "First video: id=${first.id} title=${first.title} s=${first.season} e=${first.episode} embeddedStreams=${first.streams.size}" }
-            }
-            enriched
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            log.e(e) { "Failed to fetch/parse meta from $url (manifest=${manifest.transportUrl})" }
-            null
+    private suspend fun fetchMetaFromAnilist(id: String, type: String): MetaDetails? {
+        val numericId = id.removePrefix("anilist:").trim().toIntOrNull()
+        if (numericId != null) {
+            val details = AnilistMetadataService.fetchAnimeDetails(numericId)
+            if (details != null) return details
         }
+        val cleanSearch = id.removePrefix("anilist:")
+            .removePrefix("kitsu:")
+            .replace(Regex("[:/_-]"), " ")
+            .trim()
+        return AnilistMetadataService.searchAnimeDetails(cleanSearch)
     }
-
-    private suspend fun findReadyMetaManifests(type: String, id: String): List<AddonManifest> {
-        AddonRepository.initialize()
-
-        findMetaManifests(AddonRepository.uiState.value, type, id).takeIf { it.isNotEmpty() }?.let { return it }
-
-        if (!AddonRepository.uiState.value.hasPendingEnabledAddonManifests()) {
-            return emptyList()
-        }
-
-        val readyState = withTimeoutOrNull(METADATA_PROVIDER_READY_TIMEOUT_MS) {
-            AddonRepository.uiState.first { state ->
-                findMetaManifests(state, type, id).isNotEmpty() ||
-                    !state.hasPendingEnabledAddonManifests()
-            }
-        } ?: AddonRepository.uiState.value
-
-        return findMetaManifests(readyState, type, id)
-    }
-
-    private fun findMetaManifests(state: com.nuvio.app.features.addons.AddonsUiState, type: String, id: String): List<AddonManifest> =
-        state.addons
-            .enabledAddons()
-            .mapNotNull { it.manifest }
-            .filter { manifest ->
-                manifest.resources.any { resource ->
-                    resource.name == "meta" &&
-                        resource.types.contains(type) &&
-                        (resource.idPrefixes.isEmpty() || resource.idPrefixes.any { id.startsWith(it) })
-                }
-            }
-
-    private fun com.nuvio.app.features.addons.AddonsUiState.hasPendingEnabledAddonManifests(): Boolean =
-        addons.enabledAddons().any { addon -> addon.manifest == null && addon.isRefreshing }
-
-    private suspend fun resolveMetaLookupId(itemId: String, itemType: String): String {
-        val tmdbId = itemId
-            .takeIf { it.startsWith("tmdb:", ignoreCase = true) }
-            ?.substringAfter(':')
-            ?.substringBefore(':')
-            ?.toIntOrNull()
-            ?: return itemId
-
-        return withTimeoutOrNull(FETCH_TIMEOUT_MS) {
-            TmdbService.tmdbToImdb(tmdbId = tmdbId, mediaType = itemType)
-        }
-            ?.takeIf { it.isNotBlank() }
-            ?: itemId
-    }
-
-    private suspend fun tryFetchTmdbFallbackMeta(type: String, id: String): MetaDetails? =
-        withTimeoutOrNull(TMDB_ENRICH_TIMEOUT_MS) {
-            TmdbMetadataService.fetchStandaloneMeta(
-                type = type,
-                id = id,
-                settings = TmdbSettingsRepository.snapshot(),
-            )
-        }
 
     private suspend fun publishLoadedMeta(
         requestKey: String,
@@ -417,7 +304,6 @@ object MetaDetailsRepository {
     ): MetaDetails {
         TrackingSettingsRepository.ensureLoaded()
         TraktAuthRepository.ensureLoaded()
-        TmdbSettingsRepository.ensureLoaded()
 
         val trackingSettings = TrackingSettingsRepository.uiState.value
         val isTraktAuthenticated = TraktAuthRepository.uiState.value.mode == TraktConnectionMode.CONNECTED
@@ -465,13 +351,8 @@ object MetaDetailsRepository {
             )
         }
 
-        val tmdbSettings = TmdbSettingsRepository.snapshot()
-        if (!tmdbSettings.enabled || !tmdbSettings.useMoreLikeThis) {
-            return meta.copy(moreLikeThis = emptyList(), moreLikeThisSource = null)
-        }
-
         return meta.copy(
-            moreLikeThisSource = MoreLikeThisSource.TMDB.takeIf { meta.moreLikeThis.isNotEmpty() },
+            moreLikeThisSource = if (meta.moreLikeThis.isNotEmpty()) MoreLikeThisSource.ANILIST else null,
         )
     }
 
@@ -497,15 +378,13 @@ object MetaDetailsRepository {
     private fun shouldApplyMoreLikeThisSource(meta: MetaDetails): Boolean {
         TrackingSettingsRepository.ensureLoaded()
         TraktAuthRepository.ensureLoaded()
-        TmdbSettingsRepository.ensureLoaded()
 
         val trackingSettings = TrackingSettingsRepository.uiState.value
         val isTraktAuthenticated = TraktAuthRepository.uiState.value.mode == TraktConnectionMode.CONNECTED
-        val tmdbSettings = TmdbSettingsRepository.snapshot()
         return shouldUseTraktMoreLikeThis(
             isAuthenticated = isTraktAuthenticated,
             source = trackingSettings.moreLikeThisSource,
-        ) || !tmdbSettings.enabled || !tmdbSettings.useMoreLikeThis || meta.moreLikeThisSource == null && meta.moreLikeThis.isNotEmpty()
+        ) || meta.moreLikeThisSource == null && meta.moreLikeThis.isNotEmpty()
     }
 
     private fun buildMetaScreenSettingsFingerprint(
@@ -513,16 +392,13 @@ object MetaDetailsRepository {
     ): String {
         TrackingSettingsRepository.ensureLoaded()
         TraktAuthRepository.ensureLoaded()
-        TmdbSettingsRepository.ensureLoaded()
         val providers = settings.enabledProvidersInPriorityOrder().joinToString(",")
         val trackingSettings = TrackingSettingsRepository.uiState.value
         val traktAuthMode = TraktAuthRepository.uiState.value.mode
-        val tmdbSettings = TmdbSettingsRepository.snapshot()
         return buildString {
             append("${settings.enabled}:${settings.apiKey.trim()}:$providers")
             append("|mdblist_account=${settings.accountScope.takeUnless { settings.hasApiKey }}")
             append("|more_like=${trackingSettings.moreLikeThisSource}:$traktAuthMode")
-            append("|tmdb=${tmdbSettings.enabled}:${tmdbSettings.useMoreLikeThis}:${tmdbSettings.language}")
         }
     }
 
@@ -589,5 +465,69 @@ object MetaDetailsRepository {
         }
 
         return emptyList()
+    }
+
+    private fun com.nuvio.app.features.plugins.PluginDetailsResult.toMetaDetails(id: String, type: String): MetaDetails {
+        val displayTitle = title?.takeIf { it.isNotBlank() } ?: id
+        val videoList = episodes.map { ep ->
+            MetaVideo(
+                id = ep.id ?: "$id:${ep.season}:${ep.episode}",
+                title = ep.title ?: "Episode ${ep.episode}",
+                thumbnail = ep.thumbnail ?: poster,
+                season = ep.season,
+                episode = ep.episode,
+                overview = ep.overview,
+                isFiller = ep.isFiller,
+                isSub = ep.isSub,
+                isDub = ep.isDub,
+            )
+        }.ifEmpty {
+            val total = totalEpisodes ?: 1
+            (1..total).map { epNum ->
+                MetaVideo(
+                    id = "$id:1:$epNum",
+                    title = "Episode $epNum",
+                    thumbnail = poster,
+                    season = 1,
+                    episode = epNum,
+                    overview = null,
+                )
+            }
+        }
+
+        val relatedPreviews = related.map { r ->
+            MetaPreview(
+                id = r.id,
+                type = "anime",
+                name = r.title,
+                poster = r.poster,
+                banner = r.banner,
+                description = r.description,
+                imdbRating = r.rating,
+                releaseInfo = r.year,
+                totalEpisodes = r.episodes,
+                subEpisodes = r.subEpisodes,
+                dubEpisodes = r.dubEpisodes,
+            )
+        }
+
+        return MetaDetails(
+            id = id,
+            type = type,
+            name = displayTitle,
+            poster = poster,
+            background = banner ?: poster,
+            description = description,
+            releaseInfo = year,
+            status = status,
+            ageRating = ageRating,
+            genres = genres,
+            totalEpisodes = totalEpisodes,
+            subEpisodesCount = subEpisodes,
+            dubEpisodesCount = dubEpisodes,
+            moreLikeThis = relatedPreviews,
+            moreLikeThisSource = MoreLikeThisSource.ANILIST,
+            videos = videoList,
+        )
     }
 }

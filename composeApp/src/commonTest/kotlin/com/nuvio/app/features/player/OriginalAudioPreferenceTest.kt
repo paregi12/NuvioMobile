@@ -3,9 +3,6 @@ package com.nuvio.app.features.player
 import androidx.compose.ui.Modifier
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.details.MetaDetailsUiState
-import com.nuvio.app.features.tmdb.TmdbEnrichment
-import com.nuvio.app.features.tmdb.TmdbMetadataService
-import com.nuvio.app.features.tmdb.TmdbSettings
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -91,7 +88,7 @@ class OriginalAudioPreferenceTest {
     }
 
     @Test
-    fun threeLetterMpvTracksReceiveCanonicalTmdbPreference() {
+    fun threeLetterMpvTracksReceiveCanonicalPreference() {
         val tracks = listOf(
             AudioTrack(0, "1", "English dub", "eng", true),
             AudioTrack(1, "2", "Japanese", "jpn"),
@@ -383,30 +380,12 @@ class OriginalAudioPreferenceTest {
         AudioTrack(1, "2", "Original", originalLanguage),
     )
 
-    private fun enrichedMeta() = TmdbMetadataService.applyEnrichment(
-        meta = MetaDetails(id = "tt-original-audio-test", type = "movie", name = "Test movie"),
-        enrichment = TmdbEnrichment(
-            localizedTitle = null,
-            description = null,
-            genres = emptyList(),
-            backdrop = null,
-            logo = null,
-            poster = null,
-            people = emptyList(),
-            director = emptyList(),
-            writer = emptyList(),
-            releaseInfo = null,
-            rating = null,
-            runtimeMinutes = null,
-            ageRating = null,
-            status = null,
-            countries = listOf("US"),
-            language = originalLanguage,
-            productionCompanies = emptyList(),
-            networks = emptyList(),
-        ),
-        episodeMap = emptyMap(),
-        settings = TmdbSettings(enabled = true, useDetails = true),
+    private fun enrichedMeta() = MetaDetails(
+        id = "tt-original-audio-test",
+        type = "movie",
+        name = "Test movie",
+        countries = listOf("US"),
+        language = originalLanguage,
     )
 
     private fun runtime(controller: RecordingController, contentLanguage: String? = null) =
@@ -440,10 +419,6 @@ class OriginalAudioPreferenceTest {
                 parentMetaId = "tt-original-audio-test",
                 parentMetaType = "movie",
                 providerAddonId = null,
-                torrentInfoHash = null,
-                torrentFileIdx = null,
-                torrentFilename = null,
-                torrentTrackers = emptyList(),
                 initialPositionMs = 0L,
                 initialProgressFraction = null,
                 contentLanguage = contentLanguage,

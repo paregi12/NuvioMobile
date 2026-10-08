@@ -1,4 +1,4 @@
-package com.nuvio.app.features.addons
+package com.nuvio.app.core.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -21,58 +21,8 @@ import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.network_empty_response_body
 import nuvio.composeapp.generated.resources.network_request_failed_http
 import org.jetbrains.compose.resources.getString
-import platform.Foundation.NSUserDefaults
 
-actual object AddonStorage {
-    private const val addonUrlsKey = "installed_manifest_urls"
-    private const val addonEnabledStatesKey = "installed_manifest_enabled_states"
-
-    actual fun loadInstalledAddonUrls(profileId: Int): List<String> =
-        NSUserDefaults.standardUserDefaults
-            .stringForKey("${addonUrlsKey}_$profileId")
-            .orEmpty()
-            .lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-            .toList()
-
-    actual fun saveInstalledAddonUrls(profileId: Int, urls: List<String>) {
-        NSUserDefaults.standardUserDefaults.setObject(
-            urls.joinToString(separator = "\n"),
-            forKey = "${addonUrlsKey}_$profileId",
-        )
-    }
-
-    actual fun loadAddonEnabledStates(profileId: Int): Map<String, Boolean> =
-        NSUserDefaults.standardUserDefaults
-            .stringForKey("${addonEnabledStatesKey}_$profileId")
-            .orEmpty()
-            .lineSequence()
-            .mapNotNull(::parseEnabledStateLine)
-            .toMap()
-
-    actual fun saveAddonEnabledStates(profileId: Int, states: Map<String, Boolean>) {
-        val payload = states.entries.joinToString(separator = "\n") { (url, enabled) ->
-            "$url\t$enabled"
-        }
-        NSUserDefaults.standardUserDefaults.setObject(
-            payload,
-            forKey = "${addonEnabledStatesKey}_$profileId",
-        )
-    }
-}
-
-private fun parseEnabledStateLine(line: String): Pair<String, Boolean>? {
-    val url = line.substringBefore("\t").trim().takeIf { it.isNotEmpty() } ?: return null
-    val rawEnabled = line.substringAfter("\t", "true").trim().lowercase()
-    val enabled = when (rawEnabled) {
-        "false" -> false
-        else -> true
-    }
-    return url to enabled
-}
-
-private val addonHttpClient = HttpClient(Darwin) {
+private val platformKtorClient = HttpClient(Darwin) {
     install(HttpTimeout) {
         requestTimeoutMillis = 60_000
         connectTimeoutMillis = 60_000
@@ -82,7 +32,7 @@ private val addonHttpClient = HttpClient(Darwin) {
 }
 
 actual suspend fun httpGetText(url: String): String =
-    addonHttpClient
+    platformKtorClient
         .get(url) {
             accept(ContentType.Application.Json)
         }
@@ -98,7 +48,7 @@ actual suspend fun httpGetText(url: String): String =
         }
 
 actual suspend fun httpPostJson(url: String, body: String): String =
-    addonHttpClient
+    platformKtorClient
         .post(url) {
             accept(ContentType.Application.Json)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -119,7 +69,7 @@ actual suspend fun httpGetTextWithHeaders(
     url: String,
     headers: Map<String, String>,
 ): String =
-    addonHttpClient
+    platformKtorClient
         .get(url) {
             accept(ContentType.Application.Json)
             headers.forEach { (key, value) ->
@@ -142,7 +92,7 @@ actual suspend fun httpPostJsonWithHeaders(
     body: String,
     headers: Map<String, String>,
 ): String =
-    addonHttpClient
+    platformKtorClient
         .post(url) {
             accept(ContentType.Application.Json)
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -171,7 +121,7 @@ actual suspend fun httpRequestRaw(
     maxResponseBodyBytes: Int,
     bodyBytes: ByteArray?,
 ): RawHttpResponse =
-    addonHttpClient
+    platformKtorClient
         .request {
             url(url)
             this.method = HttpMethod.parse(method.uppercase())

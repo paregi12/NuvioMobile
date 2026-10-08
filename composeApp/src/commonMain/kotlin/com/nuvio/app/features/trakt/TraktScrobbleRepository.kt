@@ -2,12 +2,11 @@ package com.nuvio.app.features.trakt
 
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.build.AppVersionConfig
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.tracking.TrackingMediaKind
 import com.nuvio.app.features.tracking.TrackingMediaReference
 import com.nuvio.app.features.tracking.TrackingProviderId
-import com.nuvio.app.features.tracking.TrackingProviderRegistry
 import com.nuvio.app.features.tracking.TrackingScrobbleAction
 import com.nuvio.app.features.tracking.TrackingScrobbleEvent
 import com.nuvio.app.features.tracking.TrackingScrobbler
@@ -100,12 +99,6 @@ internal object TraktScrobbleRepository : TrackingScrobbler {
     private val maxStopRetries = 2
     private val retryDelayMs = 1_500L
     private val serverOverloadedRetryDelayMs = 5_000L
-
-    init {
-        TrackingProviderRegistry.registerScrobbler(this)
-    }
-
-    fun ensureRegistered() = Unit
 
     override suspend fun scrobble(
         profileId: Int,

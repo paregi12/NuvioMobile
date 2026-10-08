@@ -15,10 +15,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.nuvio.app.features.details.MetaDetailsRepository
-import com.nuvio.app.features.p2p.P2pSettingsRepository
-import com.nuvio.app.features.p2p.P2pStreamRequest
-import com.nuvio.app.features.p2p.P2pStreamingEngine
-import com.nuvio.app.features.p2p.P2pStreamingState
 import com.nuvio.app.features.player.skip.NextEpisodeInfo
 import com.nuvio.app.features.player.skip.PlayerNextEpisodeRules
 import com.nuvio.app.features.player.skip.SkipIntroRepository
@@ -33,7 +29,6 @@ import com.nuvio.app.features.tracking.TrackingScrobbleAction
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
 import com.nuvio.app.features.watchprogress.buildPlaybackVideoId
 import com.nuvio.app.features.watching.application.WatchingState
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nuvio.composeapp.generated.resources.*
@@ -115,75 +110,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         SubtitleRepository.clear()
         autoFetchedAddonSubtitlesForKey = null
         WatchProgressRepository.ensureLoaded()
-    }
-
-    LaunchedEffect(
-        activeTorrentInfoHash,
-        activeTorrentFileIdx,
-        activeTorrentFilename,
-        activeTorrentTrackers,
-        p2pSettingsUiState.p2pEnabled,
-    ) {
-        val infoHash = activeTorrentInfoHash
-        if (infoHash == null) {
-            p2pResolvedSourceUrl = null
-            P2pStreamingEngine.stopStream()
-            return@LaunchedEffect
-        }
-        if (!P2pSettingsRepository.isVisible || !p2pSettingsUiState.p2pEnabled) {
-            p2pResolvedSourceUrl = null
-            P2pStreamingEngine.stopStream()
-            return@LaunchedEffect
-        }
-
-        p2pResolvedSourceUrl = null
-        val requestedFileIdx = activeTorrentFileIdx
-        val requestedFilename = activeTorrentFilename
-        val requestedTrackers = activeTorrentTrackers
-        errorMessage = null
-        playerController = null
-        playerControllerSourceUrl = null
-        playbackSnapshot = PlayerPlaybackSnapshot()
-        initialLoadCompleted = false
-
-        try {
-            val localUrl = P2pStreamingEngine.startStream(
-                P2pStreamRequest(
-                    infoHash = infoHash,
-                    fileIdx = requestedFileIdx,
-                    filename = requestedFilename,
-                    trackers = requestedTrackers,
-                ),
-            )
-            if (activeTorrentInfoHash == infoHash && activeTorrentFileIdx == requestedFileIdx) {
-                activeSourceAudioUrl = null
-                activeSourceHeaders = emptyMap()
-                activeSourceResponseHeaders = emptyMap()
-                p2pResolvedSourceUrl = localUrl
-            }
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            errorMessage = getString(
-                Res.string.player_error_failed_start_torrent,
-                error.message ?: genericUnknownLabel,
-            )
-            controlsVisible = !playerControlsLocked
-            initialLoadCompleted = true
-        }
-    }
-
-    LaunchedEffect(p2pStreamingState, activeTorrentInfoHash) {
-        val state = p2pStreamingState
-        if (activeTorrentInfoHash != null && state is P2pStreamingState.Error) {
-            p2pResolvedSourceUrl = null
-            playerController = null
-            playerControllerSourceUrl = null
-            playbackSnapshot = PlayerPlaybackSnapshot()
-            initialLoadCompleted = true
-            errorMessage = getString(Res.string.player_error_torrent, state.message)
-            controlsVisible = !playerControlsLocked
-        }
     }
 
     LaunchedEffect(playbackSession.videoId) {
@@ -359,7 +285,6 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         onDispose {
             args.launchId?.let { launchId -> PlayerLaunchStore.update(launchId) { currentLaunch(it) } }
             playerController?.clearNowPlayingInfo()
-            P2pStreamingEngine.shutdown()
             cancelNextEpisodePreload()
             PlayerStreamsRepository.clearAll()
         }
@@ -802,7 +727,6 @@ internal fun PlayerScreenRuntime.tryRefreshCredentialedSourceAfterError(message:
             }
 
             flushWatchProgress()
-            stopActiveP2pStream()
             activeSourceUrl = refreshedUrl
             activeSourceAudioUrl = null
             activeSourceHeaders = sanitizePlaybackHeaders(stream.behaviorHints.proxyHeaders?.request)

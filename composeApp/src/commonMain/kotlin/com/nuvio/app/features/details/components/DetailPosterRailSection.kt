@@ -30,8 +30,6 @@ import com.nuvio.app.features.home.PosterShape
 import com.nuvio.app.features.home.components.HomePosterCard
 import com.nuvio.app.features.home.stableKey
 import com.nuvio.app.features.watching.application.WatchingState
-import com.nuvio.app.features.tmdb.TmdbMetadataService
-import com.nuvio.app.features.tmdb.TmdbSettingsRepository
 
 @Composable
 fun DetailPosterRailSection(
@@ -49,10 +47,6 @@ fun DetailPosterRailSection(
 ) {
     if (items.isEmpty()) return
     val posterCardStyle = rememberPosterCardStyleUiState()
-    val tmdbSettings by remember {
-        TmdbSettingsRepository.ensureLoaded()
-        TmdbSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
 
     Column(modifier = modifier.fillMaxWidth()) {
         NuvioShelfSection(
@@ -66,36 +60,18 @@ fun DetailPosterRailSection(
             key = { item -> item.stableKey() },
         ) { item ->
             val landscape = posterCardStyle.catalogLandscapeModeEnabled || item.posterShape == PosterShape.Landscape
-            val localizedBackdrop = rememberDetailBackdrop(
+            HomePosterCard(
                 item = item,
-                language = tmdbSettings.language,
-                enabled = landscape && (item.id.startsWith("tmdb:") || tmdbSettings.enabled && tmdbSettings.useArtwork),
+                useLandscapeBackdropMode = landscape,
+                showLandscapeOverlay = false,
+                isWatched = WatchingState.isPosterWatched(
+                    watchedKeys = watchedKeys,
+                    item = item,
+                    fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
+                ),
+                onClick = onPosterClick?.let { { it(item) } },
+                onLongClick = onPosterLongClick?.let { { it(item) } },
             )
-            if (localizedBackdrop.isLoading) {
-                SkeletonPoster(
-                    modifier = Modifier.width(landscapePosterWidth(posterCardStyle.widthDp)),
-                    aspectRatio = PosterLandscapeAspectRatio,
-                    cornerRadius = posterCardStyle.cornerRadiusDp.dp,
-                    showLabels = !posterCardStyle.hideLabelsEnabled,
-                    showDetail = false,
-                )
-            } else {
-                val cardItem = remember(item, localizedBackdrop.url) {
-                    localizedBackdrop.url?.let { item.copy(banner = it) } ?: item
-                }
-                HomePosterCard(
-                    item = cardItem,
-                    useLandscapeBackdropMode = landscape,
-                    showLandscapeOverlay = false,
-                    isWatched = WatchingState.isPosterWatched(
-                        watchedKeys = watchedKeys,
-                        item = item,
-                        fullyWatchedSeriesKeys = fullyWatchedSeriesKeys,
-                    ),
-                    onClick = onPosterClick?.let { { it(item) } },
-                    onLongClick = onPosterLongClick?.let { { it(item) } },
-                )
-            }
         }
 
         sourceLabel
@@ -114,21 +90,3 @@ fun DetailPosterRailSection(
             }
     }
 }
-
-@Composable
-private fun rememberDetailBackdrop(item: MetaPreview, language: String, enabled: Boolean): DetailBackdrop {
-    var backdrop by remember(item.id, item.type, language, enabled) {
-        mutableStateOf(DetailBackdrop(isLoading = enabled))
-    }
-    LaunchedEffect(item.id, item.type, language, enabled) {
-        if (enabled) {
-            backdrop = DetailBackdrop(
-                url = TmdbMetadataService.fetchLocalizedBackdrop(item.id, item.type, language),
-                isLoading = false,
-            )
-        }
-    }
-    return backdrop
-}
-
-private data class DetailBackdrop(val url: String? = null, val isLoading: Boolean)

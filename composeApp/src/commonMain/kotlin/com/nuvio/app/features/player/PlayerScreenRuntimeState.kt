@@ -6,14 +6,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
-import com.nuvio.app.features.addons.AddonsUiState
 import com.nuvio.app.features.details.MetaDetails
 import com.nuvio.app.features.details.MetaDetailsUiState
 import com.nuvio.app.features.details.MetaScreenSettingsUiState
 import com.nuvio.app.features.details.MetaVideo
-import com.nuvio.app.features.p2p.P2pSettingsUiState
-import com.nuvio.app.features.p2p.P2pStreamingState
 import com.nuvio.app.features.player.skip.NextEpisodeInfo
 import com.nuvio.app.features.player.skip.SkipInterval
 import com.nuvio.app.features.streams.StreamsUiState
@@ -52,10 +48,6 @@ internal class PlayerScreenRuntime(
     val parentMetaId: String get() = args.parentMetaId
     val parentMetaType: String get() = args.parentMetaType
     val providerAddonId: String? get() = args.providerAddonId
-    val torrentInfoHash: String? get() = args.torrentInfoHash
-    val torrentFileIdx: Int? get() = args.torrentFileIdx
-    val torrentFilename: String? get() = args.torrentFilename
-    val torrentTrackers: List<String> get() = args.torrentTrackers
     val initialPositionMs: Long get() = args.initialPositionMs
     val initialProgressFraction: Float? get() = args.initialProgressFraction
     var externalSubtitles by mutableStateOf(args.externalSubtitles)
@@ -65,15 +57,12 @@ internal class PlayerScreenRuntime(
     lateinit var hapticFeedback: HapticFeedback
 
     var playerSettingsUiState: PlayerSettingsUiState = PlayerSettingsUiState()
-    var p2pSettingsUiState by mutableStateOf(P2pSettingsUiState())
-    var p2pStreamingState by mutableStateOf<P2pStreamingState>(P2pStreamingState.Idle)
     var metaScreenSettingsUiState: MetaScreenSettingsUiState = MetaScreenSettingsUiState()
     var watchedUiState: WatchedUiState = WatchedUiState()
     var watchProgressUiState: WatchProgressUiState = WatchProgressUiState()
     var sourceStreamsState by mutableStateOf(StreamsUiState())
     var episodeStreamsRepoState by mutableStateOf(StreamsUiState())
     var metaUiState: MetaDetailsUiState = MetaDetailsUiState()
-    var addonsUiState: AddonsUiState = AddonsUiState()
     var addonSubtitles: List<AddonSubtitle> = emptyList()
     var isLoadingAddonSubtitles: Boolean = false
 
@@ -102,15 +91,8 @@ internal class PlayerScreenRuntime(
     var activeSourceHeaders by mutableStateOf(sanitizePlaybackHeaders(sourceHeaders))
     var activeSourceResponseHeaders by mutableStateOf(sanitizePlaybackResponseHeaders(sourceResponseHeaders))
     var activeStreamType by mutableStateOf(streamType)
-    var activeTorrentInfoHash by mutableStateOf(torrentInfoHash)
-    var activeTorrentFileIdx by mutableStateOf(torrentFileIdx)
-    var activeTorrentFilename by mutableStateOf(torrentFilename)
-    var activeTorrentTrackers by mutableStateOf(torrentTrackers)
-    var p2pResolvedSourceUrl by mutableStateOf<String?>(null)
     var activeSourceIdentityKey by mutableStateOf(
-        torrentInfoHash?.trim()?.lowercase()?.takeIf { it.isNotBlank() }?.let { hash ->
-            "torrent:$hash:${torrentFileIdx ?: -1}"
-        } ?: sourceUrl.trim().takeIf { it.isNotBlank() }?.let { url -> "url:$url" },
+        sourceUrl.trim().takeIf { it.isNotBlank() }?.let { url -> "url:$url" },
     )
     var activeStreamTitle by mutableStateOf(streamTitle)
     var activeStreamSubtitle by mutableStateOf(streamSubtitle)
@@ -186,7 +168,6 @@ internal class PlayerScreenRuntime(
     var nextEpisodeAutoPlayAutomatic by mutableStateOf(false)
     var nextEpisodePreloadJob by mutableStateOf<Job?>(null)
     var nextEpisodePreloadTriggered by mutableStateOf(false)
-    var pendingP2pSwitch by mutableStateOf<PendingPlayerP2pSwitch?>(null)
     var credentialRefreshJob by mutableStateOf<Job?>(null)
     var credentialRefreshAttemptedSourceUrl by mutableStateOf<String?>(null)
 

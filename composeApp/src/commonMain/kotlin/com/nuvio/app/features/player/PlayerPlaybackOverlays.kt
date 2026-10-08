@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.nuvio.app.features.p2p.P2pLoadingStatus
 import com.nuvio.app.features.player.skip.NextEpisodeCard
 import com.nuvio.app.features.player.skip.NextEpisodeInfo
 import com.nuvio.app.features.player.skip.SkipIntroButton
@@ -34,10 +33,6 @@ internal fun BoxScope.PlayerPlaybackOverlays(
     title: String,
     onBackWithProgress: () -> Unit,
     openingLoadingMessage: String?,
-    p2pInitialLoadingProgress: Float?,
-    showP2pRebufferStats: Boolean,
-    p2pRebufferMessage: String?,
-    p2pRebufferProgress: Float?,
     currentGestureFeedback: GestureFeedbackState?,
     renderedGestureFeedback: GestureFeedbackState?,
     initialLoadCompleted: Boolean,
@@ -92,18 +87,9 @@ internal fun BoxScope.PlayerPlaybackOverlays(
             horizontalSafePadding = horizontalSafePadding,
             modifier = Modifier.fillMaxSize(),
             message = openingLoadingMessage,
-            progress = p2pInitialLoadingProgress,
+            progress = null,
         )
     }
-
-    P2pLoadingStatus(
-        visible = showP2pRebufferStats && errorMessage == null,
-        message = p2pRebufferMessage,
-        progress = p2pRebufferProgress,
-        modifier = Modifier
-            .align(Alignment.Center)
-            .padding(top = 58.dp),
-    )
 
     PlayerGestureOverlay(
         currentFeedback = currentGestureFeedback,

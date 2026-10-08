@@ -16,7 +16,7 @@ import androidx.media3.extractor.text.DefaultSubtitleParserFactory
 import androidx.media3.extractor.text.SubtitleParser
 import androidx.media3.ui.SubtitleView
 import com.nuvio.app.R
-import com.nuvio.app.features.addons.httpGetTextWithHeaders
+import com.nuvio.app.core.network.httpGetTextWithHeaders
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

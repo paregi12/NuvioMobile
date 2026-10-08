@@ -30,6 +30,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -51,7 +52,7 @@ internal object PluginRuntime {
 
     suspend fun executePlugin(
         code: String,
-        tmdbId: String,
+        mediaId: String,
         mediaType: String,
         season: Int?,
         episode: Int?,
@@ -69,7 +70,7 @@ internal object PluginRuntime {
                     withTimeout(PLUGIN_TIMEOUT_MS) {
                         executePluginInternal(
                             code = code,
-                            tmdbId = tmdbId,
+                            mediaId = mediaId,
                             mediaType = mediaType,
                             season = season,
                             episode = episode,
@@ -121,9 +122,107 @@ internal object PluginRuntime {
         }
     }
 
+    suspend fun executePluginHome(
+        code: String,
+        scraperId: String,
+        scraperName: String,
+    ): List<com.nuvio.app.features.plugins.PluginHomeSection> = scraperSemaphore.withPermit {
+        withContext(pluginDispatcher) {
+            withTimeout(PLUGIN_TIMEOUT_MS) {
+                val scraperSettingsJson = PluginStorage.loadScraperSettings(scraperId) ?: "{}"
+                val jsRuntime = JsRuntime()
+                val deferred = CompletableDeferred<String?>()
+                val domBridge = DomBridge()
+                val hostRegistry = HostApiRegistry().apply {
+                    addModule(
+                        HostFunctions(
+                            scraperId = scraperId,
+                            scraperSettingsJson = scraperSettingsJson,
+                            onResult = { deferred.complete(it) },
+                        ),
+                    )
+                    addModule(FetchBridge())
+                    addModule(UrlBridge())
+                    addModule(CryptoBridge())
+                    addModule(WasmBridge())
+                    addModule(domBridge)
+                }
+
+                try {
+                    jsRuntime.use {
+                        hostRegistry.registerAll(this)
+                        evaluateCached({ JsRuntime.polyfillBytecode(this) }, JsBindings.staticPolyfillCode)
+                        evaluate<Any?>(wrapPluginModule(code))
+                        evaluate<Any?>(JsBindings.staticHomeCallCode)
+                        val rawJson = deferred.await().orEmpty()
+                        parseJsonHomeResults(rawJson, scraperId, scraperName)
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    emptyList()
+                } finally {
+                    domBridge.clear()
+                }
+            }
+        }
+    suspend fun executePluginDetails(
+        code: String,
+        scraperId: String,
+        contentId: String,
+    ): com.nuvio.app.features.plugins.PluginDetailsResult? = scraperSemaphore.withPermit {
+        withContext(pluginDispatcher) {
+            withTimeout(PLUGIN_TIMEOUT_MS) {
+                val scraperSettingsJson = PluginStorage.loadScraperSettings(scraperId) ?: "{}"
+                val jsRuntime = JsRuntime()
+                val deferred = CompletableDeferred<String?>()
+                val domBridge = DomBridge()
+                val callArgsJson = JsonObject(
+                    mapOf(
+                        "id" to JsonPrimitive(contentId),
+                        "mediaId" to JsonPrimitive(contentId),
+                        "tmdbId" to JsonPrimitive(contentId),
+                    ),
+                ).toString()
+                val hostRegistry = HostApiRegistry().apply {
+                    addModule(
+                        HostFunctions(
+                            scraperId = scraperId,
+                            scraperSettingsJson = scraperSettingsJson,
+                            callArgsJson = callArgsJson,
+                            onResult = { deferred.complete(it) },
+                        ),
+                    )
+                    addModule(FetchBridge())
+                    addModule(UrlBridge())
+                    addModule(CryptoBridge())
+                    addModule(WasmBridge())
+                    addModule(domBridge)
+                }
+
+                try {
+                    jsRuntime.use {
+                        hostRegistry.registerAll(this)
+                        evaluateCached({ JsRuntime.polyfillBytecode(this) }, JsBindings.staticPolyfillCode)
+                        evaluate<Any?>(wrapPluginModule(code))
+                        evaluate<Any?>(JsBindings.staticDetailsCallCode)
+                        val rawJson = deferred.await().orEmpty()
+                        parseJsonDetailsResult(rawJson)
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    null
+                } finally {
+                    domBridge.clear()
+                }
+            }
+        }
+    }
+
     private suspend fun executePluginInternal(
         code: String,
-        tmdbId: String,
+        mediaId: String,
         mediaType: String,
         season: Int?,
         episode: Int?,
@@ -135,7 +234,9 @@ internal object PluginRuntime {
         val settingsJson = JsonObject(scraperSettings).toString()
         val callArgsJson = JsonObject(
             mapOf(
-                "tmdbId" to JsonPrimitive(tmdbId),
+                "id" to JsonPrimitive(mediaId),
+                "mediaId" to JsonPrimitive(mediaId),
+                "tmdbId" to JsonPrimitive(mediaId),
                 "mediaType" to JsonPrimitive(mediaType),
                 "season" to (season?.let(::JsonPrimitive) ?: JsonNull),
                 "episode" to (episode?.let(::JsonPrimitive) ?: JsonNull),
@@ -247,6 +348,124 @@ internal object PluginRuntime {
                 )
             }.filter { it.url.isNotBlank() }
         }.getOrElse { emptyList() }
+    }
+
+    private fun parseJsonHomeResults(
+        rawJson: String,
+        scraperId: String,
+        scraperName: String,
+    ): List<com.nuvio.app.features.plugins.PluginHomeSection> {
+        return runCatching {
+            val element = json.parseToJsonElement(rawJson)
+            val array = element as? JsonArray ?: return emptyList()
+            if (array.isEmpty()) return emptyList()
+
+            val firstObj = array.firstOrNull() as? JsonObject
+            if (firstObj != null && firstObj.containsKey("items")) {
+                array.mapNotNull { itemElement ->
+                    val sectionObj = itemElement as? JsonObject ?: return@mapNotNull null
+                    val title = sectionObj["title"]?.jsonPrimitive?.contentOrNull ?: scraperName
+                    val itemsArray = sectionObj["items"] as? JsonArray ?: JsonArray(emptyList())
+                    val items = itemsArray.mapNotNull { it.toPluginHomeItem() }
+                    com.nuvio.app.features.plugins.PluginHomeSection(
+                        pluginId = scraperId,
+                        pluginName = scraperName,
+                        title = title,
+                        items = items,
+                    )
+                }
+            } else {
+                val items = array.mapNotNull { it.toPluginHomeItem() }
+                if (items.isEmpty()) emptyList()
+                else listOf(
+                    com.nuvio.app.features.plugins.PluginHomeSection(
+                        pluginId = scraperId,
+                        pluginName = scraperName,
+                        title = scraperName,
+                        items = items,
+                    )
+                )
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    private fun JsonElement.toPluginHomeItem(): com.nuvio.app.features.plugins.PluginHomeItem? {
+        val obj = this as? JsonObject ?: return null
+        val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: obj["url"]?.jsonPrimitive?.contentOrNull ?: return null
+        val title = obj["title"]?.jsonPrimitive?.contentOrNull ?: obj["name"]?.jsonPrimitive?.contentOrNull ?: return null
+        return com.nuvio.app.features.plugins.PluginHomeItem(
+            id = id,
+            title = title,
+            poster = obj["poster"]?.jsonPrimitive?.contentOrNull ?: obj["image"]?.jsonPrimitive?.contentOrNull ?: obj["cover"]?.jsonPrimitive?.contentOrNull,
+            banner = obj["banner"]?.jsonPrimitive?.contentOrNull ?: obj["backdrop"]?.jsonPrimitive?.contentOrNull,
+            url = obj["url"]?.jsonPrimitive?.contentOrNull,
+            description = obj["description"]?.jsonPrimitive?.contentOrNull ?: obj["synopsis"]?.jsonPrimitive?.contentOrNull,
+            rating = obj["rating"]?.jsonPrimitive?.contentOrNull,
+            year = obj["year"]?.jsonPrimitive?.contentOrNull,
+            episodes = obj["episodes"]?.jsonPrimitive?.intOrNull ?: obj["totalEpisodes"]?.jsonPrimitive?.intOrNull,
+            subEpisodes = obj["subEpisodes"]?.jsonPrimitive?.intOrNull ?: obj["sub"]?.jsonPrimitive?.intOrNull,
+            dubEpisodes = obj["dubEpisodes"]?.jsonPrimitive?.intOrNull ?: obj["dub"]?.jsonPrimitive?.intOrNull,
+            ageRating = obj["ageRating"]?.jsonPrimitive?.contentOrNull ?: obj["rated"]?.jsonPrimitive?.contentOrNull,
+        )
+    }
+
+    private fun parseJsonDetailsResult(rawJson: String): com.nuvio.app.features.plugins.PluginDetailsResult? {
+        if (rawJson.isBlank() || rawJson == "null" || rawJson == "undefined") return null
+        return runCatching {
+            val obj = json.parseToJsonElement(rawJson) as? JsonObject ?: return null
+            val id = obj["id"]?.jsonPrimitive?.contentOrNull ?: obj["url"]?.jsonPrimitive?.contentOrNull
+            val title = obj["title"]?.jsonPrimitive?.contentOrNull ?: obj["name"]?.jsonPrimitive?.contentOrNull
+            val poster = obj["poster"]?.jsonPrimitive?.contentOrNull ?: obj["image"]?.jsonPrimitive?.contentOrNull
+            val banner = obj["banner"]?.jsonPrimitive?.contentOrNull ?: obj["backdrop"]?.jsonPrimitive?.contentOrNull
+            val desc = obj["description"]?.jsonPrimitive?.contentOrNull ?: obj["synopsis"]?.jsonPrimitive?.contentOrNull
+            val totalEpisodes = obj["totalEpisodes"]?.jsonPrimitive?.intOrNull ?: obj["episodes"]?.jsonPrimitive?.intOrNull
+            val subEpisodes = obj["subEpisodes"]?.jsonPrimitive?.intOrNull ?: obj["sub"]?.jsonPrimitive?.intOrNull
+            val dubEpisodes = obj["dubEpisodes"]?.jsonPrimitive?.intOrNull ?: obj["dub"]?.jsonPrimitive?.intOrNull
+            val ageRating = obj["ageRating"]?.jsonPrimitive?.contentOrNull ?: obj["rated"]?.jsonPrimitive?.contentOrNull
+            val status = obj["status"]?.jsonPrimitive?.contentOrNull
+            val year = obj["year"]?.jsonPrimitive?.contentOrNull
+            val genres = (obj["genres"] as? JsonArray)?.mapNotNull { it.jsonPrimitive.contentOrNull }.orEmpty()
+
+            val episodesArray = (obj["episodes"] as? JsonArray) ?: (obj["episodeList"] as? JsonArray)
+            val episodes = episodesArray?.mapNotNull { epElement ->
+                val epObj = epElement as? JsonObject ?: return@mapNotNull null
+                val epNum = epObj["episode"]?.jsonPrimitive?.intOrNull ?: epObj["number"]?.jsonPrimitive?.intOrNull ?: 1
+                val isFiller = epObj["isFiller"]?.jsonPrimitive?.booleanOrNull ?: (epObj["filler"]?.jsonPrimitive?.booleanOrNull ?: false)
+                val isSub = epObj["isSub"]?.jsonPrimitive?.booleanOrNull ?: (epObj["sub"]?.jsonPrimitive?.booleanOrNull ?: true)
+                val isDub = epObj["isDub"]?.jsonPrimitive?.booleanOrNull ?: (epObj["dub"]?.jsonPrimitive?.booleanOrNull ?: false)
+                com.nuvio.app.features.plugins.PluginEpisodeItem(
+                    id = epObj["id"]?.jsonPrimitive?.contentOrNull,
+                    episode = epNum,
+                    season = epObj["season"]?.jsonPrimitive?.intOrNull ?: 1,
+                    title = epObj["title"]?.jsonPrimitive?.contentOrNull,
+                    thumbnail = epObj["thumbnail"]?.jsonPrimitive?.contentOrNull ?: epObj["image"]?.jsonPrimitive?.contentOrNull,
+                    overview = epObj["overview"]?.jsonPrimitive?.contentOrNull ?: epObj["description"]?.jsonPrimitive?.contentOrNull,
+                    isFiller = isFiller,
+                    isSub = isSub,
+                    isDub = isDub,
+                )
+            }.orEmpty()
+
+            val relatedArray = (obj["related"] as? JsonArray) ?: (obj["recommendations"] as? JsonArray)
+            val related = relatedArray?.mapNotNull { it.toPluginHomeItem() }.orEmpty()
+
+            com.nuvio.app.features.plugins.PluginDetailsResult(
+                id = id,
+                title = title,
+                poster = poster,
+                banner = banner,
+                description = desc,
+                totalEpisodes = totalEpisodes,
+                subEpisodes = subEpisodes,
+                dubEpisodes = dubEpisodes,
+                ageRating = ageRating,
+                status = status,
+                genres = genres,
+                year = year,
+                episodes = episodes,
+                related = related,
+            )
+        }.getOrNull()
     }
 
     private fun JsonObject.stringOrNull(key: String): String? =

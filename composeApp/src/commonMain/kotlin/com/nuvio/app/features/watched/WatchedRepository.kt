@@ -934,17 +934,8 @@ object WatchedRepository {
         meta: MetaDetails,
         todayIsoDate: String,
         isEpisodeWatched: (MetaVideo) -> Boolean = { episode ->
-            val keys = watchedItemKeys(meta.type, meta.id, episode.season, episode.episode)
-            if (keys.any(_uiState.value.watchedKeys::contains)) {
-                true
-            } else {
-                val episodeNumber = episode.episode
-                if (episodeNumber != null) {
-                    com.nuvio.app.features.simkl.SimklAnimeWatchedFallback.isWatched(episode.id, episodeNumber)
-                } else {
-                    false
-                }
-            }
+            watchedItemKeys(meta.type, meta.id, episode.season, episode.episode)
+                .any(_uiState.value.watchedKeys::contains)
         },
         isEpisodeCompleted: (MetaVideo) -> Boolean = { false },
     ): Boolean {

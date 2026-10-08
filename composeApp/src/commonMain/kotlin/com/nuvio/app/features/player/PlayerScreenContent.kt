@@ -13,13 +13,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.nuvio.app.features.addons.AddonRepository
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.details.MetaScreenSettingsRepository
-import com.nuvio.app.features.p2p.P2pSettingsRepository
-import com.nuvio.app.features.p2p.P2pStreamingEngine
 import com.nuvio.app.features.watched.WatchedRepository
 import com.nuvio.app.features.watchprogress.WatchProgressRepository
 import nuvio.composeapp.generated.resources.Res
@@ -46,11 +42,6 @@ internal fun PlayerScreenContent(args: PlayerScreenArgs) {
         PlayerSettingsRepository.ensureLoaded()
         PlayerSettingsRepository.uiState
     }.collectAsStateWithLifecycle()
-    val p2pSettingsUiState by remember {
-        P2pSettingsRepository.ensureLoaded()
-        P2pSettingsRepository.uiState
-    }.collectAsStateWithLifecycle()
-    val p2pStreamingState by P2pStreamingEngine.state.collectAsStateWithLifecycle()
     val metaScreenSettingsUiState by remember {
         MetaScreenSettingsRepository.ensureLoaded()
         MetaScreenSettingsRepository.uiState
@@ -66,7 +57,6 @@ internal fun PlayerScreenContent(args: PlayerScreenArgs) {
     val sourceStreamsState by PlayerStreamsRepository.sourceState.collectAsStateWithLifecycle()
     val episodeStreamsRepoState by PlayerStreamsRepository.episodeStreamsState.collectAsStateWithLifecycle()
     val metaUiState by MetaDetailsRepository.uiState.collectAsStateWithLifecycle()
-    val addonsUiState by AddonRepository.uiState.collectAsStateWithLifecycle()
     val addonSubtitles by SubtitleRepository.addonSubtitles.collectAsStateWithLifecycle()
     val isLoadingAddonSubtitles by SubtitleRepository.isLoading.collectAsStateWithLifecycle()
 
@@ -88,15 +78,12 @@ internal fun PlayerScreenContent(args: PlayerScreenArgs) {
             restoreBrightness = playerSettingsUiState.touchGesturesEnabled,
         )
         runtime.playerSettingsUiState = playerSettingsUiState
-        runtime.p2pSettingsUiState = p2pSettingsUiState
-        runtime.p2pStreamingState = p2pStreamingState
         runtime.metaScreenSettingsUiState = metaScreenSettingsUiState
         runtime.watchedUiState = watchedUiState
         runtime.watchProgressUiState = watchProgressUiState
         runtime.sourceStreamsState = sourceStreamsState
         runtime.episodeStreamsRepoState = episodeStreamsRepoState
         runtime.metaUiState = metaUiState
-        runtime.addonsUiState = addonsUiState
         runtime.addonSubtitles = mergeStreamAndAddonSubtitles(addonSubtitles, runtime.externalSubtitles)
         runtime.isLoadingAddonSubtitles = isLoadingAddonSubtitles
         runtime.horizontalSafePadding = horizontalSafePadding

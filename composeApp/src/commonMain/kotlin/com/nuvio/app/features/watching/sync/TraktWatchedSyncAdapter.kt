@@ -1,9 +1,8 @@
 package com.nuvio.app.features.watching.sync
 
 import co.touchlab.kermit.Logger
-import com.nuvio.app.features.addons.RawHttpResponse
-import com.nuvio.app.features.addons.httpRequestRaw
-import com.nuvio.app.features.tmdb.TmdbService
+import com.nuvio.app.core.network.RawHttpResponse
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.tracking.TrackingProviderId
 import com.nuvio.app.features.tracking.TrackingWatchedProvider
 import com.nuvio.app.features.trakt.TraktAuthRepository
@@ -547,19 +546,7 @@ object TraktWatchedSyncAdapter : TrackingWatchedProvider {
     }
 
     private suspend fun resolveHistoryIds(item: WatchedItem): TraktSyncIdsDto? {
-        val ids = parseIds(item.id) ?: return null
-        return enrichWithImdb(ids = ids, contentType = item.type)
-    }
-
-    private suspend fun enrichWithImdb(
-        ids: TraktSyncIdsDto,
-        contentType: String,
-    ): TraktSyncIdsDto {
-        if (ids.tmdb == null || !ids.imdb.isNullOrBlank()) return ids
-        val imdb = runCatching {
-            TmdbService.tmdbToImdb(tmdbId = ids.tmdb, mediaType = contentType)
-        }.getOrNull() ?: return ids
-        return ids.copy(imdb = imdb)
+        return parseIds(item.id)
     }
 
     private fun jsonHeaders(headers: Map<String, String>): Map<String, String> =

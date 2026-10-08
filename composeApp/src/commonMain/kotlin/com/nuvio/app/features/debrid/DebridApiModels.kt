@@ -13,39 +13,6 @@ internal data class TorboxEnvelopeDto<T>(
 )
 
 @Serializable
-internal data class TorboxCreateTorrentDataDto(
-    @SerialName("torrent_id") val torrentId: Int? = null,
-    val id: Int? = null,
-    val hash: String? = null,
-    @SerialName("auth_id") val authId: String? = null,
-) {
-    fun resolvedTorrentId(): Int? = torrentId ?: id
-}
-
-@Serializable
-internal data class TorboxTorrentDataDto(
-    val id: Int? = null,
-    val hash: String? = null,
-    val name: String? = null,
-    val files: List<TorboxTorrentFileDto>? = null,
-)
-
-@Serializable
-internal data class TorboxTorrentFileDto(
-    val id: Int? = null,
-    val name: String? = null,
-    @SerialName("short_name") val shortName: String? = null,
-    @SerialName("absolute_path") val absolutePath: String? = null,
-    @SerialName("mimetype") val mimeType: String? = null,
-    val size: Long? = null,
-) {
-    fun displayName(): String =
-        listOfNotNull(name, shortName, absolutePath)
-            .firstOrNull { it.isNotBlank() }
-            .orEmpty()
-}
-
-@Serializable
 internal data class TorboxCloudItemDto(
     val id: JsonElement? = null,
     val hash: String? = null,
@@ -72,11 +39,6 @@ internal data class TorboxCloudFileDto(
 )
 
 @Serializable
-internal data class TorboxCheckCachedRequestDto(
-    val hashes: List<String>,
-)
-
-@Serializable
 internal data class TorboxDeviceAuthorizationDto(
     @SerialName("device_code") val deviceCode: String? = null,
     val code: String? = null,
@@ -95,61 +57,6 @@ internal data class TorboxDeviceTokenRequestDto(
 internal data class TorboxDeviceTokenDto(
     @SerialName("access_token") val accessToken: String? = null,
     @SerialName("token_type") val tokenType: String? = null,
-)
-
-@Serializable
-internal data class TorboxCachedItemDto(
-    val name: String? = null,
-    val size: Long? = null,
-    val hash: String? = null,
-)
-
-@Serializable
-internal data class RealDebridAddTorrentDto(
-    val id: String? = null,
-    val uri: String? = null,
-)
-
-@Serializable
-internal data class RealDebridTorrentInfoDto(
-    val id: String? = null,
-    val filename: String? = null,
-    @SerialName("original_filename") val originalFilename: String? = null,
-    val hash: String? = null,
-    val bytes: Long? = null,
-    @SerialName("original_bytes") val originalBytes: Long? = null,
-    val host: String? = null,
-    val split: Int? = null,
-    val progress: Int? = null,
-    val status: String? = null,
-    val files: List<RealDebridTorrentFileDto>? = null,
-    val links: List<String>? = null,
-)
-
-@Serializable
-internal data class RealDebridTorrentFileDto(
-    val id: Int? = null,
-    val path: String? = null,
-    val bytes: Long? = null,
-    val selected: Int? = null,
-) {
-    fun displayName(): String =
-        path.orEmpty().substringAfterLast('/').ifBlank { path.orEmpty() }
-}
-
-@Serializable
-internal data class RealDebridUnrestrictLinkDto(
-    val id: String? = null,
-    val filename: String? = null,
-    val mimeType: String? = null,
-    val filesize: Long? = null,
-    val link: String? = null,
-    val host: String? = null,
-    val chunks: Int? = null,
-    val crc: Int? = null,
-    val download: String? = null,
-    val streamable: Int? = null,
-    val type: String? = null,
 )
 
 @Serializable
@@ -190,31 +97,6 @@ internal data class PremiumizeAccountInfoDto(
     @SerialName("premium_until") val premiumUntil: Long? = null,
     @SerialName("limit_used") val limitUsed: Double? = null,
     @SerialName("booster_points") val boosterPoints: Int? = null,
-)
-
-@Serializable
-internal data class PremiumizeDirectDownloadDto(
-    val status: String? = null,
-    val message: String? = null,
-    val code: String? = null,
-    val content: List<PremiumizeDirectDownloadFileDto>? = null,
-)
-
-@Serializable
-internal data class PremiumizeDirectDownloadFileDto(
-    val path: String? = null,
-    val size: Long? = null,
-    val link: String? = null,
-)
-
-@Serializable
-internal data class PremiumizeCacheCheckDto(
-    val status: String? = null,
-    val message: String? = null,
-    val code: String? = null,
-    val response: List<Boolean>? = null,
-    val filename: List<String?>? = null,
-    val filesize: List<JsonElement?>? = null,
 )
 
 @Serializable

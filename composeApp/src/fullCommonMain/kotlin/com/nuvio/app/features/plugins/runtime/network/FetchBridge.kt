@@ -3,7 +3,7 @@ package com.nuvio.app.features.plugins.runtime.network
 import co.touchlab.kermit.Logger
 import com.dokar.quickjs.QuickJs
 import com.dokar.quickjs.binding.asyncFunction
-import com.nuvio.app.features.addons.httpRequestRaw
+import com.nuvio.app.core.network.httpRequestRaw
 import com.nuvio.app.features.plugins.runtime.host.HostModule
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
