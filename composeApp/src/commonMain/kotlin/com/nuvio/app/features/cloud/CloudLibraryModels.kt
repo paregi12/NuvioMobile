@@ -118,5 +118,6 @@ sealed interface CloudLibraryPlaybackResult {
 
     data object MissingCredentials : CloudLibraryPlaybackResult
     data object NotPlayable : CloudLibraryPlaybackResult
+    data object NotFound : CloudLibraryPlaybackResult
     data class Failed(val message: String? = null) : CloudLibraryPlaybackResult
 }

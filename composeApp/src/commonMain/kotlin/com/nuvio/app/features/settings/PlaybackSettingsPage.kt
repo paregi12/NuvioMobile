@@ -771,6 +771,7 @@ private fun PlaybackSettingsSection(
                     description = stringResource(autoPlayPlayerSettings.streamAutoPlaySource.labelRes(pluginsEnabled)),
                     isTablet = isTablet,
                     onClick = { showAutoPlaySourceDialog = true },
+                )
                 if (pluginsEnabled) {
                     SettingsGroupDivider(isTablet = isTablet)
                     val pluginSubtitle = if (autoPlayPlayerSettings.streamAutoPlaySelectedPlugins.isEmpty()) {

@@ -869,6 +869,7 @@ private fun EpisodeHorizontalCard(
                     bottom = contentBottomPadding,
                 ),
             verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,

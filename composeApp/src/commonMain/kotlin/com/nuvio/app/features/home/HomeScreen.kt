@@ -574,8 +574,9 @@ fun HomeScreen(
             }
         }
     }
-    val enabledScrapers = remember(pluginsUiState.scrapers) {
-        pluginsUiState.scrapers.filter { it.enabled && it.manifestEnabled }
+    val enabledScrapers = remember(pluginsUiState) {
+        if (!pluginsUiState.pluginsEnabled) emptyList()
+        else pluginsUiState.scrapers.filter { it.enabled && it.manifestEnabled }
     }
     val metaProviderKey = remember(enabledScrapers) {
         enabledScrapers.map { it.id }.sorted()
@@ -847,10 +848,6 @@ fun HomeScreen(
         }
     }
 
-    val enabledScrapers = remember(pluginsUiState) {
-        if (!pluginsUiState.pluginsEnabled) emptyList()
-        else pluginsUiState.scrapers.filter { it.enabled && it.manifestEnabled }
-    }
     val hasActivePlugins = enabledScrapers.isNotEmpty()
     val pluginsLoading = pluginsUiState.repositories.any { it.isRefreshing }
     val pluginErrorMessage = pluginsUiState.repositories.firstNotNullOfOrNull { it.errorMessage }

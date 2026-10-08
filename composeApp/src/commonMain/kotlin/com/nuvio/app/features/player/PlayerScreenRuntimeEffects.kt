@@ -71,7 +71,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
 
     LaunchedEffect(activeVideoId, activeSeasonNumber, activeEpisodeNumber) {
         val vid = activeVideoId ?: return@LaunchedEffect
-        if (sourceStreamsState.streams.isEmpty()) {
+        if (sourceStreamsState.allStreams.isEmpty()) {
             PlayerStreamsRepository.loadSources(
                 type = contentType ?: parentMetaType,
                 videoId = vid,

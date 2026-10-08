@@ -3,6 +3,7 @@ package com.nuvio.app.core.tracking
 import com.nuvio.app.features.mdblist.MdbListTracker
 import com.nuvio.app.features.simkl.SimklAuthRepository
 import com.nuvio.app.features.simkl.SimklSyncRepository
+import com.nuvio.app.features.tracking.TrackingProviderRegistry
 import com.nuvio.app.features.trakt.TraktAuthRepository
 
 /**

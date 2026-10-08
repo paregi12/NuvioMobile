@@ -43,7 +43,7 @@ object SearchRepository {
             val anilistSettings = AnilistSettingsRepository.snapshot()
             val anilistDeferred = async {
                 if (anilistSettings.enabled) {
-                    AnilistMetadataService.searchAnime(normalizedQuery).getOrNull().orEmpty()
+                    runCatching { AnilistMetadataService.searchAnime(normalizedQuery) }.getOrElse { emptyList() }
                 } else {
                     emptyList()
                 }
@@ -118,8 +118,8 @@ object SearchRepository {
         activeDiscoverJob?.cancel()
         _discoverUiState.value = DiscoverUiState(isLoading = true)
         activeDiscoverJob = scope.launch {
-            val trending = AnilistMetadataService.fetchTrendingAnime().getOrElse { emptyList() }
-            val popular = AnilistMetadataService.fetchPopularAnime().getOrElse { emptyList() }
+            val trending = runCatching { AnilistMetadataService.fetchTrending() }.getOrElse { emptyList() }
+            val popular = runCatching { AnilistMetadataService.fetchPopular() }.getOrElse { emptyList() }
             val combined = (trending + popular).distinctBy { it.id }
             _discoverUiState.value = DiscoverUiState(
                 isLoading = false,

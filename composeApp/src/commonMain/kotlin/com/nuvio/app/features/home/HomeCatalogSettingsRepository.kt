@@ -99,7 +99,7 @@ object HomeCatalogSettingsRepository {
     private var hasLoaded = false
     private var definitions: List<HomeCatalogDefinition> = emptyList()
     private var collectionDefinitions: List<CollectionCatalogDefinition> = emptyList()
-    private var lastCatalogSync: Triple<List<ManagedAddon>, List<Collection>, String>? = null
+    private var lastCatalogSync: Triple<List<PluginHomeSection>, List<Collection>, String>? = null
     private var lastCollectionSync: Pair<List<Collection>, String>? = null
     private val preferencesRef = atomic<Map<String, StoredHomeCatalogPreference>>(emptyMap())
     private var preferences: Map<String, StoredHomeCatalogPreference>

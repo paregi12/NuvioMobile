@@ -1,6 +1,5 @@
 package com.nuvio.app.features.player
 
-import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.details.MetaVideo
 import com.nuvio.app.features.downloads.DownloadItem
 import com.nuvio.app.features.downloads.DownloadsRepository
@@ -156,7 +155,6 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
         }
 
         val installedAddonNames = emptySet<String>()
-        val debridSettings = DebridSettingsRepository.snapshot()
 
         val timeoutSeconds = settings.streamAutoPlayTimeoutSeconds
         var autoSelectTriggered = false
@@ -193,8 +191,6 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
                 preferredBingeGroup = preferredBingeGroup,
                 preferBingeGroupInSelection = settings.streamAutoPlayPreferBingeGroup,
                 bingeGroupOnly = bingeGroupOnlyManualMode,
-                debridEnabled = debridSettings.canResolvePlayableLinks,
-                activeResolverProviderId = debridSettings.activeResolverProviderId,
             )
 
         fun tryBingeGroupOnly(streams: List<StreamItem>): StreamItem? {
@@ -210,8 +206,6 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
                 preferredBingeGroup = preferredBingeGroup,
                 preferBingeGroupInSelection = true,
                 bingeGroupOnly = true,
-                debridEnabled = debridSettings.canResolvePlayableLinks,
-                activeResolverProviderId = debridSettings.activeResolverProviderId,
             )
         }
 

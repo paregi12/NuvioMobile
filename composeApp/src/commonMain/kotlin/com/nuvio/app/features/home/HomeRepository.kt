@@ -78,6 +78,10 @@ object HomeRepository {
         }
     }
 
+    fun applyCurrentSettings() {
+        refresh()
+    }
+
     fun clear() {
         activeJob?.cancel()
         activeJob = null

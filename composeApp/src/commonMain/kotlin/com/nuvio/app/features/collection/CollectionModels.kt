@@ -270,3 +270,18 @@ data class ValidationResult(
     val collectionCount: Int = 0,
     val folderCount: Int = 0,
 )
+
+@Serializable
+data class TmdbCompanySearchResult(
+    val id: Int = 0,
+    val name: String? = null,
+    @SerialName("origin_country") val originCountry: String? = null,
+)
+
+@Serializable
+data class TmdbCollectionSearchResult(
+    val id: Int = 0,
+    val name: String? = null,
+    @SerialName("poster_path") val posterPath: String? = null,
+    @SerialName("backdrop_path") val backdropPath: String? = null,
+)

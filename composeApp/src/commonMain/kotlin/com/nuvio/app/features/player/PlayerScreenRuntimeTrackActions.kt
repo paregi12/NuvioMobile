@@ -386,7 +386,7 @@ internal fun StreamItem.matchesFormat(targetFormat: DubSubFormat): Boolean {
 
 internal fun PlayerScreenRuntime.resolveCurrentDubSubFormat(): DubSubFormat {
     currentDubSubFormat?.let { return it }
-    val currentStream = sourceStreamsState.streams.firstOrNull { it.playableDirectUrl == activeSourceUrl }
+    val currentStream = sourceStreamsState.allStreams.firstOrNull { it.playableDirectUrl == activeSourceUrl }
     if (currentStream != null) {
         for (f in DubSubFormat.entries) {
             if (currentStream.matchesFormat(f)) return f
@@ -403,7 +403,7 @@ internal fun PlayerScreenRuntime.resolveCurrentDubSubFormat(): DubSubFormat {
 
 internal fun PlayerScreenRuntime.buildDubSubOptions(): List<DubSubOptionItem> {
     val active = resolveCurrentDubSubFormat()
-    val allStreams = sourceStreamsState.streams
+    val allStreams = sourceStreamsState.allStreams
     return DubSubFormat.entries.map { format ->
         val matchingCount = allStreams.count { it.matchesFormat(format) }
         DubSubOptionItem(
@@ -426,7 +426,7 @@ internal fun PlayerScreenRuntime.buildDubSubOptions(): List<DubSubOptionItem> {
 
 internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
     currentDubSubFormat = format
-    val availableStreams = sourceStreamsState.streams
+    val availableStreams = sourceStreamsState.allStreams
     val matchedStream = availableStreams.firstOrNull { stream ->
         stream.matchesFormat(format) && stream.playableDirectUrl != activeSourceUrl
     }
@@ -436,8 +436,8 @@ internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
     when (format) {
         DubSubFormat.DUB -> {
             val dubAudio = audioTracks.firstOrNull { track ->
-                val name = track.name.lowercase()
-                val lang = track.language.lowercase()
+                val name = track.label.lowercase()
+                val lang = track.language.orEmpty().lowercase()
                 name.contains("dub") || name.contains("eng") || lang.contains("en")
             }
             if (dubAudio != null && dubAudio.index != selectedAudioIndex) {
@@ -454,8 +454,8 @@ internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
             selectedAddonSubtitleId = null
             playerController?.selectSubtitleTrack(-1)
             val jaAudio = audioTracks.firstOrNull { track ->
-                val name = track.name.lowercase()
-                val lang = track.language.lowercase()
+                val name = track.label.lowercase()
+                val lang = track.language.orEmpty().lowercase()
                 name.contains("jpn") || name.contains("jap") || lang.contains("ja")
             }
             if (jaAudio != null && jaAudio.index != selectedAudioIndex) {
@@ -466,8 +466,8 @@ internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
         }
         DubSubFormat.SOFTSUB -> {
             val jaAudio = audioTracks.firstOrNull { track ->
-                val name = track.name.lowercase()
-                val lang = track.language.lowercase()
+                val name = track.label.lowercase()
+                val lang = track.language.orEmpty().lowercase()
                 name.contains("jpn") || name.contains("jap") || lang.contains("ja")
             }
             if (jaAudio != null && jaAudio.index != selectedAudioIndex) {
@@ -477,8 +477,8 @@ internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
             }
             if (selectedSubtitleIndex < 0 && subtitleTracks.isNotEmpty()) {
                 val engSub = subtitleTracks.firstOrNull { track ->
-                    val name = track.name.lowercase()
-                    val lang = track.language.lowercase()
+                    val name = track.label.lowercase()
+                    val lang = track.language.orEmpty().lowercase()
                     name.contains("eng") || lang.contains("en")
                 } ?: subtitleTracks.firstOrNull { it.index >= 0 }
                 if (engSub != null) {

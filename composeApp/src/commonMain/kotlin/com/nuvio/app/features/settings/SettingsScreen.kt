@@ -61,6 +61,7 @@ import com.nuvio.app.features.anilist.AnilistSettings
 import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
 import com.nuvio.app.features.debrid.DebridSettings
+import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.details.MetaScreenSettingsRepository
 import com.nuvio.app.features.details.MetaScreenSettingsUiState
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
@@ -90,6 +91,7 @@ private val SettingsSearchRevealThreshold = 28.dp
 private const val SettingsSearchRevealAnimationMillis = 240L
 private const val SettingsSearchRevealHapticDelayMillis = 90L
 
+@Composable
 private fun settingsPageTitles(): Map<SettingsPage, String> {
     val titles = mutableMapOf<SettingsPage, String>()
     for (page in SettingsPage.entries) {

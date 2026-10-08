@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.nuvio.app.features.details.MetaDetailsScreen
 import com.nuvio.app.features.details.EntityBrowseScreen
 import com.nuvio.app.features.details.EntityKind
+import com.nuvio.app.features.details.PersonDetailScreen
 import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.navigation.DetailRoute
 import com.nuvio.app.navigation.EntityBrowseRoute

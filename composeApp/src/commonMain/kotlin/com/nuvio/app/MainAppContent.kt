@@ -1025,11 +1025,12 @@ internal fun MainAppContent(
             }
 
         val onCatalogClick: (HomeCatalogSection) -> Unit = { section ->
+            val target = section.target ?: return@onCatalogClick
             val launchId = CatalogLaunchStore.put(
                 CatalogLaunch(
                     title = section.title,
                     subtitle = section.subtitle,
-                    target = section.target,
+                    target = target,
                 ),
             )
             navController.navigate(

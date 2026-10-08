@@ -3,7 +3,9 @@ package com.nuvio.app.features.details
 import co.touchlab.kermit.Logger
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
+import com.nuvio.app.features.home.MetaPreview
 import com.nuvio.app.features.home.filterReleasedItems
+import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.anilist.AnilistMetadataService
 import com.nuvio.app.features.mdblist.MdbListMetadataService
 import com.nuvio.app.features.mdblist.MdbListSettingsRepository

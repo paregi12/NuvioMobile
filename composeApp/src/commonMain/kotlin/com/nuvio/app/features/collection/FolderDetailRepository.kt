@@ -6,7 +6,6 @@ import com.nuvio.app.features.catalog.CatalogPage
 import com.nuvio.app.features.catalog.CatalogTarget
 import com.nuvio.app.features.catalog.mergeCatalogItems
 import com.nuvio.app.features.catalog.nextCatalogPaginationState
-import com.nuvio.app.features.catalog.supportsPagination
 import com.nuvio.app.core.poster.withCustomPosterUrls
 import com.nuvio.app.core.i18n.localizedMediaTypeLabel
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
@@ -184,7 +183,7 @@ object FolderDetailRepository {
         sources.forEachIndexed { sourceIndex, source ->
             val tabIndex = if (showAll) sourceIndex + 1 else sourceIndex
             val catalogSource = source.addonCatalogSource()
-            val resolvedCatalog = catalogSource?.let { addons.findCollectionCatalog(it) }
+            val resolvedCatalog: Any? = null
             if (!source.isTrakt && resolvedCatalog == null) {
                 updateTab(tabIndex) {
                     it.copy(

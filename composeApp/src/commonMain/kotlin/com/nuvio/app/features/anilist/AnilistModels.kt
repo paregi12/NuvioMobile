@@ -403,7 +403,7 @@ fun AnilistMediaDto.toMetaPreview(): MetaPreview {
         type = mediaType,
         name = displayTitle,
         poster = coverImage?.best,
-        background = bannerImage,
+        banner = bannerImage,
         imdbRating = rating,
         releaseInfo = releaseYear,
         genres = genres,
