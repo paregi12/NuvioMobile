@@ -44,4 +44,12 @@ expect object PluginRepository {
     suspend fun loadHomeSections(): List<PluginHomeSection>
 
     suspend fun getAnimeDetails(contentId: String): PluginDetailsResult?
+
+    suspend fun search(query: String, page: Int = 1): List<PluginHomeSection>
+
+    suspend fun searchScraper(
+        scraper: PluginScraper,
+        query: String,
+        page: Int = 1,
+    ): List<PluginHomeItem>
 }

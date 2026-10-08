@@ -97,6 +97,26 @@ internal object JsBindings {
             })();
         """.trimIndent()
 
+    val staticSearchCallCode: String = """
+            (async function() {
+                try {
+                    var searchFn = (typeof module !== 'undefined' && module.exports && (module.exports.search || module.exports.searchAnime || module.exports.getSearch || module.exports.findAnime)) || globalThis.search || globalThis.searchAnime || globalThis.getSearch || globalThis.findAnime;
+                    if (typeof searchFn === 'function') {
+                        var args = JSON.parse(__get_call_args());
+                        var query = args.query || args.q || args.keyword || "";
+                        var page = args.page || 1;
+                        var result = await searchFn(query, page);
+                        __capture_result(JSON.stringify(result || []));
+                    } else {
+                        __capture_result("[]");
+                    }
+                } catch (e) {
+                    console.error("search error:", e && e.message ? e.message : e);
+                    __capture_result("[]");
+                }
+            })();
+        """.trimIndent()
+
     private fun timerPolyfill() = """
         // QuickJS has no event loop or native timers. Back timers with a
         // coroutine delay so callbacks run asynchronously without blocking a worker.

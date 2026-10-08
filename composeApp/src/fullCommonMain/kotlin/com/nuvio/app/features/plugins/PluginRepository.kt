@@ -401,6 +401,46 @@ actual object PluginRepository {
         return null
     }
 
+    actual suspend fun search(query: String, page: Int): List<PluginHomeSection> {
+        val state = _uiState.value
+        if (!state.pluginsEnabled) return emptyList()
+        val scrapers = state.scrapers.filter { it.enabled && it.manifestEnabled }
+        if (scrapers.isEmpty()) return emptyList()
+        return kotlinx.coroutines.coroutineScope {
+            scrapers.map { scraper ->
+                kotlinx.coroutines.async {
+                    runCatching {
+                        PluginRuntime.executePluginSearch(
+                            code = scraper.code,
+                            scraperId = scraper.id,
+                            scraperName = scraper.name,
+                            query = query,
+                            page = page,
+                        )
+                    }.getOrElse { emptyList() }
+                }
+            }.let { kotlinx.coroutines.awaitAll(*it.toTypedArray()) }.flatten()
+        }
+    }
+
+    actual suspend fun searchScraper(
+        scraper: PluginScraper,
+        query: String,
+        page: Int,
+    ): List<PluginHomeItem> {
+        val state = _uiState.value
+        if (!state.pluginsEnabled || !scraper.enabled || !scraper.manifestEnabled) return emptyList()
+        return runCatching {
+            PluginRuntime.executePluginSearch(
+                code = scraper.code,
+                scraperId = scraper.id,
+                scraperName = scraper.name,
+                query = query,
+                page = page,
+            ).flatMap { it.items }
+        }.getOrElse { emptyList() }
+    }
+
     private suspend fun executeScraperInternal(
         scraper: PluginScraper,
         mediaId: String,

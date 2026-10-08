@@ -54,4 +54,12 @@ actual object PluginRepository {
     actual suspend fun loadHomeSections(): List<PluginHomeSection> = emptyList()
 
     actual suspend fun getAnimeDetails(contentId: String): PluginDetailsResult? = null
+
+    actual suspend fun search(query: String, page: Int): List<PluginHomeSection> = emptyList()
+
+    actual suspend fun searchScraper(
+        scraper: PluginScraper,
+        query: String,
+        page: Int,
+    ): List<PluginHomeItem> = emptyList()
 }

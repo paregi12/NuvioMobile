@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 import com.nuvio.app.features.anilist.AnilistMetadataService
+import com.nuvio.app.features.anilist.AnilistSettingsRepository
+import com.nuvio.app.features.plugins.PluginRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 object SearchRepository {
@@ -37,33 +40,73 @@ object SearchRepository {
         activeJob?.cancel()
         _uiState.value = SearchUiState(isLoading = true)
         activeJob = scope.launch {
-            val result = AnilistMetadataService.searchAnime(normalizedQuery)
-            result.onSuccess { previews ->
-                if (previews.isEmpty()) {
-                    _uiState.value = SearchUiState(
-                        isLoading = false,
-                        sections = emptyList(),
-                        emptyStateReason = SearchEmptyStateReason.NoResults,
-                    )
+            val anilistSettings = AnilistSettingsRepository.snapshot()
+            val anilistDeferred = async {
+                if (anilistSettings.enabled) {
+                    AnilistMetadataService.searchAnime(normalizedQuery).getOrNull().orEmpty()
                 } else {
-                    val section = HomeCatalogSection(
+                    emptyList()
+                }
+            }
+            val pluginsDeferred = async {
+                runCatching {
+                    PluginRepository.search(normalizedQuery)
+                }.getOrElse { emptyList() }
+            }
+
+            val anilistPreviews = anilistDeferred.await()
+            val pluginSections = pluginsDeferred.await()
+
+            val anilistSection = if (anilistPreviews.isNotEmpty()) {
+                listOf(
+                    HomeCatalogSection(
                         key = "anilist_search",
                         title = "Anime",
                         subtitle = "AniList",
                         addonName = "AniList",
-                        items = previews,
-                    )
-                    _uiState.value = SearchUiState(
-                        isLoading = false,
-                        sections = listOf(section),
-                        emptyStateReason = null,
-                    )
-                }
-            }.onFailure { err ->
+                        items = anilistPreviews,
+                    ),
+                )
+            } else {
+                emptyList()
+            }
+
+            val pluginCatalogSections = pluginSections.map { section ->
+                HomeCatalogSection(
+                    key = "plugin_${section.pluginId}_search",
+                    title = section.title.ifBlank { section.pluginName },
+                    subtitle = section.pluginName,
+                    addonName = section.pluginName,
+                    items = section.items.map { item ->
+                        MetaPreview(
+                            id = item.id,
+                            type = "anime",
+                            name = item.title,
+                            poster = item.poster,
+                            banner = item.banner,
+                            description = item.description,
+                            imdbRating = item.rating,
+                            releaseInfo = item.year,
+                            totalEpisodes = item.episodes,
+                            subEpisodes = item.subEpisodes,
+                            dubEpisodes = item.dubEpisodes,
+                        )
+                    },
+                )
+            }.filter { it.items.isNotEmpty() }
+
+            val allSections = anilistSection + pluginCatalogSections
+            if (allSections.isEmpty()) {
                 _uiState.value = SearchUiState(
                     isLoading = false,
-                    emptyStateReason = SearchEmptyStateReason.RequestFailed,
-                    errorMessage = err.message,
+                    sections = emptyList(),
+                    emptyStateReason = SearchEmptyStateReason.NoResults,
+                )
+            } else {
+                _uiState.value = SearchUiState(
+                    isLoading = false,
+                    sections = allSections,
+                    emptyStateReason = null,
                 )
             }
         }
