@@ -1025,21 +1025,23 @@ internal fun MainAppContent(
             }
 
         val onCatalogClick: (HomeCatalogSection) -> Unit = { section ->
-            val target = section.target ?: return@onCatalogClick
-            val launchId = CatalogLaunchStore.put(
-                CatalogLaunch(
-                    title = section.title,
-                    subtitle = section.subtitle,
-                    target = target,
-                ),
-            )
-            navController.navigate(
-                CatalogRoute(
-                    launchId = launchId,
-                    title = section.title,
-                    subtitle = section.subtitle,
-                ),
-            )
+            val target = section.target
+            if (target != null) {
+                val launchId = CatalogLaunchStore.put(
+                    CatalogLaunch(
+                        title = section.title,
+                        subtitle = section.subtitle,
+                        target = target,
+                    ),
+                )
+                navController.navigate(
+                    CatalogRoute(
+                        launchId = launchId,
+                        title = section.title,
+                        subtitle = section.subtitle,
+                    ),
+                )
+            }
         }
 
         val librarySectionSubtitle = when (libraryUiState.sourceMode) {
