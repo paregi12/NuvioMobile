@@ -53,7 +53,6 @@ import com.nuvio.app.navigation.PosterNavigationState
 import com.nuvio.app.navigation.posterNavigationEntry
 import com.nuvio.app.core.auth.AuthRepository
 import com.nuvio.app.core.auth.AuthState
-import com.nuvio.app.core.auth.DeviceSessionRegistration
 import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.core.deeplink.AppDeepLink
 import com.nuvio.app.core.deeplink.AppDeepLinkRepository
@@ -133,7 +132,6 @@ import com.nuvio.app.features.player.LockPlayerToLandscape
 import com.nuvio.app.features.player.HidePlayerSystemBars
 import com.nuvio.app.features.player.rememberExternalPlayerLauncher
 import com.nuvio.app.features.profiles.ProfileRepository
-import com.nuvio.app.features.settings.AccountSettingsScreen
 import com.nuvio.app.features.settings.ContinueWatchingSettingsScreen
 import com.nuvio.app.features.settings.HomescreenSettingsScreen
 import com.nuvio.app.features.settings.MetaScreenSettingsScreen
@@ -338,7 +336,6 @@ internal fun MainAppContent(
     val debridSettingsTitle = stringResource(Res.string.compose_settings_page_debrid)
     val downloadsTitle = stringResource(Res.string.compose_settings_root_downloads_title)
     val pluginsSettingsTitle = stringResource(Res.string.compose_settings_page_plugins)
-    val accountSettingsTitle = stringResource(Res.string.compose_settings_page_account)
     val collectionsTitle = stringResource(Res.string.collections_header)
     val newCollectionTitle = stringResource(Res.string.collections_new)
     val detailsFallbackTitle = stringResource(Res.string.meta_section_details_title)
@@ -626,7 +623,6 @@ internal fun MainAppContent(
                 when (visibility) {
                     AppVisibility.Foreground -> {
                         NetworkStatusRepository.requestForegroundRefresh()
-                        DeviceSessionRegistration.registerIfAuthenticated()
                         MemberAccessRepository.refreshIfStale()
                         if (syncProfileId != null) {
                             SyncManager.startPeriodicNuvioSyncPull(syncProfileId)
@@ -1347,7 +1343,6 @@ internal fun MainAppContent(
                                         navController.navigate(PluginsSettingsRoute(pluginsSettingsTitle))
                                     }
                                 },
-                                onAccountSettingsClick = { navController.navigate(AccountSettingsRoute(accountSettingsTitle)) },
                                 onCheckForUpdatesClick = if (AppFeaturePolicy.inAppUpdaterEnabled) {
                                     {
                                         appUpdaterController.checkForUpdates(
@@ -1523,11 +1518,6 @@ internal fun MainAppContent(
                 entry<PluginsSettingsRoute> { route ->
                     SettingsDestination(route, navController) { onBack ->
                         PluginsSettingsScreen(onBack = onBack)
-                    }
-                }
-                entry<AccountSettingsRoute> { route ->
-                    SettingsDestination(route, navController) { onBack ->
-                        AccountSettingsScreen(onBack = onBack)
                     }
                 }
                 entry<CollectionsRoute> { route ->

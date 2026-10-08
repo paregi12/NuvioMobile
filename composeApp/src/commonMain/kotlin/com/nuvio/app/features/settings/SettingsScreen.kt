@@ -111,7 +111,6 @@ fun SettingsScreen(
     onMetaScreenClick: () -> Unit = {},
     onContinueWatchingClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
-    onAccountClick: () -> Unit = {},
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsClick: () -> Unit = {},
@@ -258,11 +257,6 @@ fun SettingsScreen(
             { openPage(SettingsPage.Plugins) }
         } else {
             onPluginsClick
-        }
-        val openAccount = if (onNavigatePage != null) {
-            { openPage(SettingsPage.Account) }
-        } else {
-            onAccountClick
         }
 
         LaunchedEffect(page, currentPage) {
@@ -420,7 +414,6 @@ fun SettingsScreen(
                         onMetaScreenClick = openMetaScreen,
                         onContinueWatchingClick = openContinueWatching,
                         onPluginsClick = openPlugins,
-                        onAccountClick = openAccount,
                         onCheckForUpdatesClick = onCheckForUpdatesClick,
                         onTestUpdateBannerClick = onTestUpdateBannerClick,
                         onCollectionsClick = onCollectionsClick,
@@ -490,7 +483,6 @@ private fun MobileSettingsScreen(
     onMetaScreenClick: () -> Unit = {},
     onContinueWatchingClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
-    onAccountClick: () -> Unit = {},
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsClick: () -> Unit = {},
@@ -522,7 +514,6 @@ private fun MobileSettingsScreen(
         fun openSearchTarget(target: SettingsSearchTarget) {
             when (target) {
                 is SettingsSearchTarget.Page -> when (target.page) {
-                    SettingsPage.Account -> onAccountClick()
                     SettingsPage.ContinueWatching -> onContinueWatchingClick()
                     SettingsPage.Plugins -> onPluginsClick()
                     SettingsPage.Homescreen -> onHomescreenClick()
@@ -596,14 +587,10 @@ private fun MobileSettingsScreen(
                             onTrackingClick = { onPageChange(SettingsPage.TraktAuthentication) },
                             onCheckForUpdatesClick = onCheckForUpdatesClick,
                             onTestUpdateBannerClick = onTestUpdateBannerClick,
-                            onAccountClick = onAccountClick,
                             onSwitchProfileClick = onSwitchProfile,
                         )
                     }
                 }
-                SettingsPage.Account -> accountSettingsContent(
-                    isTablet = false,
-                )
                 SettingsPage.Playback -> playbackSettingsContent(
                     isTablet = false,
                     showLoadingOverlay = showLoadingOverlay,
@@ -981,17 +968,13 @@ private fun TabletSettingsScreen(
                                 onTrackingClick = { openInlinePage(SettingsPage.TraktAuthentication) },
                                 onCheckForUpdatesClick = onCheckForUpdatesClick,
                                 onTestUpdateBannerClick = onTestUpdateBannerClick,
-                                onAccountClick = { openInlinePage(SettingsPage.Account) },
                                 onSwitchProfileClick = onSwitchProfile,
-                                showAccountSection = activeCategory == SettingsCategory.Account,
+                                showAccountSection = activeCategory == SettingsCategory.General,
                                 showGeneralSection = activeCategory == SettingsCategory.General,
                                 showAboutSection = activeCategory == SettingsCategory.About,
                             )
                         }
                     }
-                    SettingsPage.Account -> accountSettingsContent(
-                        isTablet = true,
-                    )
                     SettingsPage.Playback -> playbackSettingsContent(
                         isTablet = true,
                         showLoadingOverlay = showLoadingOverlay,

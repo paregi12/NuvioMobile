@@ -95,9 +95,6 @@ data class DownloadShowRoute(
 data class PluginsSettingsRoute(override val title: String = "") : SettingsDestinationRoute
 
 @Serializable
-data class AccountSettingsRoute(override val title: String = "") : SettingsDestinationRoute
-
-@Serializable
 data class CollectionsRoute(override val title: String = "") : SettingsDestinationRoute
 
 @Serializable

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material.icons.rounded.CollectionsBookmark
@@ -87,11 +86,9 @@ internal fun settingsSearchEntries(
     switchProfileAvailable: Boolean,
     checkForUpdatesAvailable: Boolean,
 ): List<SettingsSearchEntry> {
-    val accountCategory = stringResource(SettingsCategory.Account.labelRes)
     val generalCategory = stringResource(SettingsCategory.General.labelRes)
     val aboutCategory = stringResource(SettingsCategory.About.labelRes)
 
-    val accountPage = stringResource(Res.string.compose_settings_page_account)
     val trackingPage = stringResource(Res.string.compose_settings_page_tracking)
     val layoutPage = stringResource(Res.string.compose_settings_page_appearance)
     val contentDiscoveryPage = stringResource(Res.string.compose_settings_page_content_discovery)
@@ -177,27 +174,19 @@ internal fun settingsSearchEntries(
             key = "switch-profile",
             title = stringResource(Res.string.compose_settings_root_switch_profile_title),
             description = stringResource(Res.string.compose_settings_root_switch_profile_description),
-            page = accountPage,
+            page = trackingPage,
             section = stringResource(Res.string.compose_settings_root_account_section),
-            category = accountCategory,
+            category = generalCategory,
             icon = Icons.Rounded.People,
             target = SettingsSearchTarget.SwitchProfile,
         )
     }
     addPage(
-        page = SettingsPage.Account,
-        key = "account",
-        title = accountPage,
-        description = stringResource(Res.string.compose_settings_root_account_description),
-        category = accountCategory,
-        icon = Icons.Rounded.AccountCircle,
-    )
-    addPage(
         page = SettingsPage.TraktAuthentication,
         key = "tracking",
         title = trackingPage,
         description = stringResource(Res.string.compose_settings_root_tracking_description),
-        category = accountCategory,
+        category = generalCategory,
         icon = Icons.Default.Sync,
     )
     addPage(
@@ -264,36 +253,6 @@ internal fun settingsSearchEntries(
         )
     }
 
-    addRow(
-        page = SettingsPage.Account,
-        key = "account-status",
-        title = stringResource(Res.string.settings_account_status),
-        pageLabel = accountPage,
-        section = accountPage,
-        category = accountCategory,
-        icon = Icons.Rounded.AccountCircle,
-    )
-    addRow(
-        page = SettingsPage.Account,
-        key = "account-sign-out",
-        title = stringResource(Res.string.settings_account_sign_out),
-        pageLabel = accountPage,
-        section = accountPage,
-        category = accountCategory,
-        icon = Icons.Rounded.AccountCircle,
-    )
-    if (accountDeletionEnabled) {
-        addRow(
-            page = SettingsPage.Account,
-            key = "account-delete",
-            title = stringResource(Res.string.settings_account_delete_account),
-            description = stringResource(Res.string.settings_account_delete_account_description),
-            pageLabel = accountPage,
-            section = accountPage,
-            category = accountCategory,
-            icon = Icons.Rounded.AccountCircle,
-        )
-    }
 
     addRow(
         page = SettingsPage.Appearance,

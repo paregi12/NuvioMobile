@@ -1,7 +1,6 @@
 package com.nuvio.app.features.settings
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Settings
@@ -10,7 +9,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_settings_category_about
 import nuvio.composeapp.generated.resources.compose_settings_category_general
-import nuvio.composeapp.generated.resources.compose_settings_page_account
 import nuvio.composeapp.generated.resources.compose_settings_page_addons
 import nuvio.composeapp.generated.resources.compose_settings_page_appearance
 import nuvio.composeapp.generated.resources.compose_settings_page_content_discovery
@@ -29,14 +27,12 @@ import nuvio.composeapp.generated.resources.compose_settings_page_streams
 import nuvio.composeapp.generated.resources.compose_settings_page_anilist_enrichment
 import nuvio.composeapp.generated.resources.compose_settings_page_trakt
 import nuvio.composeapp.generated.resources.compose_settings_page_tracking
-import nuvio.composeapp.generated.resources.settings_account
 import org.jetbrains.compose.resources.StringResource
 
 internal enum class SettingsCategory(
     val labelRes: StringResource,
     val icon: ImageVector,
 ) {
-    Account(Res.string.settings_account, Icons.Rounded.AccountCircle),
     General(Res.string.compose_settings_category_general, Icons.Rounded.Settings),
     About(Res.string.compose_settings_category_about, Icons.Rounded.Info),
 }
@@ -50,11 +46,6 @@ internal enum class SettingsPage(
         titleRes = Res.string.compose_settings_page_root,
         category = SettingsCategory.General,
         parentPage = null,
-    ),
-    Account(
-        titleRes = Res.string.compose_settings_page_account,
-        category = SettingsCategory.Account,
-        parentPage = Root,
     ),
     Playback(
         titleRes = Res.string.compose_settings_page_playback,
@@ -129,7 +120,7 @@ internal enum class SettingsPage(
     TraktAuthentication(
         // Keep the enum name for saved navigation-state compatibility.
         titleRes = Res.string.compose_settings_page_tracking,
-        category = SettingsCategory.Account,
+        category = SettingsCategory.General,
         parentPage = Root,
     ),
 }

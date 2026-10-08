@@ -24,6 +24,7 @@ data class CosmeticEntitlements(
 
     companion object {
         val None = CosmeticEntitlements()
+        val All = CosmeticEntitlements(CosmeticEntitlement.entries.toSet())
     }
 }
 
@@ -33,5 +34,9 @@ data class MemberAccess(
 ) {
     companion object {
         val None = MemberAccess()
+        val All = MemberAccess(
+            tier = MemberTier.SUPPORTER_PLUS,
+            entitlements = CosmeticEntitlements.All,
+        )
     }
 }

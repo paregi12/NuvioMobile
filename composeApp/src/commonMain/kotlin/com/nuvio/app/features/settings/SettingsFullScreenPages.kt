@@ -16,7 +16,6 @@ import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.watchprogress.ContinueWatchingPreferencesRepository
 import nuvio.composeapp.generated.resources.Res
-import nuvio.composeapp.generated.resources.compose_settings_page_account
 import nuvio.composeapp.generated.resources.compose_settings_page_continue_watching
 import nuvio.composeapp.generated.resources.compose_settings_page_homescreen
 import nuvio.composeapp.generated.resources.compose_settings_page_meta_screen
@@ -141,24 +140,5 @@ fun PluginsSettingsScreen(
             )
         }
         pluginsSettingsContent()
-    }
-}
-
-@Composable
-fun AccountSettingsScreen(
-    onBack: () -> Unit,
-) {
-    NuvioScreen(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        stickyHeader {
-            NuvioScreenHeader(
-                title = stringResource(Res.string.compose_settings_page_account),
-                onBack = onBack,
-            )
-        }
-        accountSettingsContent(
-            isTablet = false,
-        )
     }
 }
