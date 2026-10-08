@@ -1664,20 +1664,6 @@ object WatchProgressRepository {
     ): List<WatchProgressEntry> = activeProgressProvider()
         ?.prepareNextUpProgressEntries(entries, contentId)
         ?: entries
-
-    private fun AddonsUiState.metadataProviderReadiness(): MetadataProviderReadiness {
-        val enabled = addons.enabledAddons()
-        val providers = enabled
-            .mapNotNull { addon -> addon.manifest }
-            .filter { manifest -> manifest.hasMetaResource() }
-        return MetadataProviderReadiness(
-            providers = providers,
-        )
-    }
-
-    private fun AddonManifest.hasMetaResource(): Boolean =
-        resources.any { resource -> resource.name == "meta" }
-
 }
 
 internal fun projectWatchProgressUiState(

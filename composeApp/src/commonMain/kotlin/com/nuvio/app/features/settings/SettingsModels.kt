@@ -129,3 +129,8 @@ internal val SettingsPage.opensInlineOnTablet: Boolean
     get() = parentPage != null
 
 internal fun SettingsPage.previousPage(): SettingsPage? = parentPage
+
+internal fun SettingsPage.isEnabledByPolicy(): Boolean = when (this) {
+    SettingsPage.Plugins -> com.nuvio.app.core.build.AppFeaturePolicy.pluginsEnabled
+    else -> true
+}

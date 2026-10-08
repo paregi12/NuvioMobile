@@ -15,6 +15,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -367,9 +370,9 @@ actual object PluginRepository {
         if (!state.pluginsEnabled) return emptyList()
         val scrapers = state.scrapers.filter { it.enabled && it.manifestEnabled }
         if (scrapers.isEmpty()) return emptyList()
-        return kotlinx.coroutines.coroutineScope {
+        return coroutineScope {
             scrapers.map { scraper ->
-                kotlinx.coroutines.async {
+                async {
                     runCatching {
                         PluginRuntime.executePluginHome(
                             code = scraper.code,
@@ -378,7 +381,7 @@ actual object PluginRepository {
                         )
                     }.getOrElse { emptyList() }
                 }
-            }.let { kotlinx.coroutines.awaitAll(*it.toTypedArray()) }.flatten()
+            }.awaitAll().flatten()
         }
     }
 
@@ -406,9 +409,9 @@ actual object PluginRepository {
         if (!state.pluginsEnabled) return emptyList()
         val scrapers = state.scrapers.filter { it.enabled && it.manifestEnabled }
         if (scrapers.isEmpty()) return emptyList()
-        return kotlinx.coroutines.coroutineScope {
+        return coroutineScope {
             scrapers.map { scraper ->
-                kotlinx.coroutines.async {
+                async {
                     runCatching {
                         PluginRuntime.executePluginSearch(
                             code = scraper.code,
@@ -419,7 +422,7 @@ actual object PluginRepository {
                         )
                     }.getOrElse { emptyList() }
                 }
-            }.let { kotlinx.coroutines.awaitAll(*it.toTypedArray()) }.flatten()
+            }.awaitAll().flatten()
         }
     }
 

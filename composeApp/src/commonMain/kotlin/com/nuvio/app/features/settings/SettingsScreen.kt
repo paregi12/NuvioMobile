@@ -56,10 +56,14 @@ import com.nuvio.app.core.ui.NuvioScreenHeader
 import com.nuvio.app.core.ui.PlatformBackHandler
 import com.nuvio.app.core.ui.isLiquidGlassNativeTabBarSupported
 import com.nuvio.app.core.ui.PosterCardStyleRepository
+import com.nuvio.app.core.ui.PosterCardStyleUiState
 import com.nuvio.app.features.anilist.AnilistSettings
 import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
+import com.nuvio.app.features.debrid.DebridSettings
 import com.nuvio.app.features.details.MetaScreenSettingsRepository
+import com.nuvio.app.features.details.MetaScreenSettingsUiState
+import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.mdblist.MdbListSettings
