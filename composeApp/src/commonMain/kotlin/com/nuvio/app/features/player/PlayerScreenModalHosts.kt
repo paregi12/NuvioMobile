@@ -1,7 +1,6 @@
 package com.nuvio.app.features.player
 
 import androidx.compose.runtime.Composable
-import com.nuvio.app.features.details.MetaDetailsUiState
 import com.nuvio.app.features.details.MetaVideo
 import com.nuvio.app.features.downloads.DownloadsRepository
 import com.nuvio.app.features.streams.StreamItem
@@ -71,18 +70,6 @@ internal fun PlayerScreenModalHosts(
     onBackToEpisodes: () -> Unit,
     onReloadEpisodeStreams: () -> Unit,
     onEpisodesPanelDismissed: () -> Unit,
-    showSubmitIntroModal: Boolean,
-    activeVideoId: String?,
-    metaUiState: MetaDetailsUiState,
-    displayedPositionMs: Long,
-    submitIntroSegmentType: String,
-    onSubmitIntroSegmentTypeChanged: (String) -> Unit,
-    submitIntroStartTimeStr: String,
-    onSubmitIntroStartTimeChanged: (String) -> Unit,
-    submitIntroEndTimeStr: String,
-    onSubmitIntroEndTimeChanged: (String) -> Unit,
-    onSubmitIntroDismissed: () -> Unit,
-    onSubmitIntroSuccess: () -> Unit,
 ) {
     AudioTrackModal(
         visible = showAudioModal,
@@ -164,29 +151,6 @@ internal fun PlayerScreenModalHosts(
             onBackToEpisodes = onBackToEpisodes,
             onReloadEpisodeStreams = onReloadEpisodeStreams,
             onDismiss = onEpisodesPanelDismissed,
-        )
-    }
-
-    val season = activeSeasonNumber
-    val episode = activeEpisodeNumber
-    val imdbId = activeVideoId?.split(":")?.firstOrNull()?.takeIf { it.startsWith("tt") }
-        ?: parentMetaId.takeIf { it.startsWith("tt") }
-        ?: metaUiState.meta?.id?.takeIf { it.startsWith("tt") }
-
-    if (showSubmitIntroModal && season != null && episode != null && !imdbId.isNullOrBlank()) {
-        com.nuvio.app.features.player.skip.SubmitIntroDialog(
-            imdbId = imdbId,
-            season = season,
-            episode = episode,
-            currentTimeSec = displayedPositionMs / 1000.0,
-            segmentType = submitIntroSegmentType,
-            onSegmentTypeChange = onSubmitIntroSegmentTypeChanged,
-            startTimeStr = submitIntroStartTimeStr,
-            onStartTimeChange = onSubmitIntroStartTimeChanged,
-            endTimeStr = submitIntroEndTimeStr,
-            onEndTimeChange = onSubmitIntroEndTimeChanged,
-            onDismiss = onSubmitIntroDismissed,
-            onSuccess = onSubmitIntroSuccess,
         )
     }
 }

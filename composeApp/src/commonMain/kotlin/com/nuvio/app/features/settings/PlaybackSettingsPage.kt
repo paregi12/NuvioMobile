@@ -1193,35 +1193,6 @@ private fun PlaybackSettingsSection(
                         )
                     }
                 }
-                SettingsGroupDivider(isTablet = isTablet)
-                SettingsSwitchRow(
-                    title = stringResource(Res.string.settings_playback_intro_submit_enabled),
-                    description = stringResource(Res.string.settings_playback_intro_submit_enabled_description),
-                    checked = autoPlayPlayerSettings.introSubmitEnabled,
-                    isTablet = isTablet,
-                    onCheckedChange = PlayerSettingsRepository::setIntroSubmitEnabled,
-                )
-                if (autoPlayPlayerSettings.introSubmitEnabled) {
-                    SettingsGroupDivider(isTablet = isTablet)
-                    var showIntroDbApiKeyDialog by remember { mutableStateOf(false) }
-                    val notSetLabel = stringResource(Res.string.settings_playback_not_set)
-                    SettingsNavigationRow(
-                        title = stringResource(Res.string.settings_playback_introdb_api_key),
-                        description = autoPlayPlayerSettings.introDbApiKey.ifBlank { notSetLabel },
-                        isTablet = isTablet,
-                        onClick = { showIntroDbApiKeyDialog = true },
-                    )
-                    if (showIntroDbApiKeyDialog) {
-                        IntroDbApiKeyDialog(
-                            initialValue = autoPlayPlayerSettings.introDbApiKey,
-                            onSave = {
-                                PlayerSettingsRepository.setIntroDbApiKey(it)
-                                showIntroDbApiKeyDialog = false
-                            },
-                            onDismiss = { showIntroDbApiKeyDialog = false },
-                        )
-                    }
-                }
             }
         }
 
@@ -2536,85 +2507,6 @@ private fun AnimeSkipClientIdDialog(
                 text = stringResource(Res.string.action_save),
                 onClick = { onSave(value.trim()) },
                 style = DialogButtonStyle.Primary,
-            )
-        }
-    }
-}
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun IntroDbApiKeyDialog(
-    initialValue: String,
-    onSave: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val scope = rememberCoroutineScope()
-    var value by remember { mutableStateOf(initialValue) }
-    var isVerifying by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val invalidKeyMessage = stringResource(Res.string.settings_playback_introdb_invalid_key)
-
-    DialogSurface(
-        onDismissRequest = { if (!isVerifying) onDismiss() },
-        title = stringResource(Res.string.settings_playback_introdb_api_key),
-    ) {
-        Text(
-            text = stringResource(Res.string.settings_playback_introdb_api_key_description),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        SettingsSecretTextField(
-            value = value,
-            onValueChange = {
-                value = it
-                errorMessage = null
-            },
-            label = stringResource(Res.string.settings_playback_introdb_api_key),
-            modifier = Modifier.fillMaxWidth(),
-            isError = errorMessage != null,
-        )
-        if (errorMessage != null) {
-            Text(
-                text = errorMessage!!,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-        DialogButtons {
-            DialogButton(
-                text = stringResource(Res.string.action_cancel),
-                onClick = onDismiss,
-                enabled = !isVerifying,
-            )
-            DialogButton(
-                text = stringResource(Res.string.action_save),
-                onClick = {
-                    val trimmed = value.trim()
-                    if (trimmed.isEmpty()) {
-                        onSave(trimmed)
-                        return@DialogButton
-                    }
-
-                    if (trimmed == initialValue) {
-                        onDismiss()
-                        return@DialogButton
-                    }
-
-                    isVerifying = true
-                    errorMessage = null
-                    scope.launch {
-                        val isValid = com.nuvio.app.features.player.skip.SkipIntroRepository.verifyIntroDbApiKey(trimmed)
-                        isVerifying = false
-                        if (isValid) {
-                            onSave(trimmed)
-                        } else {
-                            errorMessage = invalidKeyMessage
-                        }
-                    }
-                },
-                style = DialogButtonStyle.Primary,
-                loading = isVerifying,
             )
         }
     }

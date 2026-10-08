@@ -216,14 +216,12 @@ PLcom/nuvio/app/AppTabActions;->getOnInitialHomeContentRendered()Lkotlin/jvm/fun
 PLcom/nuvio/app/AppTabActions;->getOnLibraryPosterClick()Lkotlin/jvm/functions/Function1;
 PLcom/nuvio/app/AppTabActions;->getOnLibraryPosterLongClick()Lkotlin/jvm/functions/Function2;
 PLcom/nuvio/app/AppTabActions;->getOnLibrarySectionViewAllClick()Lkotlin/jvm/functions/Function2;
-PLcom/nuvio/app/AppTabActions;->getOnLicensesAttributionsSettingsClick()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnMetaScreenSettingsClick()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnPluginsSettingsClick()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnPosterClick()Lkotlin/jvm/functions/Function1;
 PLcom/nuvio/app/AppTabActions;->getOnPosterLongClick()Lkotlin/jvm/functions/Function1;
 PLcom/nuvio/app/AppTabActions;->getOnRequestedSettingsPageConsumed()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnSettingsPageClick()Lkotlin/jvm/functions/Function2;
-PLcom/nuvio/app/AppTabActions;->getOnSupportersContributorsSettingsClick()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnSwitchProfile()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabActions;->getOnTestUpdateBannerClick()Lkotlin/jvm/functions/Function0;
 PLcom/nuvio/app/AppTabRequests;-><clinit>()V
@@ -696,7 +694,6 @@ SPLcom/nuvio/app/core/build/AppFeaturePolicy;-><init>()V
 SPLcom/nuvio/app/core/build/AppFeaturePolicy;->getCustomServerConnectionsEnabled()Z
 PLcom/nuvio/app/core/build/AppFeaturePolicy;->getInAppUpdaterEnabled()Z
 PLcom/nuvio/app/core/build/AppFeaturePolicy;->getPluginsEnabled()Z
-PLcom/nuvio/app/core/build/AppFeaturePolicy;->getSupportersContributorsPageEnabled()Z
 Lcom/nuvio/app/core/build/TrailerPlaybackMode;
 SPLcom/nuvio/app/core/build/TrailerPlaybackMode;->$values()[Lcom/nuvio/app/core/build/TrailerPlaybackMode;
 SPLcom/nuvio/app/core/build/TrailerPlaybackMode;-><clinit>()V
@@ -4921,8 +4918,6 @@ PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadExternalPlayerId()Lj
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadExternalPlayerSendSkipSegments()Ljava/lang/Boolean;
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadHoldToSpeedEnabled()Ljava/lang/Boolean;
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadHoldToSpeedValue()Ljava/lang/Float;
-PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadIntroDbApiKey()Ljava/lang/String;
-PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadIntroSubmitEnabled()Ljava/lang/Boolean;
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadIosAudioOutputMode()Ljava/lang/String;
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadIosBoolean(Ljava/lang/String;Z)Ljava/lang/Boolean;
 PLcom/nuvio/app/features/player/PlayerSettingsStorage;->loadIosBrightness()Ljava/lang/Integer;
@@ -5057,7 +5052,6 @@ PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getAnimeSkipClientId()Lj
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getDecoderPriority()I
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getHoldToSpeedEnabled()Z
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getHoldToSpeedValue()F
-PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getIntroDbApiKey()Ljava/lang/String;
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getLibassRenderType()Ljava/lang/String;
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getMapDV7ToHevc()Z
 PLcom/nuvio/app/features/player/PlayerSettingsUiState;->getPreferredAudioLanguage()Ljava/lang/String;
@@ -8222,13 +8216,6 @@ PLcom/nuvio/app/navigation/HomescreenSettingsRoute$Companion;-><init>()V
 PLcom/nuvio/app/navigation/HomescreenSettingsRoute$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 PLcom/nuvio/app/navigation/HomescreenSettingsRoute$Companion;->serializer()Lkotlinx/serialization/KSerializer;
 PLcom/nuvio/app/navigation/HomescreenSettingsRoute;-><clinit>()V
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$$serializer;-><clinit>()V
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$$serializer;-><init>()V
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$$serializer;->getDescriptor()Lkotlinx/serialization/descriptors/SerialDescriptor;
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$Companion;-><init>()V
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute$Companion;->serializer()Lkotlinx/serialization/KSerializer;
-PLcom/nuvio/app/navigation/LicensesAttributionsSettingsRoute;-><clinit>()V
 PLcom/nuvio/app/navigation/MetaScreenSettingsRoute$$serializer;-><clinit>()V
 PLcom/nuvio/app/navigation/MetaScreenSettingsRoute$$serializer;-><init>()V
 PLcom/nuvio/app/navigation/MetaScreenSettingsRoute$$serializer;->getDescriptor()Lkotlinx/serialization/descriptors/SerialDescriptor;
@@ -8289,13 +8276,6 @@ PLcom/nuvio/app/navigation/StreamRoute$Companion;-><init>()V
 PLcom/nuvio/app/navigation/StreamRoute$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 PLcom/nuvio/app/navigation/StreamRoute$Companion;->serializer()Lkotlinx/serialization/KSerializer;
 PLcom/nuvio/app/navigation/StreamRoute;-><clinit>()V
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$$serializer;-><clinit>()V
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$$serializer;-><init>()V
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$$serializer;->getDescriptor()Lkotlinx/serialization/descriptors/SerialDescriptor;
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$Companion;-><init>()V
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$Companion;-><init>(Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute$Companion;->serializer()Lkotlinx/serialization/KSerializer;
-PLcom/nuvio/app/navigation/SupportersContributorsSettingsRoute;-><clinit>()V
 Lcom/nuvio/app/navigation/TabsRoute$$ExternalSyntheticLambda0;
 SPLcom/nuvio/app/navigation/TabsRoute$$ExternalSyntheticLambda0;-><init>()V
 PLcom/nuvio/app/navigation/TabsRoute$$ExternalSyntheticLambda0;->invoke()Ljava/lang/Object;

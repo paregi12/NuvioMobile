@@ -136,10 +136,8 @@ import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.settings.AccountSettingsScreen
 import com.nuvio.app.features.settings.ContinueWatchingSettingsScreen
 import com.nuvio.app.features.settings.HomescreenSettingsScreen
-import com.nuvio.app.features.settings.LicensesAttributionsSettingsScreen
 import com.nuvio.app.features.settings.MetaScreenSettingsScreen
 import com.nuvio.app.features.settings.PluginsSettingsScreen
-import com.nuvio.app.features.settings.SupportersContributorsSettingsScreen
 import com.nuvio.app.features.settings.ThemeSettingsRepository
 import com.nuvio.app.features.streams.BingeGroupCacheRepository
 import com.nuvio.app.features.streams.StreamAutoPlayPolicy
@@ -341,8 +339,6 @@ internal fun MainAppContent(
     val downloadsTitle = stringResource(Res.string.compose_settings_root_downloads_title)
     val pluginsSettingsTitle = stringResource(Res.string.compose_settings_page_plugins)
     val accountSettingsTitle = stringResource(Res.string.compose_settings_page_account)
-    val supportersSettingsTitle = stringResource(Res.string.compose_settings_page_supporters_contributors)
-    val licensesSettingsTitle = stringResource(Res.string.compose_settings_page_licenses_attributions)
     val collectionsTitle = stringResource(Res.string.collections_header)
     val newCollectionTitle = stringResource(Res.string.collections_new)
     val detailsFallbackTitle = stringResource(Res.string.meta_section_details_title)
@@ -1352,14 +1348,6 @@ internal fun MainAppContent(
                                     }
                                 },
                                 onAccountSettingsClick = { navController.navigate(AccountSettingsRoute(accountSettingsTitle)) },
-                                onSupportersContributorsSettingsClick = {
-                                    if (AppFeaturePolicy.supportersContributorsPageEnabled) {
-                                        navController.navigate(SupportersContributorsSettingsRoute(supportersSettingsTitle))
-                                    }
-                                },
-                                onLicensesAttributionsSettingsClick = {
-                                    navController.navigate(LicensesAttributionsSettingsRoute(licensesSettingsTitle))
-                                },
                                 onCheckForUpdatesClick = if (AppFeaturePolicy.inAppUpdaterEnabled) {
                                     {
                                         appUpdaterController.checkForUpdates(
@@ -1540,20 +1528,6 @@ internal fun MainAppContent(
                 entry<AccountSettingsRoute> { route ->
                     SettingsDestination(route, navController) { onBack ->
                         AccountSettingsScreen(onBack = onBack)
-                    }
-                }
-                entry<SupportersContributorsSettingsRoute> { route ->
-                    SettingsDestination(route, navController) { onBack ->
-                        if (AppFeaturePolicy.supportersContributorsPageEnabled) {
-                            SupportersContributorsSettingsScreen(onBack = onBack)
-                        } else {
-                            LaunchedEffect(Unit) { onBack() }
-                        }
-                    }
-                }
-                entry<LicensesAttributionsSettingsRoute> { route ->
-                    SettingsDestination(route, navController) { onBack ->
-                        LicensesAttributionsSettingsScreen(onBack = onBack)
                     }
                 }
                 entry<CollectionsRoute> { route ->

@@ -86,13 +86,6 @@ private val SettingsSearchRevealThreshold = 28.dp
 private const val SettingsSearchRevealAnimationMillis = 240L
 private const val SettingsSearchRevealHapticDelayMillis = 90L
 
-private fun SettingsPage.isEnabledByPolicy(): Boolean =
-    when (this) {
-        SettingsPage.SupportersContributors -> AppFeaturePolicy.supportersContributorsPageEnabled
-        else -> true
-    }
-
-@Composable
 private fun settingsPageTitles(): Map<SettingsPage, String> {
     val titles = mutableMapOf<SettingsPage, String>()
     for (page in SettingsPage.entries) {
@@ -119,8 +112,6 @@ fun SettingsScreen(
     onContinueWatchingClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
-    onSupportersContributorsClick: () -> Unit = {},
-    onLicensesAttributionsClick: () -> Unit = {},
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsClick: () -> Unit = {},
@@ -273,16 +264,6 @@ fun SettingsScreen(
         } else {
             onAccountClick
         }
-        val openSupportersContributors = if (onNavigatePage != null) {
-            { openPage(SettingsPage.SupportersContributors) }
-        } else {
-            onSupportersContributorsClick
-        }
-        val openLicensesAttributions = if (onNavigatePage != null) {
-            { openPage(SettingsPage.LicensesAttributions) }
-        } else {
-            onLicensesAttributionsClick
-        }
 
         LaunchedEffect(page, currentPage) {
             if (page.name != currentPage) {
@@ -376,8 +357,6 @@ fun SettingsScreen(
                         continueWatchingPreferencesUiState = continueWatchingPreferencesUiState,
                         posterCardStyleUiState = posterCardStyleUiState,
                         onSwitchProfile = onSwitchProfile,
-                        onSupportersContributorsClick = openSupportersContributors,
-                        onLicensesAttributionsClick = openLicensesAttributions,
                         onCheckForUpdatesClick = onCheckForUpdatesClick,
                         onTestUpdateBannerClick = onTestUpdateBannerClick,
                         onCollectionsClick = onCollectionsClick,
@@ -442,8 +421,6 @@ fun SettingsScreen(
                         onContinueWatchingClick = openContinueWatching,
                         onPluginsClick = openPlugins,
                         onAccountClick = openAccount,
-                        onSupportersContributorsClick = openSupportersContributors,
-                        onLicensesAttributionsClick = openLicensesAttributions,
                         onCheckForUpdatesClick = onCheckForUpdatesClick,
                         onTestUpdateBannerClick = onTestUpdateBannerClick,
                         onCollectionsClick = onCollectionsClick,
@@ -514,8 +491,6 @@ private fun MobileSettingsScreen(
     onContinueWatchingClick: () -> Unit = {},
     onPluginsClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
-    onSupportersContributorsClick: () -> Unit = {},
-    onLicensesAttributionsClick: () -> Unit = {},
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsClick: () -> Unit = {},
@@ -548,12 +523,6 @@ private fun MobileSettingsScreen(
             when (target) {
                 is SettingsSearchTarget.Page -> when (target.page) {
                     SettingsPage.Account -> onAccountClick()
-                    SettingsPage.SupportersContributors -> {
-                        if (AppFeaturePolicy.supportersContributorsPageEnabled) {
-                            onSupportersContributorsClick()
-                        }
-                    }
-                    SettingsPage.LicensesAttributions -> onLicensesAttributionsClick()
                     SettingsPage.ContinueWatching -> onContinueWatchingClick()
                     SettingsPage.Plugins -> onPluginsClick()
                     SettingsPage.Homescreen -> onHomescreenClick()
@@ -603,7 +572,6 @@ private fun MobileSettingsScreen(
                             settingsSearchEntries(
                                 isTablet = false,
                                 pluginsEnabled = AppFeaturePolicy.pluginsEnabled,
-                                supportersContributorsPageEnabled = AppFeaturePolicy.supportersContributorsPageEnabled,
                                 accountDeletionEnabled = AppFeaturePolicy.accountDeletionEnabled,
                                 personalMediaAddonCopyEnabled = AppFeaturePolicy.personalMediaAddonCopyEnabled,
                                 liquidGlassNativeTabBarSupported = liquidGlassNativeTabBarSupported,
@@ -622,30 +590,18 @@ private fun MobileSettingsScreen(
                             isTablet = false,
                             onPlaybackClick = { onPageChange(SettingsPage.Playback) },
                             onAppearanceClick = { onPageChange(SettingsPage.Appearance) },
-                            onAdvancedClick = { onPageChange(SettingsPage.Advanced) },
                             onNotificationsClick = { onPageChange(SettingsPage.Notifications) },
                             onContentDiscoveryClick = { onPageChange(SettingsPage.ContentDiscovery) },
                             onIntegrationsClick = { onPageChange(SettingsPage.Integrations) },
                             onTrackingClick = { onPageChange(SettingsPage.TraktAuthentication) },
-                            onSupportersContributorsClick = onSupportersContributorsClick,
-                            onLicensesAttributionsClick = onLicensesAttributionsClick,
                             onCheckForUpdatesClick = onCheckForUpdatesClick,
                             onTestUpdateBannerClick = onTestUpdateBannerClick,
                             onAccountClick = onAccountClick,
                             onSwitchProfileClick = onSwitchProfile,
-                            showSupportersContributorsPage = AppFeaturePolicy.supportersContributorsPageEnabled,
                         )
                     }
                 }
                 SettingsPage.Account -> accountSettingsContent(
-                    isTablet = false,
-                )
-                SettingsPage.SupportersContributors -> {
-                    if (AppFeaturePolicy.supportersContributorsPageEnabled) {
-                        supportersContributorsContent(isTablet = false)
-                    }
-                }
-                SettingsPage.LicensesAttributions -> licensesAttributionsContent(
                     isTablet = false,
                 )
                 SettingsPage.Playback -> playbackSettingsContent(
@@ -695,10 +651,6 @@ private fun MobileSettingsScreen(
                     onCollectionsClick = onCollectionsClick,
                     onContinueWatchingClick = onContinueWatchingClick,
                     onPosterCustomizationClick = { onPageChange(SettingsPage.PosterCustomization) },
-                )
-                SettingsPage.Advanced -> advancedSettingsContent(
-                    isTablet = false,
-                    rememberLastProfileEnabled = rememberLastProfileEnabled,
                 )
                 SettingsPage.Notifications -> notificationsSettingsContent(
                     isTablet = false,
@@ -859,8 +811,6 @@ private fun TabletSettingsScreen(
     continueWatchingPreferencesUiState: ContinueWatchingPreferencesUiState,
     posterCardStyleUiState: PosterCardStyleUiState,
     onSwitchProfile: (() -> Unit)? = null,
-    onSupportersContributorsClick: () -> Unit = {},
-    onLicensesAttributionsClick: () -> Unit = {},
     onCheckForUpdatesClick: (() -> Unit)? = null,
     onTestUpdateBannerClick: (() -> Unit)? = null,
     onCollectionsClick: () -> Unit = {},
@@ -932,11 +882,7 @@ private fun TabletSettingsScreen(
             val hapticScope = rememberCoroutineScope()
             fun openSearchTarget(target: SettingsSearchTarget) {
                 when (target) {
-                    is SettingsSearchTarget.Page -> {
-                        if (target.page.isEnabledByPolicy()) {
-                            openInlinePage(target.page)
-                        }
-                    }
+                    is SettingsSearchTarget.Page -> openInlinePage(target.page)
                     SettingsSearchTarget.Collections -> onCollectionsClick()
                     SettingsSearchTarget.SwitchProfile -> onSwitchProfile?.invoke()
                     SettingsSearchTarget.CheckForUpdates -> onCheckForUpdatesClick?.invoke()
@@ -1011,7 +957,6 @@ private fun TabletSettingsScreen(
                                 settingsSearchEntries(
                                     isTablet = true,
                                     pluginsEnabled = AppFeaturePolicy.pluginsEnabled,
-                                    supportersContributorsPageEnabled = AppFeaturePolicy.supportersContributorsPageEnabled,
                                     accountDeletionEnabled = AppFeaturePolicy.accountDeletionEnabled,
                                     personalMediaAddonCopyEnabled = AppFeaturePolicy.personalMediaAddonCopyEnabled,
                                     liquidGlassNativeTabBarSupported = liquidGlassNativeTabBarSupported,
@@ -1030,13 +975,10 @@ private fun TabletSettingsScreen(
                                 isTablet = true,
                                 onPlaybackClick = { openInlinePage(SettingsPage.Playback) },
                                 onAppearanceClick = { openInlinePage(SettingsPage.Appearance) },
-                                onAdvancedClick = { openInlinePage(SettingsPage.Advanced) },
                                 onNotificationsClick = { openInlinePage(SettingsPage.Notifications) },
                                 onContentDiscoveryClick = { openInlinePage(SettingsPage.ContentDiscovery) },
                                 onIntegrationsClick = { openInlinePage(SettingsPage.Integrations) },
                                 onTrackingClick = { openInlinePage(SettingsPage.TraktAuthentication) },
-                                onSupportersContributorsClick = { openInlinePage(SettingsPage.SupportersContributors) },
-                                onLicensesAttributionsClick = { openInlinePage(SettingsPage.LicensesAttributions) },
                                 onCheckForUpdatesClick = onCheckForUpdatesClick,
                                 onTestUpdateBannerClick = onTestUpdateBannerClick,
                                 onAccountClick = { openInlinePage(SettingsPage.Account) },
@@ -1044,20 +986,10 @@ private fun TabletSettingsScreen(
                                 showAccountSection = activeCategory == SettingsCategory.Account,
                                 showGeneralSection = activeCategory == SettingsCategory.General,
                                 showAboutSection = activeCategory == SettingsCategory.About,
-                                showAdvancedSection = activeCategory == SettingsCategory.Advanced,
-                                showSupportersContributorsPage = AppFeaturePolicy.supportersContributorsPageEnabled,
                             )
                         }
                     }
                     SettingsPage.Account -> accountSettingsContent(
-                        isTablet = true,
-                    )
-                    SettingsPage.SupportersContributors -> {
-                        if (AppFeaturePolicy.supportersContributorsPageEnabled) {
-                            supportersContributorsContent(isTablet = true)
-                        }
-                    }
-                    SettingsPage.LicensesAttributions -> licensesAttributionsContent(
                         isTablet = true,
                     )
                     SettingsPage.Playback -> playbackSettingsContent(
@@ -1107,10 +1039,6 @@ private fun TabletSettingsScreen(
                         onCollectionsClick = onCollectionsClick,
                         onContinueWatchingClick = { openInlinePage(SettingsPage.ContinueWatching) },
                         onPosterCustomizationClick = { openInlinePage(SettingsPage.PosterCustomization) },
-                    )
-                    SettingsPage.Advanced -> advancedSettingsContent(
-                        isTablet = true,
-                        rememberLastProfileEnabled = rememberLastProfileEnabled,
                     )
                     SettingsPage.Notifications -> notificationsSettingsContent(
                         isTablet = true,

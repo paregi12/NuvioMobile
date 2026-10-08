@@ -100,7 +100,6 @@ internal fun PlayerControlActions(
     onVideoSettingsClick: (() -> Unit)?,
     onOpenInExternalPlayer: (() -> Unit)?,
     onStreamInfoClick: () -> Unit,
-    onSubmitIntroClick: (() -> Unit)?,
     onInteraction: () -> Unit,
 ) {
     val actions = listOfNotNull(
@@ -158,12 +157,6 @@ internal fun PlayerControlActions(
             PlayerControlAction(
                 stringResource(Res.string.player_action_video_settings), it,
                 icon = Icons.Rounded.Build,
-            )
-        },
-        onSubmitIntroClick?.let {
-            PlayerControlAction(
-                stringResource(Res.string.submit_intro_action), it,
-                icon = Icons.Rounded.Flag,
             )
         },
     )

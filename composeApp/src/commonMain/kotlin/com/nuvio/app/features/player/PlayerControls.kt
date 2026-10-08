@@ -28,7 +28,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
@@ -110,7 +109,6 @@ internal fun PlayerControlsShell(
     onSourcesClick: (() -> Unit)? = null,
     onEpisodesClick: (() -> Unit)? = null,
     onOpenInExternalPlayer: (() -> Unit)? = null,
-    onSubmitIntroClick: (() -> Unit)? = null,
     onSwitchEngineClick: (() -> Unit)? = null,
     onStreamInfoClick: () -> Unit = {},
     parentalWarnings: List<ParentalWarning> = emptyList(),
@@ -175,7 +173,6 @@ internal fun PlayerControlsShell(
                     metrics = metrics,
                     isLocked = isLocked,
                     showActions = showPlaybackControls,
-                    onSubmitIntroClick = onSubmitIntroClick,
                     parentalWarnings = parentalWarnings,
                     showParentalGuide = showParentalGuide,
                     onParentalGuideAnimationComplete = onParentalGuideAnimationComplete,
@@ -310,7 +307,6 @@ internal fun PlayerControlsShell(
                         onVideoSettingsClick = onVideoSettingsClick,
                         onOpenInExternalPlayer = onOpenInExternalPlayer,
                         onStreamInfoClick = onStreamInfoClick,
-                        onSubmitIntroClick = onSubmitIntroClick,
                         onInteraction = onInteraction,
                     )
                 }
@@ -330,7 +326,6 @@ private fun PlayerHeader(
     metrics: PlayerLayoutMetrics,
     isLocked: Boolean,
     showActions: Boolean,
-    onSubmitIntroClick: (() -> Unit)?,
     parentalWarnings: List<ParentalWarning>,
     showParentalGuide: Boolean,
     onParentalGuideAnimationComplete: () -> Unit,
@@ -427,15 +422,6 @@ private fun PlayerHeader(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (onSubmitIntroClick != null) {
-                        PlayerHeaderIconButton(
-                            icon = Icons.Rounded.Flag,
-                            contentDescription = stringResource(Res.string.submit_intro_action),
-                            buttonSize = metrics.headerIconSize + 16.dp,
-                            iconSize = metrics.headerIconSize,
-                            onClick = onSubmitIntroClick,
-                        )
-                    }
                     if (onOpenInExternalPlayer != null) {
                         PlayerHeaderIconButton(
                             icon = Icons.Filled.SwapHoriz,

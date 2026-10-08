@@ -10,7 +10,6 @@ internal const val PROFILE_MDBLIST_SETTINGS_FEATURE = "mdblist_settings"
 private val profileCredentialKeys = mapOf(
     PROFILE_PLAYER_SETTINGS_FEATURE to setOf(
         "animeskip_client_id",
-        "introdb_api_key",
     ),
     PROFILE_DEBRID_SETTINGS_FEATURE to setOf(
         "debrid_torbox_api_key",

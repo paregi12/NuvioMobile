@@ -81,7 +81,6 @@ internal data class SettingsSearchEntry(
 internal fun settingsSearchEntries(
     isTablet: Boolean,
     pluginsEnabled: Boolean,
-    supportersContributorsPageEnabled: Boolean,
     accountDeletionEnabled: Boolean,
     personalMediaAddonCopyEnabled: Boolean,
     liquidGlassNativeTabBarSupported: Boolean,
@@ -91,19 +90,15 @@ internal fun settingsSearchEntries(
     val accountCategory = stringResource(SettingsCategory.Account.labelRes)
     val generalCategory = stringResource(SettingsCategory.General.labelRes)
     val aboutCategory = stringResource(SettingsCategory.About.labelRes)
-    val advancedCategory = stringResource(SettingsCategory.Advanced.labelRes)
 
     val accountPage = stringResource(Res.string.compose_settings_page_account)
     val trackingPage = stringResource(Res.string.compose_settings_page_tracking)
     val layoutPage = stringResource(Res.string.compose_settings_page_appearance)
-    val advancedPage = stringResource(Res.string.compose_settings_page_advanced)
     val contentDiscoveryPage = stringResource(Res.string.compose_settings_page_content_discovery)
     val playbackPage = stringResource(Res.string.compose_settings_page_playback)
     val streamsPage = stringResource(Res.string.compose_settings_page_streams)
     val integrationsPage = stringResource(Res.string.compose_settings_page_integrations)
     val notificationsPage = stringResource(Res.string.compose_settings_page_notifications)
-    val supportersPage = stringResource(Res.string.compose_settings_page_supporters_contributors)
-    val licensesPage = stringResource(Res.string.compose_settings_page_licenses_attributions)
     val homeLayoutPage = stringResource(Res.string.compose_settings_page_homescreen)
     val detailPage = stringResource(Res.string.compose_settings_page_meta_screen)
     val continueWatchingPage = stringResource(Res.string.compose_settings_page_continue_watching)
@@ -213,14 +208,6 @@ internal fun settingsSearchEntries(
         icon = Icons.Rounded.Palette,
     )
     addPage(
-        page = SettingsPage.Advanced,
-        key = "advanced",
-        title = advancedPage,
-        description = stringResource(Res.string.compose_settings_root_advanced_description),
-        category = advancedCategory,
-        icon = Icons.Rounded.Tune,
-    )
-    addPage(
         page = SettingsPage.ContentDiscovery,
         key = "content-discovery",
         title = contentDiscoveryPage,
@@ -264,65 +251,12 @@ internal fun settingsSearchEntries(
         description = stringResource(Res.string.compose_settings_root_notifications_description),
         icon = Icons.Rounded.Notifications,
     )
-    if (supportersContributorsPageEnabled) {
-        addPage(
-            page = SettingsPage.SupportersContributors,
-            key = "supporters",
-            title = supportersPage,
-            description = stringResource(Res.string.about_supporters_contributors_subtitle),
-            category = aboutCategory,
-            icon = Icons.Rounded.Favorite,
-        )
-    }
-    addPage(
-        page = SettingsPage.LicensesAttributions,
-        key = "licenses-attributions",
-        title = licensesPage,
-        description = stringResource(Res.string.about_licenses_attributions_subtitle),
-        category = aboutCategory,
-        icon = Icons.Rounded.Info,
-    )
-    listOf(
-        PlaybackSearchRow("nuvio-license", stringResource(Res.string.settings_licenses_attributions_nuvio_title), stringResource(Res.string.settings_licenses_attributions_nuvio_license)),
-        PlaybackSearchRow("tmdb-attribution", stringResource(Res.string.settings_licenses_attributions_tmdb_title), stringResource(Res.string.settings_licenses_attributions_tmdb_body)),
-        PlaybackSearchRow("trakt-attribution", stringResource(Res.string.settings_licenses_attributions_trakt_title), stringResource(Res.string.settings_licenses_attributions_trakt_body)),
-        PlaybackSearchRow("simkl-attribution", stringResource(Res.string.settings_licenses_attributions_simkl_title), stringResource(Res.string.settings_licenses_attributions_simkl_body)),
-        PlaybackSearchRow("premiumize-attribution", stringResource(Res.string.settings_licenses_attributions_premiumize_title), stringResource(Res.string.settings_licenses_attributions_premiumize_body)),
-        PlaybackSearchRow("torbox-attribution", stringResource(Res.string.settings_licenses_attributions_torbox_title), stringResource(Res.string.settings_licenses_attributions_torbox_body)),
-        PlaybackSearchRow("mdblist-attribution", stringResource(Res.string.settings_licenses_attributions_mdblist_title), stringResource(Res.string.settings_licenses_attributions_mdblist_body)),
-        PlaybackSearchRow("introdb-attribution", stringResource(Res.string.settings_licenses_attributions_introdb_title), stringResource(Res.string.settings_licenses_attributions_introdb_body)),
-        PlaybackSearchRow("imdb-datasets", stringResource(Res.string.settings_licenses_attributions_imdb_title), stringResource(Res.string.settings_licenses_attributions_imdb_body)),
-        PlaybackSearchRow(
-            if (isIos) "mpvkit-license" else "exoplayer-license",
-            if (isIos) {
-                stringResource(Res.string.settings_licenses_attributions_mpvkit_title)
-            } else {
-                stringResource(Res.string.settings_licenses_attributions_exoplayer_title)
-            },
-            if (isIos) {
-                stringResource(Res.string.settings_licenses_attributions_mpvkit_license)
-            } else {
-                stringResource(Res.string.settings_licenses_attributions_exoplayer_license)
-            },
-        ),
-    ).forEach { row ->
-        addRow(
-            page = SettingsPage.LicensesAttributions,
-            key = row.key,
-            title = row.title,
-            description = row.description,
-            pageLabel = licensesPage,
-            section = stringResource(Res.string.compose_settings_root_about_section),
-            category = aboutCategory,
-            icon = Icons.Rounded.Info,
-        )
-    }
     if (checkForUpdatesAvailable) {
         add(
             key = "check-updates",
             title = stringResource(Res.string.compose_settings_root_check_updates_title),
             description = stringResource(Res.string.compose_settings_root_check_updates_description),
-            page = if (supportersContributorsPageEnabled) supportersPage else licensesPage,
+            page = stringResource(Res.string.compose_settings_root_about_section),
             section = stringResource(Res.string.compose_settings_root_about_section),
             category = aboutCategory,
             icon = Icons.Rounded.CloudDownload,
@@ -396,38 +330,6 @@ internal fun settingsSearchEntries(
         pageLabel = layoutPage,
         section = stringResource(Res.string.settings_appearance_section_display),
         icon = Icons.Rounded.Language,
-    )
-    addRow(
-        page = SettingsPage.Advanced,
-        key = "remember-last-profile",
-        title = stringResource(Res.string.settings_advanced_remember_last_profile),
-        description = stringResource(Res.string.settings_advanced_remember_last_profile_description),
-        pageLabel = advancedPage,
-        section = stringResource(Res.string.settings_advanced_section_startup),
-        category = advancedCategory,
-        icon = Icons.Rounded.Tune,
-    )
-    if (SentrySettingsRepository.isSupported) {
-        addRow(
-            page = SettingsPage.Advanced,
-            key = "sentry-crash-reports",
-            title = stringResource(Res.string.settings_advanced_sentry_reports),
-            description = stringResource(Res.string.settings_advanced_sentry_reports_subtitle),
-            pageLabel = advancedPage,
-            section = stringResource(Res.string.settings_advanced_section_diagnostics),
-            category = advancedCategory,
-            icon = Icons.Rounded.Tune,
-        )
-    }
-    addRow(
-        page = SettingsPage.Advanced,
-        key = "clear-cw-cache",
-        title = stringResource(Res.string.settings_advanced_clear_cw_cache),
-        description = stringResource(Res.string.settings_advanced_clear_cw_cache_subtitle),
-        pageLabel = advancedPage,
-        section = stringResource(Res.string.settings_advanced_section_cache),
-        category = advancedCategory,
-        icon = Icons.Rounded.Tune,
     )
     addPage(
         page = SettingsPage.ContinueWatching,
@@ -651,8 +553,6 @@ internal fun settingsSearchEntries(
             PlaybackSearchRow("skip-intro", stringResource(Res.string.settings_playback_skip_intro_outro_recap), stringResource(Res.string.settings_playback_skip_intro_outro_recap_description)),
             PlaybackSearchRow("anime-skip", stringResource(Res.string.settings_playback_anime_skip), stringResource(Res.string.settings_playback_anime_skip_description)),
             PlaybackSearchRow("anime-skip-client", stringResource(Res.string.settings_playback_anime_skip_client_id), stringResource(Res.string.settings_playback_anime_skip_client_id_description)),
-            PlaybackSearchRow("intro-submit", stringResource(Res.string.settings_playback_intro_submit_enabled), stringResource(Res.string.settings_playback_intro_submit_enabled_description)),
-            PlaybackSearchRow("introdb-key", stringResource(Res.string.settings_playback_introdb_api_key), stringResource(Res.string.settings_playback_introdb_api_key_description)),
         ),
     )
     addPlaybackRows(

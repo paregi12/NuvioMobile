@@ -199,13 +199,6 @@ object ProviderCredentialSync {
                     player.animeSkipClientId.trim(),
                 ),
             )
-            add(
-                ProviderCredentialValue(
-                    ProviderCredentialIds.INTRODB,
-                    PROVIDER_API_KEY_FIELD,
-                    player.introDbApiKey.trim(),
-                ),
-            )
         },
     )
 
@@ -227,9 +220,6 @@ object ProviderCredentialSync {
                 }
                 credential.provider == ProviderCredentialIds.ANIMESKIP -> {
                     PlayerSettingsRepository.setAnimeSkipClientId(credential.value)
-                }
-                credential.provider == ProviderCredentialIds.INTRODB -> {
-                    PlayerSettingsRepository.setIntroDbApiKey(credential.value)
                 }
             }
         }

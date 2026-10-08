@@ -15,7 +15,6 @@ internal object ProviderCredentialIds {
     const val TMDB = "tmdb"
     const val MDBLIST = "mdblist"
     const val ANIMESKIP = "animeskip"
-    const val INTRODB = "introdb"
 
     fun debrid(providerId: String): String = "debrid:$providerId"
 }

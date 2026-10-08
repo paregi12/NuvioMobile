@@ -3,7 +3,6 @@ package com.nuvio.app.features.player.skip
 import com.nuvio.app.core.network.httpGetText
 import com.nuvio.app.core.network.httpPostJsonWithHeaders
 import kotlinx.serialization.json.Json
-import kotlinx.coroutines.CancellationException
 
 internal object SkipIntroApi {
 
@@ -11,93 +10,6 @@ internal object SkipIntroApi {
 
     private const val ANISKIP_BASE = "https://api.aniskip.com/v2/"
     private const val ANIMESKIP_BASE = "https://api.anime-skip.com/"
-
-    // --- IntroDb ---
-
-    suspend fun getIntroDbMovieSegments(imdbId: String): IntroDbSegmentsResponse? {
-        val baseUrl = IntroDbConfig.URL.trimEnd('/')
-        if (baseUrl.isBlank()) return null
-        return try {
-            val text = httpGetText(introDbMovieSegmentsUrl(baseUrl, imdbId))
-            json.decodeFromString<IntroDbSegmentsResponse>(text)
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    suspend fun getIntroDbSegments(
-        imdbId: String,
-        season: Int,
-        episode: Int,
-    ): IntroDbSegmentsResponse? {
-        val baseUrl = IntroDbConfig.URL.trimEnd('/')
-        if (baseUrl.isBlank()) return null
-        val url = "$baseUrl/segments?imdb_id=$imdbId&season=$season&episode=$episode"
-        return try {
-            val text = httpGetText(url)
-            json.decodeFromString<IntroDbSegmentsResponse>(text)
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    suspend fun submitIntro(
-        apiKey: String,
-        request: SubmitIntroRequest,
-    ): Boolean {
-        val baseUrl = IntroDbConfig.URL.trimEnd('/')
-        if (baseUrl.isBlank() || apiKey.isBlank()) return false
-        val url = "$baseUrl/submit"
-        val body = json.encodeToString(SubmitIntroRequest.serializer(), request)
-        val headers = mapOf(
-            "Authorization" to "Bearer $apiKey",
-            "Content-Type" to "application/json"
-        )
-        return try {
-            val response = com.nuvio.app.core.network.httpRequestRaw(
-                method = "POST",
-                url = url,
-                headers = headers,
-                body = body
-            )
-            response.status == 200 || response.status == 201
-        } catch (_: Exception) {
-            false
-        }
-    }
-
-    suspend fun verifyIntroDbApiKey(apiKey: String): Boolean {
-        val baseUrl = IntroDbConfig.URL.trimEnd('/')
-        if (baseUrl.isBlank() || apiKey.isBlank()) return false
-        val url = "$baseUrl/submit"
-        val headers = mapOf(
-            "Authorization" to "Bearer $apiKey",
-            "Content-Type" to "application/json"
-        )
-        return try {
-            val response = com.nuvio.app.core.network.httpRequestRaw(
-                method = "POST",
-                url = url,
-                headers = headers,
-                body = "{}"
-            )
-            
-            // 400 means Auth passed but payload was empty/invalid -> Key is Valid
-            if (response.status == 400) return true
-            
-            // 200/201 would also mean valid (though unexpected with empty body)
-            if (response.status == 200 || response.status == 201) return true
-            
-            // Explicitly handle auth failures
-            if (response.status == 401 || response.status == 403) return false
-            
-            false
-        } catch (_: Exception) {
-            false
-        }
-    }
 
     // --- AniSkip ---
 
@@ -136,6 +48,3 @@ internal object SkipIntroApi {
         }
     }
 }
-
-internal fun introDbMovieSegmentsUrl(baseUrl: String, imdbId: String): String =
-    "${baseUrl.trimEnd('/')}/segments?imdb_id=$imdbId&is_movie=true"

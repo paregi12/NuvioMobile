@@ -28,62 +28,6 @@ enum class NextEpisodeThresholdMode {
     MINUTES_BEFORE_END,
 }
 
-// --- IntroDb API response models ---
-
-@Serializable
-data class IntroDbSegmentsResponse(
-    @SerialName("imdb_id") val imdbId: String? = null,
-    @SerialName("season") val season: Int? = null,
-    @SerialName("episode") val episode: Int? = null,
-    @SerialName("intro") val intro: IntroDbSegment? = null,
-    @SerialName("recap") val recap: IntroDbSegment? = null,
-    @SerialName("outro") val outro: IntroDbSegment? = null,
-    @SerialName("post_credits") val postCredits: IntroDbSegment? = null,
-)
-
-internal fun IntroDbSegmentsResponse.movieSkipIntervals(): List<SkipInterval> {
-    val credits = outro.movieIntervalOrNull("movie-credits")
-    val scene = postCredits.movieIntervalOrNull("post-credits")
-    // End-credit skipping must stop before the post-credits scene, even if data overlaps.
-    val safeCredits = if (credits != null && scene != null &&
-        scene.startTime < credits.endTime && scene.endTime > credits.startTime
-    ) {
-        credits.copy(endTime = scene.startTime).takeIf { it.endTime > it.startTime }
-    } else credits
-    return listOfNotNull(safeCredits, scene)
-}
-
-private fun IntroDbSegment?.movieIntervalOrNull(type: String): SkipInterval? {
-    if (this == null) return null
-    val start = startSec ?: startMs?.let { it / 1000.0 } ?: return null
-    val end = endSec ?: endMs?.let { it / 1000.0 } ?: return null
-    if (!start.isFinite() || !end.isFinite() || start < 0 || end <= start) return null
-    return SkipInterval(start, end, type, "introdb")
-}
-
-@Serializable
-data class IntroDbSegment(
-    @SerialName("start_sec") val startSec: Double? = null,
-    @SerialName("end_sec") val endSec: Double? = null,
-    @SerialName("start_ms") val startMs: Long? = null,
-    @SerialName("end_ms") val endMs: Long? = null,
-    @SerialName("confidence") val confidence: Double? = null,
-    @SerialName("submission_count") val submissionCount: Int? = null,
-    @SerialName("updated_at") val updatedAt: String? = null,
-)
-
-@Serializable
-data class SubmitIntroRequest(
-    @SerialName("imdb_id") val imdbId: String,
-    @SerialName("season") val season: Int,
-    @SerialName("episode") val episode: Int,
-    @SerialName("start_sec") val startSec: Double,
-    @SerialName("end_sec") val endSec: Double,
-    @SerialName("start_ms") val startMs: Long,
-    @SerialName("end_ms") val endMs: Long,
-    @SerialName("segment_type") val segmentType: String,
-)
-
 // --- AniSkip API response models ---
 
 @Serializable

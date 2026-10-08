@@ -253,15 +253,6 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
                     )
                 }
             },
-            onSubmitIntroClick = if (
-                isSeries &&
-                playerSettingsUiState.introSubmitEnabled &&
-                playerSettingsUiState.introDbApiKey.isNotBlank()
-            ) {
-                { showSubmitIntroModal = true }
-            } else {
-                null
-            },
             onSwitchEngineClick = if (playerController?.playbackEngine != null) {
                 { switchPlaybackEngine() }
             } else {
@@ -504,23 +495,6 @@ private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
             episodeStreamsPanelState = EpisodeStreamsPanelState()
             PlayerStreamsRepository.clearEpisodeStreams()
             controlsVisible = true
-        },
-        showSubmitIntroModal = showSubmitIntroModal,
-        activeVideoId = activeVideoId,
-        metaUiState = metaUiState,
-        displayedPositionMs = displayedPositionMs,
-        submitIntroSegmentType = submitIntroSegmentType,
-        onSubmitIntroSegmentTypeChanged = { submitIntroSegmentType = it },
-        submitIntroStartTimeStr = submitIntroStartTimeStr,
-        onSubmitIntroStartTimeChanged = { submitIntroStartTimeStr = it },
-        submitIntroEndTimeStr = submitIntroEndTimeStr,
-        onSubmitIntroEndTimeChanged = { submitIntroEndTimeStr = it },
-        onSubmitIntroDismissed = { showSubmitIntroModal = false },
-        onSubmitIntroSuccess = {
-            submitIntroStartTimeStr = "00:00"
-            submitIntroEndTimeStr = "00:00"
-            submitIntroSegmentType = "intro"
-            showSubmitIntroModal = false
         },
     )
     StreamInfoOverlay(

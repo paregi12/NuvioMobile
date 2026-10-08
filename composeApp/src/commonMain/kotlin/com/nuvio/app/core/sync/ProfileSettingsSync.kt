@@ -286,7 +286,6 @@ object ProfileSettingsSync {
         CardDepthStyleRepository.onProfileChanged()
 
         val localPlayerSettings = PlayerSettingsStorage.exportToSyncPayload()
-        val localIntroDbApiKey = PlayerSettingsStorage.loadIntroDbApiKey()
         PlayerSettingsStorage.replaceFromSyncPayload(
             preservingLocalProfileCredentials(
                 PROFILE_PLAYER_SETTINGS_FEATURE,
@@ -294,7 +293,6 @@ object ProfileSettingsSync {
                 localPlayerSettings,
             ),
         )
-        localIntroDbApiKey?.let(PlayerSettingsStorage::saveIntroDbApiKey)
         PlayerSettingsRepository.onProfileChanged()
 
         StreamBadgeSettingsStorage.replaceFromSyncPayload(blob.features.streamBadgeSettings)
