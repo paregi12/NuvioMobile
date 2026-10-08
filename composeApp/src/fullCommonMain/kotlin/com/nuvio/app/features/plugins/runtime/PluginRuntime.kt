@@ -166,6 +166,8 @@ internal object PluginRuntime {
                 }
             }
         }
+    }
+
     suspend fun executePluginDetails(
         code: String,
         scraperId: String,
