@@ -26,6 +26,7 @@ data class StreamItem(
     val streamType: String? = null,
     val quality: String? = null,
     val server: String? = null,
+    val format: String? = null,
     val behaviorHints: StreamBehaviorHints = StreamBehaviorHints(),
     val clientResolve: StreamClientResolve? = null,
     val debridCacheStatus: StreamDebridCacheStatus? = null,

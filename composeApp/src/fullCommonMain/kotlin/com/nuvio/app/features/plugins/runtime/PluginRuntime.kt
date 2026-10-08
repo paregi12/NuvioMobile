@@ -395,6 +395,7 @@ internal object PluginRuntime {
                     language = item.stringOrNull("language"),
                     provider = item.stringOrNull("provider"),
                     server = item.stringOrNull("server") ?: item.stringOrNull("serverName"),
+                    format = item.stringOrNull("format") ?: item.stringOrNull("subType"),
                     type = item.stringOrNull("type"),
                     seeders = item["seeders"]?.jsonPrimitive?.intOrNull,
                     peers = item["peers"]?.jsonPrimitive?.intOrNull,

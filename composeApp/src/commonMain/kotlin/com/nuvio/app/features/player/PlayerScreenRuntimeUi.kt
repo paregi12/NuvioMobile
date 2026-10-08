@@ -216,6 +216,10 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
                 showQualityModal = true
                 controlsVisible = true
             },
+            onDubSubClick = {
+                showDubSubModal = true
+                controlsVisible = true
+            },
             onVideoSettingsClick = if (isIos) {
                 {
                     showVideoSettingsModal = true
@@ -224,9 +228,7 @@ private fun PlayerScreenRuntime.RenderPlayerControls(displayedPositionMs: Long, 
             } else {
                 null
             },
-            onSourcesClick = if (activeVideoId != null || parentMetaId.isNotBlank() || sourceStreamsState.streams.isNotEmpty()) {
-                { openSourcesPanel() }
-            } else null,
+            onSourcesClick = null,
             onEpisodesClick = if (isSeries) { { openEpisodesPanel() } } else null,
             onOpenInExternalPlayer = args.onOpenInExternalPlayer?.let { openExternal ->
                 {
@@ -301,7 +303,7 @@ private fun BoxScope.RenderPlaybackOverlays(
         metrics = metrics,
         horizontalSafePadding = horizontalSafePadding,
         onUnlock = { unlockPlayerControls() },
-        showOpeningOverlay = playerSettingsUiState.showLoadingOverlay && !initialLoadCompleted && errorMessage == null,
+        showOpeningOverlay = false,
         backdropArtwork = background ?: poster,
         logo = logo,
         title = title,
@@ -390,6 +392,16 @@ private fun PlayerScreenRuntime.RenderPlayerModals(displayedPositionMs: Long) {
             }
         },
         onQualityModalDismissed = { showQualityModal = false },
+        showDubSubModal = showDubSubModal,
+        dubSubOptions = buildDubSubOptions(),
+        onDubSubFormatSelected = { format ->
+            selectDubSubFormat(format)
+            scope.launch {
+                kotlinx.coroutines.delay(200)
+                showDubSubModal = false
+            }
+        },
+        onDubSubModalDismissed = { showDubSubModal = false },
         showSubtitleModal = showSubtitleModal,
         subtitleTracks = subtitleTracks,
         selectedSubtitleIndex = selectedSubtitleIndex,

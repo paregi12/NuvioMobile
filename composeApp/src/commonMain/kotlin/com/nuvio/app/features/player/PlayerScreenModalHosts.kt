@@ -22,6 +22,10 @@ internal fun PlayerScreenModalHosts(
     selectedVideoIndex: Int = -1,
     onVideoTrackSelected: (Int) -> Unit = {},
     onQualityModalDismissed: () -> Unit = {},
+    showDubSubModal: Boolean = false,
+    dubSubOptions: List<DubSubOptionItem> = emptyList(),
+    onDubSubFormatSelected: (DubSubFormat) -> Unit = {},
+    onDubSubModalDismissed: () -> Unit = {},
     showSubtitleModal: Boolean,
     subtitleTracks: List<SubtitleTrack>,
     selectedSubtitleIndex: Int,
@@ -90,6 +94,13 @@ internal fun PlayerScreenModalHosts(
         selectedIndex = selectedVideoIndex,
         onTrackSelected = onVideoTrackSelected,
         onDismiss = onQualityModalDismissed,
+    )
+
+    DubSubModal(
+        visible = showDubSubModal,
+        options = dubSubOptions,
+        onFormatSelected = onDubSubFormatSelected,
+        onDismiss = onDubSubModalDismissed,
     )
 
     SubtitleModal(

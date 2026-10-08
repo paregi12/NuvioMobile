@@ -69,6 +69,19 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         }
     }
 
+    LaunchedEffect(activeVideoId, activeSeasonNumber, activeEpisodeNumber) {
+        val vid = activeVideoId ?: return@LaunchedEffect
+        if (sourceStreamsState.streams.isEmpty()) {
+            PlayerStreamsRepository.loadSources(
+                type = contentType ?: parentMetaType,
+                videoId = vid,
+                season = activeSeasonNumber,
+                episode = activeEpisodeNumber,
+                forceRefresh = false,
+            )
+        }
+    }
+
     LaunchedEffect(activePlaybackKey, activeSourceUrl, activeSourceAudioUrl, activeSourceHeaders, activeSourceResponseHeaders) {
         errorMessage = null
         playerController = null

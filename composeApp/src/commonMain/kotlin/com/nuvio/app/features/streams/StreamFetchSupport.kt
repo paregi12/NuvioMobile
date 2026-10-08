@@ -107,6 +107,7 @@ internal fun PluginRuntimeResult.toStreamItem(
         streamType = normalizeStreamType(type),
         quality = quality,
         server = server,
+        format = format,
         behaviorHints = if (requestHeaders.isEmpty()) {
             StreamBehaviorHints()
         } else {

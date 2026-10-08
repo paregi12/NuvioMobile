@@ -466,6 +466,13 @@
     <string name="compose_player_servers">Servers</string>
     <string name="compose_player_quality">Quality</string>
     <string name="compose_player_no_quality_tracks_available">No alternative quality tracks available</string>
+    <string name="compose_player_dub_sub">Dub / Sub</string>
+    <string name="compose_player_dub">Dub</string>
+    <string name="compose_player_hardsub">Hardsub</string>
+    <string name="compose_player_softsub">Softsub</string>
+    <string name="compose_player_dub_desc">English / dubbed audio</string>
+    <string name="compose_player_hardsub_desc">Burned-in subtitles</string>
+    <string name="compose_player_softsub_desc">Soft / styled subtitles</string>
     <string name="compose_player_style">Style</string>
     <string name="compose_player_select_addon_subtitle_first">Select an addon subtitle first</string>
     <string name="compose_player_subs">Subs</string>

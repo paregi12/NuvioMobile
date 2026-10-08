@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.SkipNext
@@ -93,7 +94,8 @@ internal fun PlayerControlActions(
     onSubtitleClick: () -> Unit,
     onAudioClick: () -> Unit,
     onQualityClick: (() -> Unit)? = null,
-    onSourcesClick: (() -> Unit)?,
+    onDubSubClick: (() -> Unit)? = null,
+    onSourcesClick: (() -> Unit)? = null,
     onEpisodesClick: (() -> Unit)?,
     onNextEpisodeClick: (() -> Unit)?,
     onSwitchEngineClick: (() -> Unit)?,
@@ -125,10 +127,10 @@ internal fun PlayerControlActions(
                 icon = Icons.Rounded.Tune,
             )
         },
-        onSourcesClick?.let {
+        onDubSubClick?.let {
             PlayerControlAction(
-                stringResource(Res.string.compose_player_servers), it,
-                painter = appIconPainter(AppIconResource.PlayerSource),
+                stringResource(Res.string.compose_player_dub_sub), it,
+                icon = Icons.Rounded.Language,
             )
         },
         onEpisodesClick?.let {

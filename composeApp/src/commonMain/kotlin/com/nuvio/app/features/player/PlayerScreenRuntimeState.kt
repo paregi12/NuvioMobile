@@ -141,6 +141,8 @@ internal class PlayerScreenRuntime(
     var currentTrackingMedia by mutableStateOf<TrackingMediaReference?>(null)
 
     var showSourcesPanel by mutableStateOf(false)
+    var showDubSubModal by mutableStateOf(false)
+    var currentDubSubFormat by mutableStateOf<DubSubFormat?>(null)
     var showEpisodesPanel by mutableStateOf(false)
     var episodeStreamsPanelState by mutableStateOf(EpisodeStreamsPanelState())
     var playerMetaVideos by mutableStateOf<List<MetaVideo>>(emptyList())

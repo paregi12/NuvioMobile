@@ -1,5 +1,7 @@
 package com.nuvio.app.features.player
 
+import com.nuvio.app.features.streams.StreamItem
+
 internal val PlayerScreenRuntime.subtitleStyle: SubtitleStyleState
     get() = playerSettingsUiState.subtitleStyle
 
@@ -363,4 +365,127 @@ private fun PlayerScreenRuntime.disableAutomaticSubtitleSelection() {
 internal fun PlayerScreenRuntime.selectVideoTrack(index: Int) {
     selectedVideoIndex = index
     playerController?.selectVideoTrack(index)
+}
+
+internal fun StreamItem.matchesFormat(targetFormat: DubSubFormat): Boolean {
+    format?.trim()?.lowercase()?.let { f ->
+        return when (targetFormat) {
+            DubSubFormat.DUB -> f == "dub"
+            DubSubFormat.HARDSUB -> f == "hardsub" || f == "hard-sub"
+            DubSubFormat.SOFTSUB -> f == "softsub" || f == "soft-sub"
+        }
+    }
+    val text = "${name.orEmpty()} ${title.orEmpty()} ${description.orEmpty()} ${server.orEmpty()}".lowercase()
+    return when (targetFormat) {
+        DubSubFormat.DUB -> text.contains("dub")
+        DubSubFormat.SOFTSUB -> text.contains("softsub") || text.contains("soft-sub") || (externalSubtitles.isNotEmpty() && !text.contains("dub"))
+        DubSubFormat.HARDSUB -> text.contains("hardsub") || text.contains("hard-sub") ||
+            (text.contains("sub") && !text.contains("softsub") && !text.contains("soft-sub") && !text.contains("dub") && externalSubtitles.isEmpty())
+    }
+}
+
+internal fun PlayerScreenRuntime.resolveCurrentDubSubFormat(): DubSubFormat {
+    currentDubSubFormat?.let { return it }
+    val currentStream = sourceStreamsState.streams.firstOrNull { it.playableDirectUrl == activeSourceUrl }
+    if (currentStream != null) {
+        for (f in DubSubFormat.entries) {
+            if (currentStream.matchesFormat(f)) return f
+        }
+    }
+    val title = "${activeStreamTitle.orEmpty()} ${activeStreamSubtitle.orEmpty()}".lowercase()
+    return when {
+        title.contains("dub") -> DubSubFormat.DUB
+        title.contains("softsub") || title.contains("soft-sub") || externalSubtitles.isNotEmpty() -> DubSubFormat.SOFTSUB
+        title.contains("hardsub") || title.contains("hard-sub") || title.contains("sub") -> DubSubFormat.HARDSUB
+        else -> DubSubFormat.SOFTSUB
+    }
+}
+
+internal fun PlayerScreenRuntime.buildDubSubOptions(): List<DubSubOptionItem> {
+    val active = resolveCurrentDubSubFormat()
+    val allStreams = sourceStreamsState.streams
+    return DubSubFormat.entries.map { format ->
+        val matchingCount = allStreams.count { it.matchesFormat(format) }
+        DubSubOptionItem(
+            format = format,
+            title = when (format) {
+                DubSubFormat.DUB -> "Dub"
+                DubSubFormat.HARDSUB -> "Hardsub"
+                DubSubFormat.SOFTSUB -> "Softsub"
+            },
+            description = when (format) {
+                DubSubFormat.DUB -> "English / dubbed audio"
+                DubSubFormat.HARDSUB -> "Burned-in subtitles"
+                DubSubFormat.SOFTSUB -> "Soft / styled subtitles"
+            },
+            isSelected = active == format,
+            matchingStreamCount = matchingCount,
+        )
+    }
+}
+
+internal fun PlayerScreenRuntime.selectDubSubFormat(format: DubSubFormat) {
+    currentDubSubFormat = format
+    val availableStreams = sourceStreamsState.streams
+    val matchedStream = availableStreams.firstOrNull { stream ->
+        stream.matchesFormat(format) && stream.playableDirectUrl != activeSourceUrl
+    }
+    if (matchedStream != null) {
+        switchToSource(matchedStream)
+    }
+    when (format) {
+        DubSubFormat.DUB -> {
+            val dubAudio = audioTracks.firstOrNull { track ->
+                val name = track.name.lowercase()
+                val lang = track.language.lowercase()
+                name.contains("dub") || name.contains("eng") || lang.contains("en")
+            }
+            if (dubAudio != null && dubAudio.index != selectedAudioIndex) {
+                selectedAudioIndex = dubAudio.index
+                persistAudioPreference(dubAudio)
+                playerController?.selectAudioTrack(dubAudio.index)
+            }
+            selectedSubtitleIndex = -1
+            selectedAddonSubtitleId = null
+            playerController?.selectSubtitleTrack(-1)
+        }
+        DubSubFormat.HARDSUB -> {
+            selectedSubtitleIndex = -1
+            selectedAddonSubtitleId = null
+            playerController?.selectSubtitleTrack(-1)
+            val jaAudio = audioTracks.firstOrNull { track ->
+                val name = track.name.lowercase()
+                val lang = track.language.lowercase()
+                name.contains("jpn") || name.contains("jap") || lang.contains("ja")
+            }
+            if (jaAudio != null && jaAudio.index != selectedAudioIndex) {
+                selectedAudioIndex = jaAudio.index
+                persistAudioPreference(jaAudio)
+                playerController?.selectAudioTrack(jaAudio.index)
+            }
+        }
+        DubSubFormat.SOFTSUB -> {
+            val jaAudio = audioTracks.firstOrNull { track ->
+                val name = track.name.lowercase()
+                val lang = track.language.lowercase()
+                name.contains("jpn") || name.contains("jap") || lang.contains("ja")
+            }
+            if (jaAudio != null && jaAudio.index != selectedAudioIndex) {
+                selectedAudioIndex = jaAudio.index
+                persistAudioPreference(jaAudio)
+                playerController?.selectAudioTrack(jaAudio.index)
+            }
+            if (selectedSubtitleIndex < 0 && subtitleTracks.isNotEmpty()) {
+                val engSub = subtitleTracks.firstOrNull { track ->
+                    val name = track.name.lowercase()
+                    val lang = track.language.lowercase()
+                    name.contains("eng") || lang.contains("en")
+                } ?: subtitleTracks.firstOrNull { it.index >= 0 }
+                if (engSub != null) {
+                    selectedSubtitleIndex = engSub.index
+                    playerController?.selectSubtitleTrack(engSub.index)
+                }
+            }
+        }
+    }
 }
