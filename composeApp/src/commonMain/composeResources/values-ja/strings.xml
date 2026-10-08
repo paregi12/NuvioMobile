@@ -1,6 +1,4 @@
 <resources>
-    <string name="about_licenses_attributions_subtitle">データソース、謝辞、ライセンス情報</string>
-    <string name="about_supporters_contributors_subtitle">サポーター・コントリビューターのクレジット</string>
     <string name="action_back">戻る</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_close">閉じる</string>
@@ -434,14 +432,10 @@
     <string name="compose_settings_page_root">設定</string>
     <string name="compose_settings_page_streams">ストリーム</string>
     <string name="settings_appearance_section_streams">ストリーム</string>
-    <string name="compose_settings_page_supporters_contributors">サポーターとコントリビューター</string>
-    <string name="compose_settings_page_tmdb_enrichment">TMDB補完</string>
     <string name="compose_settings_page_trakt">Trakt</string>
     <string name="compose_settings_root_about_section">アプリについて</string>
     <string name="compose_settings_root_account_description">アカウントと同期状況</string>
     <string name="compose_settings_root_account_section">アカウント</string>
-    <string name="compose_settings_root_advanced_description">起動時とプロフィールの動作</string>
-    <string name="compose_settings_root_advanced_section">詳細設定</string>
     <string name="compose_settings_root_appearance_description">ホーム構成とポスタースタイル</string>
     <string name="compose_settings_root_check_updates_description">最新リリースをダウンロード</string>
     <string name="compose_settings_root_check_updates_title">アップデートを確認</string>
@@ -466,36 +460,8 @@
     <string name="settings_advanced_remember_last_profile_description">起動時に最後に選択したプロフィールを記憶する</string>
     <string name="settings_advanced_clear_cw_cache">「視聴を続ける」キャッシュをクリア</string>
     <string name="settings_advanced_clear_cw_cache_subtitle">「視聴を続ける」のキャッシュデータを削除して視聴進捗を更新する</string>
-    <string name="settings_advanced_clear_cw_cache_done">キャッシュをクリアしました</string>
-    <string name="settings_licenses_attributions_section_app">アプリライセンス</string>
-    <string name="settings_licenses_attributions_section_data">データとサービス</string>
-    <string name="settings_licenses_attributions_section_playback">再生ライセンス</string>
-    <string name="settings_licenses_attributions_nuvio_title">Nuvio Mobile</string>
-    <string name="settings_licenses_attributions_nuvio_body">ソースコードとライセンス条件はプロジェクトリポジトリで確認できます。</string>
-    <string name="settings_licenses_attributions_nuvio_license">GNU General Public License v3.0のもとでライセンスされています。</string>
-    <string name="settings_licenses_attributions_tmdb_title">The Movie Database (TMDB)</string>
-    <string name="settings_licenses_attributions_tmdb_body">NuvioはTMDB APIを使用して、映画・TV番組のメタデータ、アートワーク、予告編、キャスト、制作詳細、コレクション、おすすめ作品を取得しています。本製品はTMDB APIを使用していますが、TMDBの公式承認・認定を受けたものではありません。</string>
-    <string name="settings_licenses_attributions_imdb_title">IMDb非商用データセット</string>
-    <string name="settings_licenses_attributions_imdb_body">NuvioはIMDbの非商用データセット（title.ratings.tsv.gzを含む）を使用してIMDb評価と投票数を取得しています。情報提供：IMDb（https://www.imdb.com）。許可を得て使用しています。IMDbデータは個人的・非商用目的でのみIMDの利用規約に基づいて使用できます。</string>
-    <string name="settings_licenses_attributions_trakt_title">Trakt</string>
-    <string name="settings_licenses_attributions_trakt_body">Nuvioはアカウント認証、視聴履歴、進捗同期、ライブラリデータ、評価、リスト、コメントのためにTraktと連携しています。NuvioはTraktと提携・承認されたものではありません。</string>
-    <string name="settings_licenses_attributions_premiumize_title">Premiumize</string>
-    <string name="settings_licenses_attributions_premiumize_body">Nuvioはアカウント認証、クラウドライブラリアクセス、キャッシュ確認、クラウド再生機能のためにPremiumizeと連携しています。NuvioはPremiumizeと提携・承認されたものではありません。</string>
-    <string name="settings_licenses_attributions_torbox_title">TorBox</string>
-    <string name="settings_licenses_attributions_torbox_body">Nuvioはアカウント認証、クラウドライブラリアクセス、キャッシュ確認、クラウド再生機能のためにTorBoxと連携しています。NuvioはTorBoxと提携・承認されたものではありません。</string>
-    <string name="settings_licenses_attributions_mdblist_title">MDBList</string>
-    <string name="settings_licenses_attributions_mdblist_body">NuvioはMDBListを使用して評価と外部スコアプロバイダーデータを取得しています。NuvioはMDBListと提携・承認されたものではありません。</string>
-    <string name="settings_licenses_attributions_introdb_title">IntroDB</string>
-    <string name="settings_licenses_attributions_introdb_body">NuvioはIntroDB APIを使用して、スキップコントロールに使用するイントロ・振り返り・エンドクレジット・プレビューのタイムスタンプ（コミュニティ提供）を取得しています。NuvioはIntroDBと提携・承認されたものではありません。</string>
-    <string name="settings_licenses_attributions_mpvkit_title">MPVKit</string>
-    <string name="settings_licenses_attributions_mpvkit_body">iOSビルドの再生に使用。</string>
-    <string name="settings_licenses_attributions_mpvkit_license">MPVKit単体はLGPL v3.0でライセンスされています。libmpvおよびFFmpegライブラリを含むMPVKitバンドルも同様にLGPL v3.0でライセンスされています。</string>
-    <string name="settings_licenses_attributions_exoplayer_title">AndroidX Media3 ExoPlayer 1.8.0</string>
-    <string name="settings_licenses_attributions_exoplayer_body">Androidビルドの再生に使用。</string>
-    <string name="settings_licenses_attributions_exoplayer_license">Apache License, Version 2.0のもとでライセンスされています。</string>
     <string name="compose_trakt_list_picker_loading">Traktリストを読み込み中…</string>
     <string name="compose_trakt_list_picker_subtitle">Traktでこのタイトルを保存する場所を選択</string>
-    <string name="action_donate">寄付</string>
     <string name="cw_action_go_to_details">詳細を見る</string>
     <string name="cw_action_remove">削除</string>
     <string name="cw_action_start_from_beginning">最初から再生</string>
@@ -788,42 +754,6 @@
     <string name="settings_notifications_test_for_title">%1$s のローカルテスト通知を送信します。</string>
     <string name="settings_notifications_test_requires_saved_show">テスト通知を送るには、シリーズをライブラリに保存してください。</string>
     <string name="settings_notifications_test_title">テスト通知</string>
-    <string name="community_section_title">コミュニティ</string>
-    <string name="community_section_description">Mobile・TV・Webを通じてNuvioを構築・支援している人々をご覧ください。</string>
-    <string name="community_donation_progress_title">今月のサーバー・メンテナンス費用</string>
-    <string name="community_donation_progress_complete">達成済み。追加のサポートは開発費に充てられます。</string>
-    <string name="community_donation_progress_remaining">100%を超えた追加サポートは開発費に充てられます。</string>
-    <string name="community_loading_donation_progress">資金調達状況を読み込み中...</string>
-    <string name="community_supporters_not_configured">サポーターAPIが設定されていません。local.propertiesにDONATIONS_BASE_URLを追加してください。</string>
-    <string name="community_tab_contributors">コントリビューター</string>
-    <string name="community_tab_supporters">サポーター</string>
-    <string name="community_open_github">GitHubを開く</string>
-    <string name="community_github_profile_unavailable">GitHubプロフィールは利用できません</string>
-    <string name="community_no_message_attached">メッセージはありません。</string>
-    <string name="community_loading_contributors">コントリビューターを読み込み中...</string>
-    <string name="community_loading_supporters">サポーターを読み込み中...</string>
-    <string name="community_load_contributors_failed">コントリビューターを読み込めませんでした</string>
-    <string name="community_load_supporters_failed">サポーターを読み込めませんでした</string>
-    <string name="community_empty_contributors">コントリビューターが見つかりません。</string>
-    <string name="community_empty_supporters">サポーターが見つかりません。</string>
-    <string name="community_error_unable_load_contributors">コントリビューターを読み込めません。</string>
-    <string name="community_error_unable_load_supporters">サポーターを読み込めません。</string>
-    <string name="community_error_contributors_request_failed">現在コントリビューターを読み込めません。</string>
-    <string name="community_error_supporters_request_failed">現在サポーターを読み込めません。</string>
-    <string name="community_total_commits">合計 %1$d コミット</string>
-    <string name="community_month_jan">1月</string>
-    <string name="community_month_feb">2月</string>
-    <string name="community_month_mar">3月</string>
-    <string name="community_month_apr">4月</string>
-    <string name="community_month_may">5月</string>
-    <string name="community_month_jun">6月</string>
-    <string name="community_month_jul">7月</string>
-    <string name="community_month_aug">8月</string>
-    <string name="community_month_sep">9月</string>
-    <string name="community_month_oct">10月</string>
-    <string name="community_month_nov">11月</string>
-    <string name="community_month_dec">12月</string>
-    <string name="community_date_format">%3$s年%1$s%2$s日</string>
     <string name="settings_playback_all_addons">インストール済みのすべてのアドオン</string>
     <string name="settings_playback_all_plugins">有効なすべてのプラグイン</string>
     <string name="settings_playback_allowed_addons">許可するアドオン</string>
@@ -831,10 +761,6 @@
     <string name="settings_playback_anime_skip">Anime Skip</string>
     <string name="settings_playback_anime_skip_client_id">AnimeSkip クライアントID</string>
     <string name="settings_playback_anime_skip_client_id_description">AnimeSkip APIのクライアントIDを入力してください。anime-skip.comで取得できます。</string>
-    <string name="settings_playback_intro_submit_enabled">イントロ投稿を有効にする</string>
-    <string name="settings_playback_intro_submit_enabled_description">イントロ・アウトロのタイムスタンプをコミュニティデータベースに投稿するボタンを表示します。</string>
-    <string name="settings_playback_introdb_api_key">IntroDB APIキー</string>
-    <string name="settings_playback_introdb_api_key_description">タイムスタンプを投稿するためのIntroDB APIキーを入力してください。投稿に必要です。</string>
     <string name="settings_playback_anime_skip_description">スキップタイムスタンプをAnimeSkipでも検索します（クライアントIDが必要）。</string>
     <string name="settings_playback_auto_play_next_episode">次のエピソードを自動再生</string>
     <string name="settings_playback_auto_play_next_episode_description">プロンプトが表示されたら自動的に次のエピソードを開始します。</string>
@@ -1592,7 +1518,6 @@
     <string name="unit_bytes_mb">MB</string>
     <string name="unit_bytes_gb">GB</string>
     <!-- PlayerControls a11y -->
-    <string name="player_action_submit_intro">イントロを投稿</string>
     <string name="player_action_video_settings">映像設定</string>
     <!-- CloudLibrary -->
     <string name="cloud_library_provider_unavailable">%1$s ではクラウドライブラリが利用できません。</string>
@@ -1725,15 +1650,6 @@
     <string name="settings_debrid_rule_excluded_release_groups">除外するリリースグループ</string>
     <string name="settings_debrid_rule_excluded_release_groups_desc">選択したリリースグループを非表示にします。</string>
     <!-- Submit intro/recap/outro dialog -->
-    <string name="submit_intro_title">タイムスタンプを投稿</string>
-    <string name="submit_intro_segment_type">セグメントタイプ</string>
-    <string name="submit_intro_segment_intro">イントロ</string>
-    <string name="submit_intro_segment_recap">振り返り</string>
-    <string name="submit_intro_segment_outro">アウトロ</string>
-    <string name="submit_intro_start_time">開始時刻 (MM:SS)</string>
-    <string name="submit_intro_end_time">終了時刻 (MM:SS)</string>
-    <string name="submit_intro_submit">投稿</string>
-    <string name="submit_intro_capture">キャプチャ</string>
     <!-- iOS advanced playback -->
     <string name="settings_playback_ios_hw_decoder_dialog">ハードウェアデコーダー</string>
     <string name="settings_playback_ios_audio_output_dialog">音声出力</string>
@@ -1759,7 +1675,6 @@
     <!-- Cloud library -->
     <string name="cloud_library_playback_disabled">クラウドライブラリが無効です。</string>
     <!-- IntroDB settings -->
-    <string name="settings_playback_introdb_invalid_api_key">APIキーが無効か接続に失敗しました</string>
     <string name="addons_manifest_missing_field">マニフェストに「%1$s」がありません</string>
     <string name="collections_editor_tmdb_collection_title_format">TMDBコレクション %1$s</string>
     <string name="collections_editor_tmdb_director_title_format">TMDB監督 %1$s</string>
@@ -1857,14 +1772,7 @@
     <string name="plugins_test_failed">プロバイダーのテストに失敗しました</string>
     <string name="plugins_test_results_count">テスト結果 (%1$d 件)</string>
     <string name="search_error_no_results_for_catalog">%1$s の検索結果が返されませんでした。</string>
-    <string name="settings_playback_introdb_invalid_key">APIキーが無効か接続に失敗しました</string>
     <string name="streams_plugin_repository_fallback">プラグインリポジトリ</string>
-    <string name="submit_intro_action">イントロを投稿</string>
-    <string name="submit_intro_button_submit">投稿</string>
-    <string name="submit_intro_capture_button">キャプチャ</string>
-    <string name="submit_intro_end_time_label">終了時刻 (MM:SS)</string>
-    <string name="submit_intro_segment_type_label">セグメントタイプ</string>
-    <string name="submit_intro_start_time_label">開始時刻 (MM:SS)</string>
     <string name="trakt_connected_status">Traktに連携しました</string>
     <string name="trakt_disconnected_status">Traktの連携を解除しました</string>
     <string name="unit_bytes_tb">TB</string>

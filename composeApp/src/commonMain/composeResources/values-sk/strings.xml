@@ -1,6 +1,4 @@
 <resources>
-    <string name="about_licenses_attributions_subtitle">Zdroje dát, poďakovania a licencie platformy</string>
-    <string name="about_supporters_contributors_subtitle">Otvorené uznanie a kredity projektu</string>
     <string name="action_back">Späť</string>
     <string name="action_cancel">Zrušiť</string>
     <string name="action_close">Zavrieť</string>
@@ -424,14 +422,10 @@
     <string name="compose_settings_page_root">Nastavenia</string>
     <string name="compose_settings_page_streams">Streamy</string>
     <string name="settings_appearance_section_streams">STREAMY</string>
-    <string name="compose_settings_page_supporters_contributors">Podporovatelia a prispievatelia</string>
-    <string name="compose_settings_page_tmdb_enrichment">Obohatenie TMDB</string>
     <string name="compose_settings_page_trakt">Trakt</string>
     <string name="compose_settings_root_about_section">O APLIKÁCII</string>
     <string name="compose_settings_root_account_description">Stav účtu a synchronizácie</string>
     <string name="compose_settings_root_account_section">ÚČET</string>
-    <string name="compose_settings_root_advanced_description">Správanie pri spustení a profiloch.</string>
-    <string name="compose_settings_root_advanced_section">POKROČILÉ</string>
     <string name="compose_settings_root_appearance_description">Štruktúra domovskej obrazovky a štýly plagátov</string>
     <string name="compose_settings_root_check_updates_description">Stiahnuť najnovšie vydanie</string>
     <string name="compose_settings_root_check_updates_title">Skontrolovať aktualizácie</string>
@@ -456,36 +450,8 @@
     <string name="settings_advanced_remember_last_profile_description">Zapamätať naposledy vybraný profil pri spustení</string>
     <string name="settings_advanced_clear_cw_cache">Vymazať vyrovnávaciu pamäť Pokračovať v sledovaní</string>
     <string name="settings_advanced_clear_cw_cache_subtitle">Odstrániť uložené dáta Pokračovať v sledovaní a obnoviť postup sledovania</string>
-    <string name="settings_advanced_clear_cw_cache_done">Vyrovnávacia pamäť vymazaná</string>
-    <string name="settings_licenses_attributions_section_app">LICENCIA APLIKÁCIE</string>
-    <string name="settings_licenses_attributions_section_data">DÁTA A SLUŽBY</string>
-    <string name="settings_licenses_attributions_section_playback">LICENCIA PREHRÁVANIA</string>
-    <string name="settings_licenses_attributions_nuvio_title">Nuvio Mobile</string>
-    <string name="settings_licenses_attributions_nuvio_body">Zdrojový kód a licenčné podmienky sú dostupné v repozitári projektu.</string>
-    <string name="settings_licenses_attributions_nuvio_license">Licencované pod GNU General Public License v3.0.</string>
-    <string name="settings_licenses_attributions_tmdb_title">The Movie Database (TMDB)</string>
-    <string name="settings_licenses_attributions_tmdb_body">Nuvio používa API TMDB pre metadáta filmov a TV, umelecké diela, trailery, obsadenie, produkčné detaily, kolekcie a odporúčania. Tento produkt používa API TMDB, ale nie je schválený ani certifikovaný spoločnosťou TMDB.</string>
-    <string name="settings_licenses_attributions_imdb_title">Nekomerčné datasety IMDb</string>
-    <string name="settings_licenses_attributions_imdb_body">Nuvio používa nekomerčné datasety IMDb vrátane title.ratings.tsv.gz pre hodnotenia IMDb a počty hlasov. Informácie poskytnuté IMDb (https://www.imdb.com). Použité so súhlasom. Dáta IMDb sú určené na osobné a nekomerčné použitie podľa podmienok IMDb.</string>
-    <string name="settings_licenses_attributions_trakt_title">Trakt</string>
-    <string name="settings_licenses_attributions_trakt_body">Nuvio sa pripája k Trakt pre autentifikáciu účtu, históriu sledovania, synchronizáciu postupu, dáta knižnice, hodnotenia, zoznamy a komentáre. Nuvio nie je pridružený k Trakt ani ním schválený.</string>
-    <string name="settings_licenses_attributions_premiumize_title">Premiumize</string>
-    <string name="settings_licenses_attributions_premiumize_body">Nuvio sa pripája k Premiumize pre autentifikáciu účtu, prístup ku cloudovej knižnici, kontroly vyrovnávacej pamäte a funkcie cloudového prehrávania. Nuvio nie je pridružený k Premiumize ani ním schválený.</string>
-    <string name="settings_licenses_attributions_torbox_title">TorBox</string>
-    <string name="settings_licenses_attributions_torbox_body">Nuvio sa pripája k TorBox pre autentifikáciu účtu, prístup ku cloudovej knižnici, kontroly vyrovnávacej pamäte a funkcie cloudového prehrávania. Nuvio nie je pridružený k TorBox ani ním schválený.</string>
-    <string name="settings_licenses_attributions_mdblist_title">MDBList</string>
-    <string name="settings_licenses_attributions_mdblist_body">Nuvio používa MDBList pre hodnotenia a dáta externých poskytovateľov skóre. Nuvio nie je pridružený k MDBList ani ním schválený.</string>
-    <string name="settings_licenses_attributions_introdb_title">IntroDB</string>
-    <string name="settings_licenses_attributions_introdb_body">Nuvio používa API IntroDB pre komunitou poskytované časové pečiatky intro, rekapitulácie, kreditov a náhľadov používaných ovládacími prvkami preskočenia. Nuvio nie je pridružený k IntroDB ani ním schválený.</string>
-    <string name="settings_licenses_attributions_mpvkit_title">MPVKit</string>
-    <string name="settings_licenses_attributions_mpvkit_body">Používa sa na prehrávanie v zostavách iOS.</string>
-    <string name="settings_licenses_attributions_mpvkit_license">Samotný zdrojový kód MPVKit je licencovaný pod LGPL v3.0. Balíky MPVKit vrátane knižníc libmpv a FFmpeg sú tiež licencované pod LGPL v3.0.</string>
-    <string name="settings_licenses_attributions_exoplayer_title">AndroidX Media3 ExoPlayer 1.8.0</string>
-    <string name="settings_licenses_attributions_exoplayer_body">Používa sa na prehrávanie v zostavách Android.</string>
-    <string name="settings_licenses_attributions_exoplayer_license">Licencované pod Apache License, Version 2.0.</string>
     <string name="compose_trakt_list_picker_loading">Načítavanie vašich zoznamov Trakt…</string>
     <string name="compose_trakt_list_picker_subtitle">Vyberte, kam uložiť tento titul na Trakt</string>
-    <string name="action_donate">Darovať</string>
     <string name="cw_action_go_to_details">Prejsť na podrobnosti</string>
     <string name="cw_action_remove">Odstrániť</string>
     <string name="cw_action_start_from_beginning">Začať od začiatku</string>
@@ -776,42 +742,6 @@
     <string name="settings_notifications_test_for_title">Odoslať lokálne testovacie oznámenie pre %1$s.</string>
     <string name="settings_notifications_test_requires_saved_show">Najprv uložte seriál do knižnice, aby ste mohli testovať oznámenia.</string>
     <string name="settings_notifications_test_title">Testovacie oznámenie</string>
-    <string name="community_section_title">Komunita</string>
-    <string name="community_section_description">Pozrite sa na ľudí, ktorí budujú a podporujú Nuvio na Mobile, TV a Webe.</string>
-    <string name="community_donation_progress_title">Server a údržba tohto mesiaca</string>
-    <string name="community_donation_progress_complete">Pokryté. Ďalšia podpora ide na vývoj.</string>
-    <string name="community_donation_progress_remaining">Po 100 % ide ďalšia podpora na vývoj.</string>
-    <string name="community_loading_donation_progress">Načítavanie postupu financovania...</string>
-    <string name="community_supporters_not_configured">API podporovateľov nie je nakonfigurované. Pridajte DONATIONS_BASE_URL do local.properties.</string>
-    <string name="community_tab_contributors">Prispievatelia</string>
-    <string name="community_tab_supporters">Podporovatelia</string>
-    <string name="community_open_github">Otvoriť GitHub</string>
-    <string name="community_github_profile_unavailable">Profil GitHub nie je dostupný</string>
-    <string name="community_no_message_attached">Žiadna správa nie je priložená.</string>
-    <string name="community_loading_contributors">Načítavanie prispievateľov...</string>
-    <string name="community_loading_supporters">Načítavanie podporovateľov...</string>
-    <string name="community_load_contributors_failed">Nepodarilo sa načítať prispievateľov</string>
-    <string name="community_load_supporters_failed">Nepodarilo sa načítať podporovateľov</string>
-    <string name="community_empty_contributors">Nenašli sa žiadni prispievatelia.</string>
-    <string name="community_empty_supporters">Nenašli sa žiadni podporovatelia.</string>
-    <string name="community_error_unable_load_contributors">Nepodarilo sa načítať prispievateľov.</string>
-    <string name="community_error_unable_load_supporters">Nepodarilo sa načítať podporovateľov.</string>
-    <string name="community_error_contributors_request_failed">Momentálne sa nepodarilo načítať prispievateľov.</string>
-    <string name="community_error_supporters_request_failed">Momentálne sa nepodarilo načítať podporovateľov.</string>
-    <string name="community_total_commits">%1$d celkových commitov</string>
-    <string name="community_month_jan">Jan</string>
-    <string name="community_month_feb">Feb</string>
-    <string name="community_month_mar">Mar</string>
-    <string name="community_month_apr">Apr</string>
-    <string name="community_month_may">Máj</string>
-    <string name="community_month_jun">Jún</string>
-    <string name="community_month_jul">Júl</string>
-    <string name="community_month_aug">Aug</string>
-    <string name="community_month_sep">Sep</string>
-    <string name="community_month_oct">Okt</string>
-    <string name="community_month_nov">Nov</string>
-    <string name="community_month_dec">Dec</string>
-    <string name="community_date_format">%1$s %2$s, %3$s</string>
     <string name="settings_playback_all_addons">Všetky nainštalované doplnky</string>
     <string name="settings_playback_all_plugins">Všetky povolené pluginy</string>
     <string name="settings_playback_allowed_addons">Povolené doplnky</string>
@@ -819,10 +749,6 @@
     <string name="settings_playback_anime_skip">Anime Skip</string>
     <string name="settings_playback_anime_skip_client_id">ID klienta AnimeSkip</string>
     <string name="settings_playback_anime_skip_client_id_description">Zadajte ID klienta API AnimeSkip. Získajte ho na anime-skip.com.</string>
-    <string name="settings_playback_intro_submit_enabled">Povoliť odosielanie intro</string>
-    <string name="settings_playback_intro_submit_enabled_description">Zobraziť tlačidlo na odosielanie časových pečiatok intro/outro do komunitnej databázy.</string>
-    <string name="settings_playback_introdb_api_key">API kľúč IntroDB</string>
-    <string name="settings_playback_introdb_api_key_description">Zadajte váš API kľúč IntroDB na odosielanie časových pečiatok. Vyžaduje sa na odosielanie.</string>
     <string name="settings_playback_anime_skip_description">Tiež vyhľadávať v AnimeSkip časové pečiatky preskočenia (vyžaduje ID klienta).</string>
     <string name="settings_playback_auto_play_next_episode">Automaticky prehrať ďalšiu epizódu</string>
     <string name="settings_playback_auto_play_next_episode_description">Spustiť ďalšiu epizódu automaticky, keď sa zobrazí výzva.</string>
@@ -1336,8 +1262,6 @@
     <string name="auth_sign_out_failed">Odhlásenie zlyhalo</string>
     <string name="auth_sign_up_failed">Registrácia zlyhala</string>
     <string name="catalog_load_failed">Nepodarilo sa načítať položky katalógu.</string>
-    <string name="_watching_up_next">Ďalšia epizóda</string>
-    <string name="_watching_up_next_episode">Ďalšia epizóda • S%1$d E%2$d</string>
     <string name="detail_logo_content_description">Logo %1$s</string>
     <string name="details_comments_load_failed">Nepodarilo sa načítať komentáre</string>
     <string name="details_load_failed_all_addons">Nepodarilo sa načítať podrobnosti z žiadneho doplnku.</string>
@@ -1568,7 +1492,6 @@
     <string name="unit_bytes_mb">MB</string>
     <string name="unit_bytes_gb">GB</string>
     <!-- PlayerControls a11y -->
-    <string name="player_action_submit_intro">Odoslať intro</string>
     <string name="player_action_video_settings">Nastavenia videa</string>
     <!-- CloudLibrary -->
     <string name="cloud_library_provider_unavailable">Cloudová knižnica nie je dostupná pre %1$s.</string>
@@ -1701,15 +1624,6 @@
     <string name="settings_debrid_rule_excluded_release_groups">Vylúčené release skupiny</string>
     <string name="settings_debrid_rule_excluded_release_groups_desc">Skryť vybrané release skupiny.</string>
     <!-- Submit intro/recap/outro dialog -->
-    <string name="submit_intro_title">Odoslať časové značky</string>
-    <string name="submit_intro_segment_type">TYP SEGMENTU</string>
-    <string name="submit_intro_segment_intro">Intro</string>
-    <string name="submit_intro_segment_recap">Rekapitulácia</string>
-    <string name="submit_intro_segment_outro">Outro</string>
-    <string name="submit_intro_start_time">ZAČIATOČNÝ ČAS (MM:SS)</string>
-    <string name="submit_intro_end_time">KONCOVÝ ČAS (MM:SS)</string>
-    <string name="submit_intro_submit">Odoslať</string>
-    <string name="submit_intro_capture">Zachytiť</string>
     <!-- iOS advanced playback -->
     <string name="settings_playback_ios_hw_decoder_dialog">Hardvérový dekodér</string>
     <string name="settings_playback_ios_audio_output_dialog">Zvukový výstup</string>
@@ -1735,7 +1649,6 @@
     <!-- Cloud library -->
     <string name="cloud_library_playback_disabled">Cloudová knižnica je vypnutá.</string>
     <!-- IntroDB settings -->
-    <string name="settings_playback_introdb_invalid_api_key">Neplatný API kľúč alebo zlyhalo pripojenie</string>
     <string name="addons_manifest_missing_field">V manifeste chýba \"%1$s\"</string>
     <string name="collections_editor_tmdb_collection_title_format">TMDB Kolekcia %1$s</string>
     <string name="collections_editor_tmdb_director_title_format">TMDB Režisér %1$s</string>
@@ -1833,14 +1746,7 @@
     <string name="plugins_test_failed">Test poskytovateľa zlyhal</string>
     <string name="plugins_test_results_count">Výsledky testu (%1$d)</string>
     <string name="search_error_no_results_for_catalog">Žiadne výsledky vyhľadávania pre %1$s.</string>
-    <string name="settings_playback_introdb_invalid_key">Neplatný API kľúč alebo zlyhalo pripojenie</string>
     <string name="streams_plugin_repository_fallback">Repozitár pluginov</string>
-    <string name="submit_intro_action">Odoslať Intro</string>
-    <string name="submit_intro_button_submit">Odoslať</string>
-    <string name="submit_intro_capture_button">Zachytiť</string>
-    <string name="submit_intro_end_time_label">KONCOVÝ ČAS (MM:SS)</string>
-    <string name="submit_intro_segment_type_label">TYP SEGMENTU</string>
-    <string name="submit_intro_start_time_label">ZAČIATOČNÝ ČAS (MM:SS)</string>
     <string name="trakt_connected_status">Pripojené k Trakt</string>
     <string name="trakt_disconnected_status">Odpojené od Trakt</string>
     <string name="unit_bytes_tb">TB</string>
@@ -1918,8 +1824,6 @@
     <string name="settings_playback_libmpv_yuv420p_description">Vynútiť výstup YUV420P pre zariadenia s problémami renderera alebo farieb.</string>
     <string name="streams_loading_skip_segments">Načítavajú sa segmenty preskočenia…</string>
     <string name="compose_player_languages">Jazyky</string>
-    <string name="compose_settings_page_privacy_policy">Zásady ochrany osobných údajov</string>
-    <string name="compose_settings_root_privacy_policy_description">Zistite, ako Nuvio spracováva vaše údaje</string>
     <string name="settings_advanced_section_diagnostics">DIAGNOSTIKA</string>
     <string name="settings_advanced_sentry_reports">Hlásenia o pádoch (Sentry)</string>
     <string name="settings_advanced_sentry_reports_subtitle">Odosielať hlásenia o pádoch a zamrznutiach (ANR) s bezpečným kontextom. Predvolene zapnuté.</string>
@@ -2008,7 +1912,6 @@
     <string name="library_sort_added_desc">Najnovšie pridané</string>
     <string name="library_sort_title_asc">Názov A–Z</string>
     <string name="library_sort_title_desc">Názov Z–A</string>
-    <string name="library_sort_trakt_order">Poradie Trakt</string>
     <string name="cloud_library_search_label">Hľadať v cloudovej knižnici</string>
     <string name="settings_p2p_profile_title">Profil pre torrenty</string>
     <string name="settings_p2p_profile_soft">Šetrný</string>
@@ -2048,8 +1951,6 @@
     <string name="compose_catalog_subtitle_simkl_library">Simkl zoznam sledovania</string>
     <string name="compose_settings_page_tracking">Sledovanie obsahu</string>
     <string name="compose_settings_root_tracking_description">Pripojte poskytovateľov sledovania obsahu a vyberte, ktorý z nich bude napájať vašu Knižnicu a Pokračovať v sledovaní.</string>
-    <string name="settings_licenses_attributions_simkl_title">Simkl</string>
-    <string name="settings_licenses_attributions_simkl_body">Aplikácia Nuvio sa pripája k službe Simkl na účely overenia účtu, zoznamov sledovania, histórie sledovania, priebehu prehrávania a scrobblovania. Údaje o sledovaní filmov, seriálov a anime poskytuje služba Simkl. Aplikácia Nuvio nie je spojená so službou Simkl ani ňou nie je podporovaná.</string>
     <string name="compose_tracking_list_picker_loading">Načítavajú sa zoznamy…</string>
     <string name="compose_tracking_list_picker_subtitle">Vyberte, kam chcete tento titul uložiť</string>
     <string name="settings_tracking_data_sources">Zdroje</string>
@@ -2228,11 +2129,6 @@
     <string name="server_error_save">Nepodarilo sa uložiť konfiguráciu servera.</string>
     <string name="server_error_session_clear">Nepodarilo sa bezpečne vymazať aktuálnu reláciu. Server nebol zmenený.</string>
     <string name="server_error_restart">Server bol uložený, ale aplikáciu sa nepodarilo automaticky reštartovať. Reštartujte ju manuálne.</string>
-    <string name="settings_licenses_attributions_section_ui">KNIŽNICE UI</string>
-    <string name="settings_licenses_attributions_haze_title">Haze 1.7.2</string>
-    <string name="settings_licenses_attributions_haze_body">Používa sa na efekty rozostrenia pozadia. Vytvoril Chris Banes.</string>
-    <string name="settings_licenses_attributions_haze_license">Licencované pod Apache License, Verzia 2.0.</string>
-    <string name="action_support_nuvio">Podporiť Nuvio</string>
     <string name="settings_appearance_app_icon">Ikona aplikácie</string>
     <string name="settings_appearance_app_icon_arctic_blue">Arktická modrá</string>
     <string name="settings_appearance_app_icon_android_confirmation_message">Zmena na %1$s zatvorí aplikáciu Nuvio. Ťuknutím na OK pokračujte.</string>
@@ -2273,20 +2169,6 @@
     <string name="settings_stream_background_description">Vyberte pozadie pre obrazovku streamov.</string>
     <string name="settings_meta_poster_transition">Prechod plagátu</string>
     <string name="settings_meta_poster_transition_description">Pri otváraní detailov zväčšiť a rozostriť plagát.</string>
-    <string name="community_membership_title">Členstvo podporovateľa Nuvio</string>
-    <string name="community_membership_description">Podpora aplikácie Nuvio pomáha pokrývať náklady na infraštruktúru a nepretržitý vývoj, pričom základné funkcie ostávajú pre všetkých zadarmo.</string>
-    <string name="community_view_supporter_membership">Zobraziť členstvo podporovateľa</string>
-    <string name="community_membership_you_are">Ste</string>
-    <string name="community_membership_thank_you">Ďakujeme.</string>
-    <string name="community_membership_supporter_since">Podporovateľom od %1$s.</string>
-    <string name="community_membership_connected_title">Patreon je pripojený</string>
-    <string name="community_membership_connected_description">Na tomto účte Patreon sa nenašla žiadna aktívna úroveň Nuvio. Pozrite si dostupné možnosti alebo obnovte stav po zmene členstva na Patreone.</string>
-    <string name="community_membership_manage">Spravovať členstvo</string>
-    <string name="community_membership_refresh">Obnoviť</string>
-    <string name="community_membership_refreshing">Obnovuje sa</string>
-    <string name="community_membership_unable_load">Nepodarilo sa načítať stav členstva. Skúste to znova.</string>
-    <string name="community_membership_tier_supporter">Podporovateľ</string>
-    <string name="community_membership_tier_supporter_plus">Podporovateľ Plus</string>
     <string name="settings_playback_auto_play_next_episode_fallback">Záložná možnosť pri zlyhaní binge skupiny</string>
     <string name="settings_playback_auto_play_next_episode_fallback_description">Automaticky vybrať prvý dostupný stream, ak sa nenájde binge skupina. Keď je možnosť vypnutá, zobrazí sa namiesto toho výber streamu.</string>
     <string name="settings_playback_pause_overlay">Informačná vrstva pri pozastavení</string>

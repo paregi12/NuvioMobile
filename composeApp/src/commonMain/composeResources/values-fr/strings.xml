@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="about_licenses_attributions_subtitle">Sources de données, remerciements et licences de plateforme</string>
-    <string name="about_supporters_contributors_subtitle">Reconnaissance et crédits du projet</string>
     <string name="action_back">Retour</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_close">Fermer</string>
@@ -426,14 +424,10 @@
     <string name="compose_settings_page_root">Paramètres</string>
     <string name="compose_settings_page_streams">Streams</string>
     <string name="settings_appearance_section_streams">STREAMS</string>
-    <string name="compose_settings_page_supporters_contributors">Supporters et contributeurs</string>
-    <string name="compose_settings_page_tmdb_enrichment">Enrichissement TMDB</string>
     <string name="compose_settings_page_trakt">Trakt</string>
     <string name="compose_settings_root_about_section">À PROPOS</string>
     <string name="compose_settings_root_account_description">Gérez votre compte, déconnectez-vous ou supprimez-le.</string>
     <string name="compose_settings_root_account_section">COMPTE</string>
-    <string name="compose_settings_root_advanced_description">Comportement au démarrage et des profils.</string>
-    <string name="compose_settings_root_advanced_section">AVANCÉ</string>
     <string name="compose_settings_root_appearance_description">Ajustez la présentation de l’accueil et les préférences visuelles.</string>
     <string name="compose_settings_root_check_updates_description">Rechercher de nouvelles versions de l’application.</string>
     <string name="compose_settings_root_check_updates_title">Vérifier les mises à jour</string>
@@ -474,36 +468,8 @@
     <string name="sentry_turn_on">Activer</string>
     <string name="settings_advanced_clear_cw_cache">Vider le cache de Continuer à regarder</string>
     <string name="settings_advanced_clear_cw_cache_subtitle">Supprime les miniatures, titres et données d’enrichissement en cache pour Continuer à regarder</string>
-    <string name="settings_advanced_clear_cw_cache_done">Cache vidé</string>
-    <string name="settings_licenses_attributions_section_app">LICENCE DE L’APP</string>
-    <string name="settings_licenses_attributions_section_data">DONNÉES ET SERVICES</string>
-    <string name="settings_licenses_attributions_section_playback">LICENCE DE LECTURE</string>
-    <string name="settings_licenses_attributions_nuvio_title">Nuvio Mobile</string>
-    <string name="settings_licenses_attributions_nuvio_body">Le code source et les termes de la licence sont disponibles dans le dépôt du projet.</string>
-    <string name="settings_licenses_attributions_nuvio_license">Distribué sous la licence GNU General Public License v3.0.</string>
-    <string name="settings_licenses_attributions_tmdb_title">The Movie Database (TMDB)</string>
-    <string name="settings_licenses_attributions_tmdb_body">Nuvio utilise l’API TMDB pour les métadonnées de films et séries, les visuels, les bandes-annonces, le casting, les détails de production, les collections et les recommandations. Ce produit utilise l’API TMDB mais n’est ni approuvé ni certifié par TMDB.</string>
-    <string name="settings_licenses_attributions_imdb_title">Jeux de données non commerciaux IMDb</string>
-    <string name="settings_licenses_attributions_imdb_body">Nuvio utilise les jeux de données non commerciaux IMDb, y compris title.ratings.tsv.gz, pour les notes et le nombre de votes IMDb. Informations fournies par IMDb (https://www.imdb.com). Utilisé avec autorisation. Les données IMDb sont destinées à un usage personnel et non commercial selon les conditions d&apos;IMDb.</string>
-    <string name="settings_licenses_attributions_trakt_title">Trakt</string>
-    <string name="settings_licenses_attributions_trakt_body">Nuvio se connecte à Trakt pour l’authentification du compte, l’historique de visionnage, la synchronisation de progression, les données de bibliothèque, les notes, les listes et les commentaires. Nuvio n’est ni affilié ni approuvé par Trakt.</string>
-    <string name="settings_licenses_attributions_premiumize_title">Premiumize</string>
-    <string name="settings_licenses_attributions_premiumize_body">Nuvio se connecte à Premiumize pour l’authentification du compte, l’accès à la cloud library, les vérifications de cache et les fonctionnalités de lecture cloud. Nuvio n’est ni affilié ni approuvé par Premiumize.</string>
-    <string name="settings_licenses_attributions_torbox_title">TorBox</string>
-    <string name="settings_licenses_attributions_torbox_body">Nuvio se connecte à TorBox pour l’authentification du compte, l’accès à la cloud library, les vérifications de cache et les fonctionnalités de lecture cloud. Nuvio n’est ni affilié ni approuvé par TorBox.</string>
-    <string name="settings_licenses_attributions_mdblist_title">MDBList</string>
-    <string name="settings_licenses_attributions_mdblist_body">Nuvio utilise MDBList pour les notes et les données de scores externes. Nuvio n’est ni affilié ni approuvé par MDBList.</string>
-    <string name="settings_licenses_attributions_introdb_title">IntroDB</string>
-    <string name="settings_licenses_attributions_introdb_body">Nuvio utilise l’API IntroDB pour les timestamps d’intro, de récap, de générique et d’aperçu fournis par la communauté et utilisés par les contrôles de saut. Nuvio n’est ni affilié ni approuvé par IntroDB.</string>
-    <string name="settings_licenses_attributions_mpvkit_title">MPVKit</string>
-    <string name="settings_licenses_attributions_mpvkit_body">Utilisé pour la lecture sur les builds iOS.</string>
-    <string name="settings_licenses_attributions_mpvkit_license">Le code source MPVKit seul est distribué sous LGPL v3.0. Les bundles MPVKit, y compris les bibliothèques libmpv et FFmpeg, sont également distribués sous LGPL v3.0.</string>
-    <string name="settings_licenses_attributions_exoplayer_title">AndroidX Media3 ExoPlayer 1.8.0</string>
-    <string name="settings_licenses_attributions_exoplayer_body">Utilisé pour la lecture sur les builds Android.</string>
-    <string name="settings_licenses_attributions_exoplayer_license">Distribué sous la licence Apache, version 2.0.</string>
     <string name="compose_trakt_list_picker_loading">Chargement de vos listes Trakt…</string>
     <string name="compose_trakt_list_picker_subtitle">Choisissez où enregistrer ce titre dans Trakt</string>
-    <string name="action_donate">Faire un don</string>
     <string name="cw_action_go_to_details">Voir les détails</string>
     <string name="cw_action_remove">Supprimer</string>
     <string name="cw_action_start_from_beginning">Recommencer depuis le début</string>
@@ -806,42 +772,6 @@
     <string name="settings_notifications_test_for_title">Envoyer une notification locale de test pour %1$s.</string>
     <string name="settings_notifications_test_requires_saved_show">Enregistrez d’abord une série dans votre bibliothèque pour tester les notifications.</string>
     <string name="settings_notifications_test_title">Notification de test</string>
-    <string name="community_section_title">Communauté</string>
-    <string name="community_section_description">Découvrez les personnes qui construisent et soutiennent Nuvio sur Mobile, TV et Web.</string>
-    <string name="community_donation_progress_title">Serveur et maintenance de ce mois-ci</string>
-    <string name="community_donation_progress_complete">Couvert. Le soutien supplémentaire va désormais au développement.</string>
-    <string name="community_donation_progress_remaining">Au-delà de 100 %, le soutien supplémentaire va au développement.</string>
-    <string name="community_loading_donation_progress">Chargement de la progression du financement…</string>
-    <string name="community_supporters_not_configured">L’API des supporters n’est pas configurée. Ajoutez DONATIONS_BASE_URL dans local.properties.</string>
-    <string name="community_tab_contributors">Contributeurs</string>
-    <string name="community_tab_supporters">Supporters</string>
-    <string name="community_open_github">Ouvrir GitHub</string>
-    <string name="community_github_profile_unavailable">Profil GitHub indisponible</string>
-    <string name="community_no_message_attached">Aucun message joint.</string>
-    <string name="community_loading_contributors">Chargement des contributeurs…</string>
-    <string name="community_loading_supporters">Chargement des supporters…</string>
-    <string name="community_load_contributors_failed">Impossible de charger les contributeurs</string>
-    <string name="community_load_supporters_failed">Impossible de charger les supporters</string>
-    <string name="community_empty_contributors">Aucun contributeur trouvé.</string>
-    <string name="community_empty_supporters">Aucun supporter trouvé.</string>
-    <string name="community_error_unable_load_contributors">Impossible de charger les contributeurs.</string>
-    <string name="community_error_unable_load_supporters">Impossible de charger les supporters.</string>
-    <string name="community_error_contributors_request_failed">Impossible de charger les contributeurs pour le moment.</string>
-    <string name="community_error_supporters_request_failed">Impossible de charger les supporters pour le moment.</string>
-    <string name="community_total_commits">%1$d commits au total</string>
-    <string name="community_month_jan">Jan</string>
-    <string name="community_month_feb">Fév</string>
-    <string name="community_month_mar">Mar</string>
-    <string name="community_month_apr">Avr</string>
-    <string name="community_month_may">Mai</string>
-    <string name="community_month_jun">Juin</string>
-    <string name="community_month_jul">Juil.</string>
-    <string name="community_month_aug">Aoû</string>
-    <string name="community_month_sep">Sep</string>
-    <string name="community_month_oct">Oct</string>
-    <string name="community_month_nov">Nov</string>
-    <string name="community_month_dec">Déc</string>
-    <string name="community_date_format">%1$s %2$s %3$s</string>
     <string name="settings_playback_all_addons">Tous les addons</string>
     <string name="settings_playback_all_plugins">Tous les plugins</string>
     <string name="settings_playback_allowed_addons">Addons autorisés</string>
@@ -849,10 +779,6 @@
     <string name="settings_playback_anime_skip">Anime Skip</string>
     <string name="settings_playback_anime_skip_client_id">ID client AnimeSkip</string>
     <string name="settings_playback_anime_skip_client_id_description">Saisissez votre ID client API AnimeSkip. Obtenez-en un sur anime-skip.com.</string>
-    <string name="settings_playback_intro_submit_enabled">Activer la soumission d’intro</string>
-    <string name="settings_playback_intro_submit_enabled_description">Affiche un bouton pour soumettre des timestamps d’intro/outro à la base de données communautaire.</string>
-    <string name="settings_playback_introdb_api_key">Clé API IntroDB</string>
-    <string name="settings_playback_introdb_api_key_description">Saisissez votre clé API IntroDB pour soumettre des timestamps. Requise pour la soumission.</string>
     <string name="settings_playback_anime_skip_description">Rechercher également des marqueurs de saut sur AnimeSkip (nécessite un ID client).</string>
     <string name="settings_playback_auto_play_next_episode">Lecture automatique de l’épisode suivant</string>
     <string name="settings_playback_auto_play_next_episode_description">Rechercher et lire automatiquement l’épisode suivant lorsque le seuil est atteint.</string>
@@ -1611,7 +1537,6 @@
     <string name="unit_bytes_mb">Mo</string>
     <string name="unit_bytes_gb">Go</string>
     <!-- PlayerControls a11y -->
-    <string name="player_action_submit_intro">Soumettre l’intro</string>
     <string name="player_action_video_settings">Paramètres vidéo</string>
     <!-- CloudLibrary -->
     <string name="cloud_library_provider_unavailable">La cloud library n’est pas disponible pour %1$s.</string>
@@ -1743,15 +1668,6 @@
     <string name="settings_debrid_rule_excluded_release_groups">Release groups exclus</string>
     <string name="settings_debrid_rule_excluded_release_groups_desc">Masque les release groups sélectionnés.</string>
     <!-- Submit intro/recap/outro dialog -->
-    <string name="submit_intro_title">Soumettre les timestamps</string>
-    <string name="submit_intro_segment_type">TYPE DE SEGMENT</string>
-    <string name="submit_intro_segment_intro">Intro</string>
-    <string name="submit_intro_segment_recap">Récap</string>
-    <string name="submit_intro_segment_outro">Outro</string>
-    <string name="submit_intro_start_time">DÉBUT (MM:SS)</string>
-    <string name="submit_intro_end_time">FIN (MM:SS)</string>
-    <string name="submit_intro_submit">Soumettre</string>
-    <string name="submit_intro_capture">Capturer</string>
     <!-- iOS advanced playback -->
     <string name="settings_playback_ios_hw_decoder_dialog">Décodeur matériel</string>
     <string name="settings_playback_ios_audio_output_dialog">Sortie audio</string>
@@ -1777,7 +1693,6 @@
     <!-- Cloud library -->
     <string name="cloud_library_playback_disabled">La cloud library est désactivée.</string>
     <!-- IntroDB settings -->
-    <string name="settings_playback_introdb_invalid_api_key">Clé API invalide ou échec de connexion</string>
     <!-- TMDB placeholders & trakt status (restored after cherry-pick) -->
     <string name="collections_editor_tmdb_country_placeholder">US, KR, JP, IN</string>
     <string name="collections_editor_tmdb_date_from_placeholder">2020-01-01</string>
@@ -1889,14 +1804,7 @@
     <string name="plugins_test_failed">Échec du test du fournisseur</string>
     <string name="plugins_test_results_count">Résultats du test (%1$d)</string>
     <string name="search_error_no_results_for_catalog">Aucun résultat de recherche pour %1$s.</string>
-    <string name="settings_playback_introdb_invalid_key">Clé API invalide ou échec de connexion</string>
     <string name="streams_plugin_repository_fallback">Dépôt de plugin</string>
-    <string name="submit_intro_action">Soumettre l’intro</string>
-    <string name="submit_intro_button_submit">Soumettre</string>
-    <string name="submit_intro_capture_button">Capturer</string>
-    <string name="submit_intro_end_time_label">FIN (MM:SS)</string>
-    <string name="submit_intro_segment_type_label">TYPE DE SEGMENT</string>
-    <string name="submit_intro_start_time_label">DÉBUT (MM:SS)</string>
     <string name="trakt_connected_status">Connecté à Trakt</string>
     <string name="trakt_disconnected_status">Déconnecté de Trakt</string>
     <string name="unit_bytes_tb">To</string>
