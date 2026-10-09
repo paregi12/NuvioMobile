@@ -12,9 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 import com.nuvio.app.features.anilist.AnilistMetadataService
-import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.plugins.PluginRepository
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 object SearchRepository {
@@ -40,36 +38,9 @@ object SearchRepository {
         activeJob?.cancel()
         _uiState.value = SearchUiState(isLoading = true)
         activeJob = scope.launch {
-            val anilistSettings = AnilistSettingsRepository.snapshot()
-            val anilistDeferred = async {
-                if (anilistSettings.enabled) {
-                    runCatching { AnilistMetadataService.searchAnime(normalizedQuery) }.getOrElse { emptyList() }
-                } else {
-                    emptyList()
-                }
-            }
-            val pluginsDeferred = async {
-                runCatching {
-                    PluginRepository.search(normalizedQuery)
-                }.getOrElse { emptyList() }
-            }
-
-            val anilistPreviews = anilistDeferred.await()
-            val pluginSections = pluginsDeferred.await()
-
-            val anilistSection = if (anilistPreviews.isNotEmpty()) {
-                listOf(
-                    HomeCatalogSection(
-                        key = "anilist_search",
-                        title = "Anime",
-                        subtitle = "AniList",
-                        addonName = "AniList",
-                        items = anilistPreviews,
-                    ),
-                )
-            } else {
-                emptyList()
-            }
+            val pluginSections = runCatching {
+                PluginRepository.search(normalizedQuery)
+            }.getOrElse { emptyList() }
 
             val pluginCatalogSections = pluginSections.map { section ->
                 HomeCatalogSection(
@@ -95,8 +66,7 @@ object SearchRepository {
                 )
             }.filter { it.items.isNotEmpty() }
 
-            val allSections = anilistSection + pluginCatalogSections
-            if (allSections.isEmpty()) {
+            if (pluginCatalogSections.isEmpty()) {
                 _uiState.value = SearchUiState(
                     isLoading = false,
                     sections = emptyList(),
@@ -105,7 +75,7 @@ object SearchRepository {
             } else {
                 _uiState.value = SearchUiState(
                     isLoading = false,
-                    sections = allSections,
+                    sections = pluginCatalogSections,
                     emptyStateReason = null,
                 )
             }

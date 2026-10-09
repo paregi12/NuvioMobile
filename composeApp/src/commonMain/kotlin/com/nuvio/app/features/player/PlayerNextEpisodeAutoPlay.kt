@@ -143,6 +143,7 @@ internal fun CoroutineScope.launchPlayerNextEpisodeAutoPlay(
         PlayerStreamsRepository.loadEpisodeStreams(
             type = type,
             videoId = nextVideo.id,
+            parentMetaId = parentMetaId,
             season = nextVideo.season,
             episode = nextVideo.episode,
         )
@@ -321,8 +322,9 @@ internal fun PlayerScreenRuntime.preloadNextEpisodeSources() {
         PlayerStreamsRepository.loadEpisodeStreams(
             type = type,
             videoId = nextEp.videoId,
+            parentMetaId = parentMetaId,
             season = nextEp.season,
-            episode = nextEp.episode
+            episode = nextEp.episode,
         )
     }
 }

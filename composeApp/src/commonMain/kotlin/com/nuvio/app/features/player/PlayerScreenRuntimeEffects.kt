@@ -75,6 +75,7 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
             PlayerStreamsRepository.loadSources(
                 type = contentType ?: parentMetaType,
                 videoId = vid,
+                parentMetaId = parentMetaId,
                 season = activeSeasonNumber,
                 episode = activeEpisodeNumber,
                 forceRefresh = false,
@@ -697,6 +698,7 @@ internal fun PlayerScreenRuntime.tryRefreshCredentialedSourceAfterError(message:
             PlayerStreamsRepository.loadSources(
                 type = type,
                 videoId = currentVideoId,
+                parentMetaId = parentMetaId,
                 season = season,
                 episode = episode,
                 forceRefresh = true,

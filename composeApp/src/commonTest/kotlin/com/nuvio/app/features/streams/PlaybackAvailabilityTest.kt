@@ -17,9 +17,16 @@ class PlaybackAvailabilityTest {
         val plugins = PluginsUiState(scrapers = listOf(scraper()))
         assertTrue(available(plugins = plugins))
         assertTrue(available(plugins = plugins, type = "series"))
+        assertTrue(available(plugins = plugins, type = "anime"))
         assertFalse(available(plugins = plugins, type = "channel"))
         assertFalse(available(plugins = plugins.copy(pluginsEnabled = false)))
         assertFalse(available(plugins = plugins.copy(scrapers = listOf(scraper().copy(enabled = false)))))
+    }
+
+    @Test
+    fun `a tv and movie plugin enables anime playback`() {
+        val plugins = PluginsUiState(scrapers = listOf(scraper().copy(supportedTypes = listOf("movie", "tv"))))
+        assertTrue(available(plugins = plugins, type = "anime"))
     }
 
     private fun available(

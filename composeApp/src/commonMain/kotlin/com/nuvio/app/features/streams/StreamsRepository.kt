@@ -5,6 +5,7 @@ import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.player.PlayerSettingsRepository
 import com.nuvio.app.features.plugins.PluginRepository
+import com.nuvio.app.features.plugins.normalizePluginType
 import com.nuvio.app.features.plugins.pluginContentId
 import com.nuvio.app.features.plugins.PluginsUiState
 import kotlinx.coroutines.CoroutineScope
@@ -314,8 +315,9 @@ object StreamsRepository {
                                 videoId = videoId,
                                 season = season,
                                 episode = episode,
+                                parentMetaId = parentMetaId,
                             ),
-                            mediaType = type,
+                            mediaType = normalizePluginType(type),
                             season = season,
                             episode = episode,
                         ).fold(

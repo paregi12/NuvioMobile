@@ -69,7 +69,15 @@ data class PluginScraper(
 ) {
     fun supportsType(type: String): Boolean {
         val normalizedType = normalizePluginType(type)
-        return supportedTypes.map { normalizePluginType(it) }.contains(normalizedType)
+        val normalizedSupported = supportedTypes.map { normalizePluginType(it) }.toSet()
+        if (normalizedType in normalizedSupported) return true
+        if (type.equals("anime", ignoreCase = true)) {
+            return "tv" in normalizedSupported || "movie" in normalizedSupported || "anime" in supportedTypes.map { it.lowercase() }
+        }
+        if ("anime" in supportedTypes.map { it.lowercase() }) {
+            return true
+        }
+        return false
     }
 }
 
@@ -215,7 +223,8 @@ internal fun StoredPluginScraper.restorePluginScraper(
 
 internal fun normalizePluginType(value: String): String =
     when (value.lowercase()) {
-        "series", "show", "other" -> "tv"
+        "series", "show", "anime", "other", "tvshow" -> "tv"
+        "movie", "film" -> "movie"
         else -> value.lowercase()
     }
 

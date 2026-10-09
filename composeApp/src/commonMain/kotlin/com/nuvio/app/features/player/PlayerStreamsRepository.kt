@@ -5,6 +5,7 @@ import com.nuvio.app.core.build.AppFeaturePolicy
 import com.nuvio.app.features.details.MetaDetailsRepository
 import com.nuvio.app.features.plugins.PluginRepository
 import com.nuvio.app.features.plugins.PluginsUiState
+import com.nuvio.app.features.plugins.normalizePluginType
 import com.nuvio.app.features.plugins.pluginContentId
 import com.nuvio.app.features.streams.AddonStreamGroup
 import com.nuvio.app.features.streams.StreamAutoPlaySelector
@@ -56,6 +57,7 @@ object PlayerStreamsRepository {
     fun loadSources(
         type: String,
         videoId: String,
+        parentMetaId: String? = null,
         season: Int? = null,
         episode: Int? = null,
         forceRefresh: Boolean = false,
@@ -63,6 +65,7 @@ object PlayerStreamsRepository {
         fetchStreams(
             type = type,
             videoId = videoId,
+            parentMetaId = parentMetaId,
             season = season,
             episode = episode,
             forceRefresh = forceRefresh,
@@ -77,6 +80,7 @@ object PlayerStreamsRepository {
     fun loadEpisodeStreams(
         type: String,
         videoId: String,
+        parentMetaId: String? = null,
         season: Int? = null,
         episode: Int? = null,
         forceRefresh: Boolean = false,
@@ -84,6 +88,7 @@ object PlayerStreamsRepository {
         fetchStreams(
             type = type,
             videoId = videoId,
+            parentMetaId = parentMetaId,
             season = season,
             episode = episode,
             forceRefresh = forceRefresh,
@@ -168,6 +173,7 @@ object PlayerStreamsRepository {
     private fun fetchStreams(
         type: String,
         videoId: String,
+        parentMetaId: String? = null,
         season: Int?,
         episode: Int?,
         forceRefresh: Boolean,
@@ -183,7 +189,7 @@ object PlayerStreamsRepository {
         } else {
             PluginsUiState(pluginsEnabled = false)
         }
-        val requestKey = "$type::$videoId::$season::$episode::pluginsGrouped=${pluginUiState.groupStreamsByRepository}"
+        val requestKey = "$type::$videoId::$parentMetaId::$season::$episode::pluginsGrouped=${pluginUiState.groupStreamsByRepository}"
         PluginRepository.setLocalPluginSearchPaused(false)
         val current = stateFlow.value
         val cachedKey = requestKeyHolder()
@@ -278,8 +284,9 @@ object PlayerStreamsRepository {
                                 videoId = videoId,
                                 season = season,
                                 episode = episode,
+                                parentMetaId = parentMetaId,
                             ),
-                            mediaType = type,
+                            mediaType = normalizePluginType(type),
                             season = season,
                             episode = episode,
                         ).fold(

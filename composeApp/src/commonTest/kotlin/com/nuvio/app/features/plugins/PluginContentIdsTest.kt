@@ -40,4 +40,17 @@ class PluginContentIdsTest {
             ),
         )
     }
+
+    @Test
+    fun `parent meta id takes precedence for episode stream id`() {
+        assertEquals(
+            "anilist:12345",
+            pluginContentId(
+                videoId = "ep-1",
+                season = 1,
+                episode = 1,
+                parentMetaId = "anilist:12345",
+            ),
+        )
+    }
 }

@@ -208,6 +208,7 @@ internal fun PlayerScreenRuntime.openSourcesPanel() {
     PlayerStreamsRepository.loadSources(
         type = contentType ?: parentMetaType,
         videoId = vid,
+        parentMetaId = parentMetaId,
         season = activeSeasonNumber,
         episode = activeEpisodeNumber,
     )
