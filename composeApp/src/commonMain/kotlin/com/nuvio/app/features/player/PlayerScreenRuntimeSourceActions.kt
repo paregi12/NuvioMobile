@@ -55,7 +55,11 @@ internal fun PlayerScreenRuntime.switchToSource(stream: StreamItem) {
         activeSourceIdentityKey = sourceIdentityKey ?: activeSourceIdentityKey
         return
     }
-    val currentPositionMs = playbackSnapshot.positionMs.coerceAtLeast(0L)
+    val currentPositionMs = if (playbackSnapshot.positionMs > 0L) {
+        playbackSnapshot.positionMs
+    } else {
+        activeInitialPositionMs
+    }
     flushWatchProgress()
     val currentVideoId = activeVideoId
     if (playerSettingsUiState.streamReuseLastLinkEnabled && currentVideoId != null) {

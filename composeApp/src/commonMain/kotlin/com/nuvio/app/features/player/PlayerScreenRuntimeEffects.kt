@@ -83,6 +83,20 @@ internal fun PlayerScreenRuntime.BindPlayerRuntimeEffects() {
         }
     }
 
+    LaunchedEffect(activeSourceUrl, sourceStreamsState.allStreams, sourceStreamsState.isAnyLoading, sourceStreamsState.emptyStateReason) {
+        if (activeSourceUrl.isNotBlank()) return@LaunchedEffect
+        val available = sourceStreamsState.allStreams.filter { !it.playableDirectUrl.isNullOrBlank() }
+        if (available.isNotEmpty()) {
+            val preferredFormat = currentDubSubFormat ?: DubSubFormat.SOFTSUB
+            val candidate = available.firstOrNull { it.matchesFormat(preferredFormat) }
+                ?: available.first()
+            switchToSource(candidate)
+        } else if (!sourceStreamsState.isAnyLoading && sourceStreamsState.emptyStateReason != null) {
+            errorMessage = "No playable stream found"
+            controlsVisible = true
+        }
+    }
+
     LaunchedEffect(activePlaybackKey, activeSourceUrl, activeSourceAudioUrl, activeSourceHeaders, activeSourceResponseHeaders) {
         errorMessage = null
         playerController = null

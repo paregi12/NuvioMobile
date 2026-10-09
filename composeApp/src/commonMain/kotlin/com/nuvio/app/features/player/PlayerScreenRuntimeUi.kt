@@ -65,7 +65,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         val playerSurfaceSourceUrl = activeSourceUrl
         val playbackKey = activePlaybackKey
         val initialPositionRequestKey = currentInitialPositionRequestKey()
-        if (playerSurfaceSourceUrl != null) {
+        if (!playerSurfaceSourceUrl.isNullOrBlank()) {
             key(playbackKey) {
                 val active = remember { mutableStateOf(true) }
                 DisposableEffect(Unit) {
@@ -117,6 +117,13 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
                         }
                     },
                 )
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                NuvioLoadingIndicator()
             }
         }
 
