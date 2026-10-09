@@ -368,19 +368,17 @@ internal fun PlayerScreenRuntime.selectVideoTrack(index: Int) {
 }
 
 internal fun StreamItem.matchesFormat(targetFormat: DubSubFormat): Boolean {
-    format?.trim()?.lowercase()?.let { f ->
-        return when (targetFormat) {
-            DubSubFormat.DUB -> f == "dub"
-            DubSubFormat.HARDSUB -> f == "hardsub" || f == "hard-sub"
-            DubSubFormat.SOFTSUB -> f == "softsub" || f == "soft-sub"
-        }
-    }
+    val f = format?.trim()?.lowercase()
     val text = "${name.orEmpty()} ${title.orEmpty()} ${description.orEmpty()} ${server.orEmpty()}".lowercase()
+    val isDub = f == "dub" || text.contains("dub")
+    val hasSoftsub = f == "softsub" || f == "soft-sub" || text.contains("softsub") || text.contains("soft-sub") || externalSubtitles.isNotEmpty()
+    val hasHardsub = f == "hardsub" || f == "hard-sub" || text.contains("hardsub") || text.contains("hard-sub")
+    val isGenericSub = f == "sub" || text.contains("[sub]") || text.contains(" sub") || text.startsWith("sub")
+
     return when (targetFormat) {
-        DubSubFormat.DUB -> text.contains("dub")
-        DubSubFormat.SOFTSUB -> text.contains("softsub") || text.contains("soft-sub") || (externalSubtitles.isNotEmpty() && !text.contains("dub"))
-        DubSubFormat.HARDSUB -> text.contains("hardsub") || text.contains("hard-sub") ||
-            (text.contains("sub") && !text.contains("softsub") && !text.contains("soft-sub") && !text.contains("dub") && externalSubtitles.isEmpty())
+        DubSubFormat.DUB -> isDub
+        DubSubFormat.SOFTSUB -> !isDub && (hasSoftsub || (isGenericSub && !hasHardsub))
+        DubSubFormat.HARDSUB -> !isDub && (hasHardsub || (isGenericSub && !hasSoftsub))
     }
 }
 
@@ -388,15 +386,14 @@ internal fun PlayerScreenRuntime.resolveCurrentDubSubFormat(): DubSubFormat {
     currentDubSubFormat?.let { return it }
     val currentStream = sourceStreamsState.allStreams.firstOrNull { it.playableDirectUrl == activeSourceUrl }
     if (currentStream != null) {
-        for (f in DubSubFormat.entries) {
-            if (currentStream.matchesFormat(f)) return f
-        }
+        if (currentStream.matchesFormat(DubSubFormat.DUB)) return DubSubFormat.DUB
+        if (currentStream.matchesFormat(DubSubFormat.HARDSUB)) return DubSubFormat.HARDSUB
+        if (currentStream.matchesFormat(DubSubFormat.SOFTSUB)) return DubSubFormat.SOFTSUB
     }
     val title = "${activeStreamTitle.orEmpty()} ${activeStreamSubtitle.orEmpty()}".lowercase()
     return when {
         title.contains("dub") -> DubSubFormat.DUB
-        title.contains("softsub") || title.contains("soft-sub") || externalSubtitles.isNotEmpty() -> DubSubFormat.SOFTSUB
-        title.contains("hardsub") || title.contains("hard-sub") || title.contains("sub") -> DubSubFormat.HARDSUB
+        title.contains("hardsub") || title.contains("hard-sub") -> DubSubFormat.HARDSUB
         else -> DubSubFormat.SOFTSUB
     }
 }
