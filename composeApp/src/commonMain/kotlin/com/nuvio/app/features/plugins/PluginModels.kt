@@ -281,4 +281,7 @@ data class PluginDetailsResult(
     val year: String? = null,
     val episodes: List<PluginEpisodeItem> = emptyList(),
     val related: List<PluginHomeItem> = emptyList(),
+    val anilistId: Int? = null,
+    val malId: Int? = null,
+    val ids: Map<String, String> = emptyMap(),
 )

@@ -116,7 +116,21 @@ object MetaDetailsRepository {
             val loadedMeta = if (!anilistSettings.enabled) {
                 pluginDetails?.toMetaDetails(id, type)
             } else {
-                var animeMeta = fetchMetaFromAnilist(id = id, type = type)
+                val anilistId = pluginDetails?.anilistId
+                    ?: pluginDetails?.ids?.get("anilist")?.toIntOrNull()
+                    ?: id.removePrefix("anilist:").trim().toIntOrNull()
+                val malId = pluginDetails?.malId
+                    ?: pluginDetails?.ids?.get("mal")?.toIntOrNull()
+
+                var animeMeta = if (anilistId != null || malId != null) {
+                    AnilistMetadataService.fetchAnimeDetails(id = anilistId, idMal = malId)
+                } else {
+                    fetchMetaFromAnilist(id = id, type = type)
+                }
+
+                if (animeMeta == null && pluginDetails?.title?.isNotBlank() == true) {
+                    animeMeta = AnilistMetadataService.searchAnimeDetails(pluginDetails.title)
+                }
                 if (animeMeta != null) {
                     animeMeta = animeMeta.copy(
                         cast = if (anilistSettings.useCast) animeMeta.cast else emptyList(),

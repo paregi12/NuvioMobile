@@ -558,6 +558,27 @@ internal object PluginRuntime {
             val relatedArray = (obj["related"] as? JsonArray) ?: (obj["recommendations"] as? JsonArray)
             val related = relatedArray?.mapNotNull { it.toPluginHomeItem() }.orEmpty()
 
+            val idsObj = obj["ids"] as? JsonObject
+            val anilistId = idsObj?.get("anilist")?.jsonPrimitive?.intOrNull
+                ?: idsObj?.get("al")?.jsonPrimitive?.intOrNull
+                ?: obj["anilistId"]?.jsonPrimitive?.intOrNull
+                ?: obj["anilist"]?.jsonPrimitive?.intOrNull
+                ?: obj["alID"]?.jsonPrimitive?.intOrNull
+
+            val malId = idsObj?.get("mal")?.jsonPrimitive?.intOrNull
+                ?: idsObj?.get("myanimelist")?.jsonPrimitive?.intOrNull
+                ?: obj["malId"]?.jsonPrimitive?.intOrNull
+                ?: obj["mal"]?.jsonPrimitive?.intOrNull
+                ?: obj["idMal"]?.jsonPrimitive?.intOrNull
+
+            val idsMap = buildMap {
+                anilistId?.let { put("anilist", it.toString()) }
+                malId?.let { put("mal", it.toString()) }
+                idsObj?.forEach { (k, v) ->
+                    v.jsonPrimitive.contentOrNull?.let { put(k, it) }
+                }
+            }
+
             com.nuvio.app.features.plugins.PluginDetailsResult(
                 id = id,
                 title = title,
@@ -573,6 +594,9 @@ internal object PluginRuntime {
                 year = year,
                 episodes = episodes,
                 related = related,
+                anilistId = anilistId,
+                malId = malId,
+                ids = idsMap,
             )
         }.getOrNull()
     }

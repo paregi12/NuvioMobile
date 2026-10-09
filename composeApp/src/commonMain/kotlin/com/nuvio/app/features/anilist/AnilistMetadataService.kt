@@ -27,8 +27,8 @@ object AnilistMetadataService {
     private val cacheMutex = Mutex()
 
     private const val MEDIA_DETAILS_QUERY = """
-        query (${'$'}id: Int) {
-          Media(id: ${'$'}id, type: ANIME) {
+        query (${'$'}id: Int, ${'$'}idMal: Int) {
+          Media(id: ${'$'}id, idMal: ${'$'}idMal, type: ANIME) {
             id
             idMal
             title { romaji english native }
@@ -220,14 +220,19 @@ object AnilistMetadataService {
         }
     """
 
-    suspend fun fetchAnimeDetails(id: Int): MetaDetails? {
+    suspend fun fetchAnimeDetails(id: Int? = null, idMal: Int? = null): MetaDetails? {
+        if (id == null && idMal == null) return null
+        val cacheKey = id ?: (-(idMal ?: 0))
         cacheMutex.withLock {
-            detailsCache[id]?.let { return it }
+            detailsCache[cacheKey]?.let { return it }
         }
 
         val requestBody = buildJsonObject {
             put("query", MEDIA_DETAILS_QUERY)
-            put("variables", buildJsonObject { put("id", id) })
+            put("variables", buildJsonObject {
+                if (id != null) put("id", id)
+                if (idMal != null) put("idMal", idMal)
+            })
         }
 
         return try {
@@ -236,13 +241,16 @@ object AnilistMetadataService {
             val details = parsed.data?.media?.toMetaDetails()
             if (details != null) {
                 cacheMutex.withLock {
-                    detailsCache[id] = details
+                    detailsCache[cacheKey] = details
+                    details.id.removePrefix("anilist:").toIntOrNull()?.let { alId ->
+                        detailsCache[alId] = details
+                    }
                 }
             }
             details
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            log.e(e) { "Failed to fetch AniList details for id=$id" }
+            log.e(e) { "Failed to fetch AniList details for id=$id idMal=$idMal" }
             null
         }
     }
