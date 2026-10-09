@@ -60,15 +60,11 @@ import com.nuvio.app.core.ui.PosterCardStyleUiState
 import com.nuvio.app.features.anilist.AnilistSettings
 import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.collection.CollectionRepository
-import com.nuvio.app.features.debrid.DebridSettings
-import com.nuvio.app.features.debrid.DebridSettingsRepository
 import com.nuvio.app.features.details.MetaScreenSettingsRepository
 import com.nuvio.app.features.details.MetaScreenSettingsUiState
 import com.nuvio.app.features.home.HomeCatalogSettingsItem
 import com.nuvio.app.features.home.HomeCatalogSettingsRepository
 import com.nuvio.app.features.plugins.PluginRepository
-import com.nuvio.app.features.mdblist.MdbListSettings
-import com.nuvio.app.features.mdblist.MdbListSettingsRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsRepository
 import com.nuvio.app.features.notifications.EpisodeReleaseNotificationsUiState
 import com.nuvio.app.features.player.PlayerSettingsRepository
@@ -154,14 +150,6 @@ fun SettingsScreen(
             appIconScope.launch { AppIconRepository.select(icon) }
         }
         val anilistSettings by AnilistSettingsRepository.uiState.collectAsStateWithLifecycle()
-        val mdbListSettings by remember {
-            MdbListSettingsRepository.ensureLoaded()
-            MdbListSettingsRepository.uiState
-        }.collectAsStateWithLifecycle()
-        val debridSettings by remember {
-            DebridSettingsRepository.ensureLoaded()
-            DebridSettingsRepository.uiState
-        }.collectAsStateWithLifecycle()
         val pluginsUiState by remember {
             PluginRepository.initialize()
             PluginRepository.uiState
@@ -345,8 +333,6 @@ fun SettingsScreen(
                         onNavBarStyleSelected = ThemeSettingsRepository::setNavBarStyle,
                         episodeReleaseNotificationsUiState = episodeReleaseNotificationsUiState,
                         anilistSettings = anilistSettings,
-                        mdbListSettings = mdbListSettings,
-                        debridSettings = debridSettings,
                         homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                         homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                         homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
@@ -404,8 +390,6 @@ fun SettingsScreen(
                         onNavBarStyleSelected = ThemeSettingsRepository::setNavBarStyle,
                         episodeReleaseNotificationsUiState = episodeReleaseNotificationsUiState,
                         anilistSettings = anilistSettings,
-                        mdbListSettings = mdbListSettings,
-                        debridSettings = debridSettings,
                         homescreenHeroEnabled = homescreenSettingsUiState.heroEnabled,
                         homescreenShowCatalogType = homescreenSettingsUiState.showCatalogType,
                         homescreenHideUnreleasedContent = homescreenSettingsUiState.hideUnreleasedContent,
@@ -473,8 +457,6 @@ private fun MobileSettingsScreen(
     onNavBarStyleSelected: (NavBarStyle) -> Unit,
     episodeReleaseNotificationsUiState: EpisodeReleaseNotificationsUiState,
     anilistSettings: AnilistSettings,
-    mdbListSettings: MdbListSettings,
-    debridSettings: DebridSettings,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
@@ -686,20 +668,10 @@ private fun MobileSettingsScreen(
                 SettingsPage.Integrations -> integrationsContent(
                     isTablet = false,
                     onAnilistClick = { onPageChange(SettingsPage.AnilistEnrichment) },
-                    onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
-                    onDebridClick = { onPageChange(SettingsPage.Debrid) },
                 )
                 SettingsPage.AnilistEnrichment -> anilistSettingsContent(
                     isTablet = false,
                     settings = anilistSettings,
-                )
-                SettingsPage.MdbListRatings -> mdbListSettingsContent(
-                    isTablet = false,
-                    settings = mdbListSettings,
-                )
-                SettingsPage.Debrid -> debridSettingsContent(
-                    isTablet = false,
-                    settings = debridSettings,
                 )
                 SettingsPage.TraktAuthentication -> trackingSettingsContent(isTablet = false)
             }
@@ -792,8 +764,6 @@ private fun TabletSettingsScreen(
     onNavBarStyleSelected: (NavBarStyle) -> Unit,
     episodeReleaseNotificationsUiState: EpisodeReleaseNotificationsUiState,
     anilistSettings: AnilistSettings,
-    mdbListSettings: MdbListSettings,
-    debridSettings: DebridSettings,
     homescreenHeroEnabled: Boolean,
     homescreenShowCatalogType: Boolean,
     homescreenHideUnreleasedContent: Boolean,
@@ -1070,20 +1040,10 @@ private fun TabletSettingsScreen(
                     SettingsPage.Integrations -> integrationsContent(
                         isTablet = true,
                         onAnilistClick = { onPageChange(SettingsPage.AnilistEnrichment) },
-                        onMdbListClick = { onPageChange(SettingsPage.MdbListRatings) },
-                        onDebridClick = { onPageChange(SettingsPage.Debrid) },
                     )
                     SettingsPage.AnilistEnrichment -> anilistSettingsContent(
                         isTablet = true,
                         settings = anilistSettings,
-                    )
-                    SettingsPage.MdbListRatings -> mdbListSettingsContent(
-                        isTablet = true,
-                        settings = mdbListSettings,
-                    )
-                    SettingsPage.Debrid -> debridSettingsContent(
-                        isTablet = true,
-                        settings = debridSettings,
                     )
                     SettingsPage.TraktAuthentication -> trackingSettingsContent(isTablet = true)
                 }

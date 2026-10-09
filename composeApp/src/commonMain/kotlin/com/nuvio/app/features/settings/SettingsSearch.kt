@@ -102,7 +102,6 @@ internal fun settingsSearchEntries(
     val posterStylePage = stringResource(Res.string.compose_settings_page_poster_customization)
     val pluginsPage = stringResource(Res.string.compose_settings_page_plugins)
     val collectionsPage = stringResource(Res.string.collections_header)
-    val mdbListPage = stringResource(Res.string.compose_settings_page_mdblist_ratings)
 
     val entries = mutableListOf<SettingsSearchEntry>()
 
@@ -710,36 +709,6 @@ internal fun settingsSearchEntries(
             pageLabel = "AniList",
             section = row.sectionOverride ?: "AniList Enrichment",
             icon = Icons.Rounded.Hub,
-        )
-    }
-
-    addPage(
-        page = SettingsPage.MdbListRatings,
-        key = "mdblist",
-        title = mdbListPage,
-        description = stringResource(Res.string.settings_integrations_mdblist_description),
-        icon = Icons.Rounded.Link,
-    )
-
-    listOf(
-        PlaybackSearchRow("mdb-enable", stringResource(Res.string.settings_mdb_enable_ratings), stringResource(Res.string.settings_mdb_enable_ratings_description), stringResource(Res.string.settings_mdb_section_title)),
-        PlaybackSearchRow("mdb-api-key", stringResource(Res.string.settings_mdb_api_key_title), stringResource(Res.string.settings_mdb_api_key_description), stringResource(Res.string.settings_mdb_section_api_key)),
-        PlaybackSearchRow("mdb-imdb", stringResource(Res.string.source_imdb), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-tmdb", stringResource(Res.string.source_tmdb), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-tomatoes", stringResource(Res.string.source_rotten_tomatoes), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-metacritic", stringResource(Res.string.source_metacritic), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-trakt", stringResource(Res.string.source_trakt), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-letterboxd", stringResource(Res.string.source_letterboxd), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-        PlaybackSearchRow("mdb-audience", stringResource(Res.string.source_audience_score), "", stringResource(Res.string.settings_mdb_section_rating_providers)),
-    ).forEach { row ->
-        addRow(
-            page = SettingsPage.MdbListRatings,
-            key = row.key,
-            title = row.title,
-            description = row.description,
-            pageLabel = mdbListPage,
-            section = row.sectionOverride ?: stringResource(Res.string.settings_mdb_section_title),
-            icon = Icons.Rounded.Link,
         )
     }
 
