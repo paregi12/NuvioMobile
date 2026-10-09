@@ -30,7 +30,7 @@ fun buildPluginCatalogRefreshSignature(scrapers: List<PluginScraper>): List<Stri
 fun buildPluginCatalogDefinitions(sections: List<PluginHomeSection>): List<HomeCatalogDefinition> =
     sections.map { section ->
         HomeCatalogDefinition(
-            key = "${section.pluginId}:${section.title}",
+            key = "plugin_${section.pluginId}_${section.title}",
             defaultTitle = section.title,
             catalogName = section.title,
             addonName = section.pluginName,

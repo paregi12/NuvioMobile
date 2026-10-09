@@ -141,8 +141,29 @@ object HomeCatalogSettingsRepository {
         ensureLoaded()
         val collections = CollectionRepository.collections.value
         val syncInput = Triple(sections, collections, Locale.current.toLanguageTag())
-        if (lastCatalogSync == syncInput) return
-        definitions = buildPluginCatalogDefinitions(sections)
+        val anilistDefs = listOf(
+            HomeCatalogDefinition(
+                key = "anilist_trending",
+                defaultTitle = "Trending Now",
+                catalogName = "Trending Now",
+                addonName = "AniList",
+                type = "anime",
+                catalogId = "trending",
+                supportsPagination = false,
+                descriptorSignature = "anilist:trending",
+            ),
+            HomeCatalogDefinition(
+                key = "anilist_popular",
+                defaultTitle = "All Time Popular",
+                catalogName = "All Time Popular",
+                addonName = "AniList",
+                type = "anime",
+                catalogId = "popular",
+                supportsPagination = false,
+                descriptorSignature = "anilist:popular",
+            ),
+        )
+        definitions = (anilistDefs + buildPluginCatalogDefinitions(sections)).distinctBy(HomeCatalogDefinition::key)
         collectionDefinitions = buildCollectionDefinitions(collections)
         lastCatalogSync = syncInput
         lastCollectionSync = lastCollectionSync?.takeIf {

@@ -1,11 +1,14 @@
 package com.nuvio.app.features.home
 
+import com.nuvio.app.features.anilist.AnilistMetadataService
+import com.nuvio.app.features.anilist.AnilistSettingsRepository
 import com.nuvio.app.features.catalog.CatalogTarget
 import com.nuvio.app.features.plugins.PluginRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +24,9 @@ object HomeRepository {
 
     fun refresh(force: Boolean = false) {
         val scrapers = PluginRepository.uiState.value.scrapers.filter { it.enabled && it.manifestEnabled }
-        if (scrapers.isEmpty()) {
+        val anilistSettings = AnilistSettingsRepository.snapshot()
+
+        if (scrapers.isEmpty() && !anilistSettings.enabled) {
             activeJob?.cancel()
             activeJob = null
             _uiState.value = HomeUiState(
@@ -37,11 +42,37 @@ object HomeRepository {
         activeJob?.cancel()
         _uiState.update { it.copy(isLoading = true, errorMessage = null, hasNoPlugins = false) }
         activeJob = scope.launch {
-            val pluginSections = runCatching {
-                PluginRepository.loadHomeSections()
-            }.getOrElse { emptyList() }
+            val pluginSectionsDeferred = async {
+                runCatching {
+                    PluginRepository.loadHomeSections()
+                }.getOrElse { emptyList() }
+            }
 
-            val homeSections = pluginSections.map { section ->
+            val anilistTrendingDeferred = async {
+                if (anilistSettings.enabled) {
+                    runCatching {
+                        AnilistMetadataService.fetchTrending()
+                    }.getOrElse { emptyList() }
+                } else {
+                    emptyList()
+                }
+            }
+
+            val anilistPopularDeferred = async {
+                if (anilistSettings.enabled) {
+                    runCatching {
+                        AnilistMetadataService.fetchPopular()
+                    }.getOrElse { emptyList() }
+                } else {
+                    emptyList()
+                }
+            }
+
+            val pluginSections = pluginSectionsDeferred.await()
+            val anilistTrending = anilistTrendingDeferred.await()
+            val anilistPopular = anilistPopularDeferred.await()
+
+            val convertedPluginSections = pluginSections.map { section ->
                 HomeCatalogSection(
                     key = "plugin_${section.pluginId}_${section.title}",
                     title = section.title,
@@ -66,13 +97,43 @@ object HomeRepository {
                 )
             }.filter { it.items.isNotEmpty() }
 
+            val anilistSections = buildList {
+                if (anilistTrending.isNotEmpty()) {
+                    add(
+                        HomeCatalogSection(
+                            key = "anilist_trending",
+                            title = "Trending Now",
+                            subtitle = "AniList",
+                            addonName = "AniList",
+                            target = CatalogTarget.Library(contentType = "anime", sectionType = "trending"),
+                            items = anilistTrending,
+                        )
+                    )
+                }
+                if (anilistPopular.isNotEmpty()) {
+                    add(
+                        HomeCatalogSection(
+                            key = "anilist_popular",
+                            title = "All Time Popular",
+                            subtitle = "AniList",
+                            addonName = "AniList",
+                            target = CatalogTarget.Library(contentType = "anime", sectionType = "popular"),
+                            items = anilistPopular,
+                        )
+                    )
+                }
+            }
+
+            val homeSections = convertedPluginSections + anilistSections
             val heroItems = homeSections.firstOrNull()?.items?.take(6) ?: emptyList()
+
+            HomeCatalogSettingsRepository.syncCatalogs(pluginSections)
 
             _uiState.value = HomeUiState(
                 isLoading = false,
                 heroItems = heroItems,
                 sections = homeSections,
-                hasNoPlugins = homeSections.isEmpty() && scrapers.isEmpty(),
+                hasNoPlugins = scrapers.isEmpty(),
                 errorMessage = null,
             )
         }
