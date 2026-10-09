@@ -26,7 +26,7 @@ object HomeRepository {
         val scrapers = PluginRepository.uiState.value.scrapers.filter { it.enabled && it.manifestEnabled }
         val anilistSettings = AnilistSettingsRepository.snapshot()
 
-        if (scrapers.isEmpty() && !anilistSettings.enabled) {
+        if (scrapers.isEmpty() && (!anilistSettings.enabled || !anilistSettings.showHomeScreenCatalogs)) {
             activeJob?.cancel()
             activeJob = null
             _uiState.value = HomeUiState(
@@ -49,7 +49,7 @@ object HomeRepository {
             }
 
             val anilistTrendingDeferred = async {
-                if (anilistSettings.enabled) {
+                if (anilistSettings.enabled && anilistSettings.showHomeScreenCatalogs) {
                     runCatching {
                         AnilistMetadataService.fetchTrending()
                     }.getOrElse { emptyList() }
@@ -59,7 +59,7 @@ object HomeRepository {
             }
 
             val anilistPopularDeferred = async {
-                if (anilistSettings.enabled) {
+                if (anilistSettings.enabled && anilistSettings.showHomeScreenCatalogs) {
                     runCatching {
                         AnilistMetadataService.fetchPopular()
                     }.getOrElse { emptyList() }
@@ -97,31 +97,35 @@ object HomeRepository {
                 )
             }.filter { it.items.isNotEmpty() }
 
-            val anilistSections = buildList {
-                if (anilistTrending.isNotEmpty()) {
-                    add(
-                        HomeCatalogSection(
-                            key = "anilist_trending",
-                            title = "Trending Now",
-                            subtitle = "AniList",
-                            addonName = "AniList",
-                            target = CatalogTarget.Library(contentType = "anime", sectionType = "trending"),
-                            items = anilistTrending,
+            val anilistSections = if (anilistSettings.enabled && anilistSettings.showHomeScreenCatalogs) {
+                buildList {
+                    if (anilistTrending.isNotEmpty()) {
+                        add(
+                            HomeCatalogSection(
+                                key = "anilist_trending",
+                                title = "Trending Now",
+                                subtitle = "AniList",
+                                addonName = "AniList",
+                                target = CatalogTarget.Library(contentType = "anime", sectionType = "trending"),
+                                items = anilistTrending,
+                            )
                         )
-                    )
-                }
-                if (anilistPopular.isNotEmpty()) {
-                    add(
-                        HomeCatalogSection(
-                            key = "anilist_popular",
-                            title = "All Time Popular",
-                            subtitle = "AniList",
-                            addonName = "AniList",
-                            target = CatalogTarget.Library(contentType = "anime", sectionType = "popular"),
-                            items = anilistPopular,
+                    }
+                    if (anilistPopular.isNotEmpty()) {
+                        add(
+                            HomeCatalogSection(
+                                key = "anilist_popular",
+                                title = "All Time Popular",
+                                subtitle = "AniList",
+                                addonName = "AniList",
+                                target = CatalogTarget.Library(contentType = "anime", sectionType = "popular"),
+                                items = anilistPopular,
+                            )
                         )
-                    )
+                    }
                 }
+            } else {
+                emptyList()
             }
 
             val homeSections = convertedPluginSections + anilistSections

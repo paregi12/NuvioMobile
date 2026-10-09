@@ -141,28 +141,33 @@ object HomeCatalogSettingsRepository {
         ensureLoaded()
         val collections = CollectionRepository.collections.value
         val syncInput = Triple(sections, collections, Locale.current.toLanguageTag())
-        val anilistDefs = listOf(
-            HomeCatalogDefinition(
-                key = "anilist_trending",
-                defaultTitle = "Trending Now",
-                catalogName = "Trending Now",
-                addonName = "AniList",
-                type = "anime",
-                catalogId = "trending",
-                supportsPagination = false,
-                descriptorSignature = "anilist:trending",
-            ),
-            HomeCatalogDefinition(
-                key = "anilist_popular",
-                defaultTitle = "All Time Popular",
-                catalogName = "All Time Popular",
-                addonName = "AniList",
-                type = "anime",
-                catalogId = "popular",
-                supportsPagination = false,
-                descriptorSignature = "anilist:popular",
-            ),
-        )
+        val anilistSettings = com.nuvio.app.features.anilist.AnilistSettingsRepository.snapshot()
+        val anilistDefs = if (anilistSettings.enabled && anilistSettings.showHomeScreenCatalogs) {
+            listOf(
+                HomeCatalogDefinition(
+                    key = "anilist_trending",
+                    defaultTitle = "Trending Now",
+                    catalogName = "Trending Now",
+                    addonName = "AniList",
+                    type = "anime",
+                    catalogId = "trending",
+                    supportsPagination = false,
+                    descriptorSignature = "anilist:trending",
+                ),
+                HomeCatalogDefinition(
+                    key = "anilist_popular",
+                    defaultTitle = "All Time Popular",
+                    catalogName = "All Time Popular",
+                    addonName = "AniList",
+                    type = "anime",
+                    catalogId = "popular",
+                    supportsPagination = false,
+                    descriptorSignature = "anilist:popular",
+                ),
+            )
+        } else {
+            emptyList()
+        }
         definitions = (anilistDefs + buildPluginCatalogDefinitions(sections)).distinctBy(HomeCatalogDefinition::key)
         collectionDefinitions = buildCollectionDefinitions(collections)
         lastCatalogSync = syncInput

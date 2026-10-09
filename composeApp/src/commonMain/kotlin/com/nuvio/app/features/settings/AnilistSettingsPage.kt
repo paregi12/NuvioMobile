@@ -23,6 +23,15 @@ internal fun LazyListScope.anilistSettingsContent(
                     isTablet = isTablet,
                     onCheckedChange = AnilistSettingsRepository::setEnabled,
                 )
+                SettingsGroupDivider(isTablet = isTablet)
+                SettingsSwitchRow(
+                    title = "Home Screen Anime Rows",
+                    description = "Show AniList Trending Now and All Time Popular sections on the home screen",
+                    checked = settings.showHomeScreenCatalogs,
+                    enabled = enrichmentEnabled,
+                    isTablet = isTablet,
+                    onCheckedChange = AnilistSettingsRepository::setShowHomeScreenCatalogs,
+                )
             }
         }
     }

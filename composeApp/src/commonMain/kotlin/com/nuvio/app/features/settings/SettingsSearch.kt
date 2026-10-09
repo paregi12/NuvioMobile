@@ -694,6 +694,7 @@ internal fun settingsSearchEntries(
     )
     listOf(
         PlaybackSearchRow("anilist-enable", "Enable AniList Enrichment", "Enrich anime with AniList metadata or use pure site sources", "AniList Enrichment"),
+        PlaybackSearchRow("anilist-home", "Home Screen Anime Rows", "Show AniList Trending Now and All Time Popular sections on the home screen", "AniList Enrichment"),
         PlaybackSearchRow("anilist-cast", "Cast & Characters", "Load character list and Japanese voice actors from AniList", "Metadata Modules"),
         PlaybackSearchRow("anilist-trailers", "Trailers", "Show official YouTube trailers from AniList", "Metadata Modules"),
         PlaybackSearchRow("anilist-desc", "Synopsis & Descriptions", "Use clean AniList synopsis instead of source site descriptions", "Metadata Modules"),

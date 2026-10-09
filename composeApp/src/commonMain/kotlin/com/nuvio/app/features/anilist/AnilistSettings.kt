@@ -1,5 +1,6 @@
 package com.nuvio.app.features.anilist
 
+import com.nuvio.app.features.home.HomeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,6 +10,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AnilistSettings(
     val enabled: Boolean = true,
+    val showHomeScreenCatalogs: Boolean = true,
     val useCast: Boolean = true,
     val useTrailers: Boolean = true,
     val useDescription: Boolean = true,
@@ -25,6 +27,12 @@ object AnilistSettingsRepository {
 
     fun setEnabled(enabled: Boolean) {
         _uiState.update { it.copy(enabled = enabled) }
+        HomeRepository.applyCurrentSettings()
+    }
+
+    fun setShowHomeScreenCatalogs(show: Boolean) {
+        _uiState.update { it.copy(showHomeScreenCatalogs = show) }
+        HomeRepository.applyCurrentSettings()
     }
 
     fun setUseCast(use: Boolean) {
