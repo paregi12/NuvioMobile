@@ -93,6 +93,9 @@ internal fun PlayerScreenModalHosts(
         videoTracks = videoTracks,
         selectedIndex = selectedVideoIndex,
         onTrackSelected = onVideoTrackSelected,
+        availableStreams = sourceStreamsState.allStreams,
+        activeStreamUrl = activeSourceUrl,
+        onStreamSelected = onSourceStreamSelected,
         onDismiss = onQualityModalDismissed,
     )
 

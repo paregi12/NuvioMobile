@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.nuvio.app.core.ui.nuvio
+import com.nuvio.app.features.streams.StreamItem
 import nuvio.composeapp.generated.resources.Res
 import nuvio.composeapp.generated.resources.compose_player_quality
 import org.jetbrains.compose.resources.stringResource
@@ -40,6 +41,9 @@ fun VideoQualityModal(
     videoTracks: List<VideoTrack>,
     selectedIndex: Int,
     onTrackSelected: (Int) -> Unit,
+    availableStreams: List<StreamItem> = emptyList(),
+    activeStreamUrl: String = "",
+    onStreamSelected: (StreamItem) -> Unit = {},
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -67,9 +71,10 @@ fun VideoQualityModal(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
 
+                val showTracks = videoTracks.isNotEmpty()
                 val allTracks = if (videoTracks.any { it.index == -1 }) {
                     videoTracks
-                } else {
+                } else if (showTracks) {
                     listOf(
                         VideoTrack(
                             index = -1,
@@ -78,7 +83,11 @@ fun VideoQualityModal(
                             isSelected = selectedIndex == -1 || videoTracks.none { it.isSelected },
                         ),
                     ) + videoTracks
+                } else {
+                    emptyList()
                 }
+
+                val playableStreams = availableStreams.filter { !it.playableDirectUrl.isNullOrBlank() }
 
                 LazyColumn(
                     modifier = Modifier
@@ -87,20 +96,56 @@ fun VideoQualityModal(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    items(allTracks, key = { "${it.index}:${it.id}" }) { track ->
-                        val isSelected = if (track.index == -1) {
-                            selectedIndex == -1 || (videoTracks.none { it.isSelected } && selectedIndex !in videoTracks.map { it.index })
-                        } else {
-                            track.index == selectedIndex || track.isSelected
+                    if (allTracks.isNotEmpty()) {
+                        if (playableStreams.isNotEmpty()) {
+                            item(key = "header-quality") {
+                                Text(
+                                    text = "Resolution",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                                )
+                            }
                         }
-                        VideoQualityRow(
-                            track = track,
-                            isSelected = isSelected,
-                            onClick = {
-                                onTrackSelected(track.index)
-                                onDismiss()
-                            },
-                        )
+                        items(allTracks, key = { "track:${it.index}:${it.id}" }) { track ->
+                            val isSelected = if (track.index == -1) {
+                                selectedIndex == -1 || (videoTracks.none { it.isSelected } && selectedIndex !in videoTracks.map { it.index })
+                            } else {
+                                track.index == selectedIndex || track.isSelected
+                            }
+                            VideoQualityRow(
+                                track = track,
+                                isSelected = isSelected,
+                                onClick = {
+                                    onTrackSelected(track.index)
+                                    onDismiss()
+                                },
+                            )
+                        }
+                    }
+
+                    if (playableStreams.isNotEmpty()) {
+                        if (allTracks.isNotEmpty()) {
+                            item(key = "header-servers") {
+                                Text(
+                                    text = "Sources / Servers",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
+                                )
+                            }
+                        }
+                        items(playableStreams, key = { "stream:${it.playableDirectUrl}:${it.streamLabel}" }) { stream ->
+                            val isSelected = stream.playableDirectUrl == activeStreamUrl
+                            StreamServerRow(
+                                stream = stream,
+                                isSelected = isSelected,
+                                onClick = {
+                                    onStreamSelected(stream)
+                                    onDismiss()
+                                },
+                            )
+                        }
                     }
                 }
             }
@@ -149,6 +194,59 @@ private fun VideoQualityRow(
                     text = rateStr,
                     color = Color.White.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = tokens.colors.accent,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StreamServerRow(
+    stream: StreamItem,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val tokens = MaterialTheme.nuvio
+    val backgroundColor = if (isSelected) {
+        tokens.colors.accent.copy(alpha = 0.25f)
+    } else {
+        tokens.colors.surface.copy(alpha = 0.6f)
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stream.streamLabel,
+                color = if (isSelected) tokens.colors.accent else Color.White,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            stream.streamSubtitle?.let { subtitle ->
+                Text(
+                    text = subtitle,
+                    color = Color.White.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
