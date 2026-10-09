@@ -131,6 +131,8 @@ import com.nuvio.app.features.player.prepareExternalPlayerLaunch
 import com.nuvio.app.features.player.LockPlayerToLandscape
 import com.nuvio.app.features.player.HidePlayerSystemBars
 import com.nuvio.app.features.player.rememberExternalPlayerLauncher
+import com.nuvio.app.features.player.sanitizePlaybackHeaders
+import com.nuvio.app.features.player.sanitizePlaybackResponseHeaders
 import com.nuvio.app.features.profiles.ProfileRepository
 import com.nuvio.app.features.settings.ContinueWatchingSettingsScreen
 import com.nuvio.app.features.settings.HomescreenSettingsScreen
@@ -143,6 +145,7 @@ import com.nuvio.app.features.streams.StreamLaunch
 import com.nuvio.app.features.streams.PlaybackAvailability
 import com.nuvio.app.features.streams.rememberPlaybackAvailability
 import com.nuvio.app.features.streams.StreamLaunchStore
+import com.nuvio.app.features.streams.StreamLinkCacheRepository
 import com.nuvio.app.features.streams.StreamsRepository
 import com.nuvio.app.features.tracking.TrackingLibraryTab
 import com.nuvio.app.features.tracking.TrackingMembershipApplyResult
@@ -948,6 +951,55 @@ internal fun MainAppContent(
 
             if (!PlaybackAvailability.current().canStream(type, videoId)) {
                 NuvioToastController.show(playbackUnavailableMessage)
+                return
+            }
+
+            val isEpisode = seasonNumber != null && episodeNumber != null
+            if (isEpisode && !playerSettingsUiState.externalPlayerEnabled) {
+                val effectiveResumePositionMs = if (startFromBeginning) 0L else targetResumePositionMs
+                val cacheKey = StreamLinkCacheRepository.contentKey(
+                    type = type,
+                    videoId = videoId,
+                    parentMetaId = parentMetaId,
+                    season = seasonNumber,
+                    episode = episodeNumber,
+                )
+                val maxAgeMs = playerSettingsUiState.streamReuseLastLinkCacheHours * 60L * 60L * 1000L
+                val cached = if (playerSettingsUiState.streamReuseLastLinkEnabled) {
+                    StreamLinkCacheRepository.getValid(cacheKey, maxAgeMs)
+                } else null
+
+                val playerLaunch = PlayerLaunch(
+                    profileId = activePlaybackProfileId,
+                    title = title,
+                    sourceUrl = cached?.url.orEmpty(),
+                    sourceHeaders = sanitizePlaybackHeaders(cached?.requestHeaders),
+                    sourceResponseHeaders = sanitizePlaybackResponseHeaders(cached?.responseHeaders),
+                    externalSubtitles = emptyList(),
+                    streamType = cached?.streamType,
+                    logo = logo,
+                    poster = poster,
+                    background = background,
+                    seasonNumber = seasonNumber,
+                    episodeNumber = episodeNumber,
+                    episodeTitle = episodeTitle,
+                    episodeThumbnail = episodeThumbnail,
+                    streamTitle = cached?.streamName ?: (episodeTitle ?: title),
+                    streamSubtitle = null,
+                    bingeGroup = cached?.bingeGroup,
+                    pauseDescription = pauseDescription,
+                    providerName = cached?.addonName.orEmpty(),
+                    providerAddonId = cached?.addonId,
+                    contentType = type,
+                    videoId = videoId,
+                    parentMetaId = parentMetaId ?: videoId,
+                    parentMetaType = parentMetaType ?: type,
+                    initialPositionMs = effectiveResumePositionMs,
+                    initialProgressFraction = targetResumeProgressFraction,
+                    contentLanguage = cached?.contentLanguage,
+                )
+                val launchId = PlayerLaunchStore.put(playerLaunch)
+                navController.navigate(PlayerRoute(launchId = launchId, title = playerLaunch.title))
                 return
             }
 
